@@ -424,6 +424,7 @@
       }
 
       h1 { font-size: 17px; }
+
       .meta {
         flex-wrap: wrap;
         gap: 6px 10px;
@@ -431,6 +432,79 @@
       }
 
       #map { inset-top: 82px; }
+
+      .leaflet-left .leaflet-control {
+        margin-left: 8px;
+        margin-top: 8px;
+      }
+
+      .leaflet-right .leaflet-control {
+        margin-right: 8px;
+        margin-top: 8px;
+      }
+
+      .leaflet-bar a {
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+        font-size: 16px;
+      }
+
+      .leaflet-control-layers:not(.leaflet-control-layers-expanded) {
+        width: 32px;
+        height: 32px;
+        overflow: hidden;
+        padding: 0;
+      }
+
+      .leaflet-control-layers-toggle {
+        width: 30px !important;
+        height: 30px !important;
+        background-size: 16px 16px;
+      }
+
+      .leaflet-control-layers {
+        width: min(236px, calc(100vw - 64px));
+        max-height: min(46vh, 360px);
+        overflow: auto;
+        padding: 7px 8px;
+        border-radius: 7px;
+      }
+
+      .leaflet-control-layers label {
+        margin: 3px 0;
+        font-size: 12px;
+      }
+
+      .route-key {
+        max-width: 198px;
+        gap: 5px;
+      }
+
+      .route-swatch {
+        width: 14px;
+        margin-top: 5px;
+        border-top-width: 3px;
+      }
+
+      .route-key-text {
+        line-height: 1.16;
+      }
+
+      .route-key small {
+        font-size: 10px;
+      }
+
+      .poi-layer-swatch-group {
+        gap: 1px;
+      }
+
+      .poi-layer-swatch-group .poi-layer-swatch {
+        width: 11px;
+        height: 11px;
+        font-size: 6px;
+      }
+
       .panel {
         left: 12px;
         right: 12px;
@@ -557,12 +631,13 @@
     });
     updateBusStops();
 
+    const compactViewport = window.matchMedia("(max-width: 720px)").matches;
     L.control.layers(null, {
       ...poiLayers,
       "校巴路线": busMasterLayer,
       ...busRouteLayers
     }, {
-      collapsed: false,
+      collapsed: compactViewport,
       position: "topright"
     }).addTo(map);
 

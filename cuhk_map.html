@@ -428,14 +428,44 @@
         gap: 6px;
       }
 
+      h1 {
+        font-size: 16px;
+      }
+
       .meta {
         justify-content: flex-start;
+        gap: 5px 8px;
+        font-size: 11px;
       }
 
       .layers {
         top: auto;
-        right: 10px;
-        bottom: 10px;
+        right: 8px;
+        bottom: 8px;
+        width: min(236px, calc(100vw - 16px));
+        max-height: min(42vh, 330px);
+        gap: 6px;
+        padding: 8px;
+      }
+
+      label {
+        min-height: 22px;
+        gap: 8px;
+        font-size: 12px;
+      }
+
+      input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+      }
+
+      .category-layers,
+      .route-layers {
+        gap: 5px;
+      }
+
+      .route-schedule {
+        font-size: 10px;
       }
 
       .legend,
@@ -444,8 +474,18 @@
       }
 
       .toolbar {
-        top: 10px;
-        left: 10px;
+        top: 8px;
+        left: 8px;
+        grid-template-columns: repeat(3, 30px);
+        gap: 4px;
+        padding: 4px;
+      }
+
+      button {
+        width: 30px;
+        height: 28px;
+        border-radius: 6px;
+        font-size: 16px;
       }
     }
   </style>
