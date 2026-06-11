@@ -6122,6 +6122,7 @@ function toRad(value) {
 
 root.CUHK_BUS_UTILS = {
   activeVehicles,
+  coordAtProgress,
   formatTime,
   hongKongClock,
   nextDeparture,
@@ -6130,6 +6131,7 @@ root.CUHK_BUS_UTILS = {
   routeCoordinates,
   routeDirectionGlyph,
   routeDirectionLabel,
+  routeStopProgress,
   routeStopDirectionGlyph,
   routeStopDirectionLabel,
   stopArrivalSummary,

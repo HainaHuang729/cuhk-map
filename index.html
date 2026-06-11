@@ -136,6 +136,53 @@
       border-radius: 999px;
     }
 
+    .route-message-panel {
+      position: fixed;
+      z-index: 890;
+      left: 16px;
+      bottom: calc(72px + env(safe-area-inset-bottom));
+      width: min(360px, calc(100vw - 32px));
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 14px 34px rgba(24, 36, 31, 0.14);
+      backdrop-filter: blur(12px);
+      font-size: 12px;
+    }
+
+    .route-message-panel[hidden] {
+      display: none;
+    }
+
+    .route-message-panel strong {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 13px;
+    }
+
+    .route-message-body {
+      display: grid;
+      gap: 7px;
+    }
+
+    .route-report-row {
+      display: grid;
+      gap: 2px;
+      color: var(--ink);
+      line-height: 1.28;
+    }
+
+    .route-report-row small {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.25;
+    }
+
+    .route-report-empty {
+      color: var(--muted);
+    }
+
     .leaflet-control-layers,
     .leaflet-bar a {
       border: 1px solid var(--line) !important;
@@ -399,6 +446,21 @@
       transform-origin: center;
     }
 
+    .passenger-report-marker {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border: 2px solid #fff;
+      border-radius: 999px;
+      background: #146aa0;
+      box-shadow: 0 4px 14px rgba(20, 33, 29, 0.32);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
     .gps-collector {
       position: fixed;
       z-index: 910;
@@ -652,6 +714,13 @@
         border-top-width: 3px;
       }
 
+      .route-message-panel {
+        left: 8px;
+        bottom: calc(58px + env(safe-area-inset-bottom));
+        width: min(312px, calc(100vw - 16px));
+        padding: 10px;
+      }
+
       .leaflet-left .leaflet-control {
         margin-left: 8px;
         margin-top: 8px;
@@ -795,6 +864,10 @@
         </select>
       </label>
       <label class="wide">
+        <span>上车站</span>
+        <select id="gpsBoardStop" aria-label="上车站"></select>
+      </label>
+      <label class="wide">
         <span>备注</span>
         <input id="gpsNote" type="text" maxlength="80" autocomplete="off" placeholder="车辆、拥堵、异常">
       </label>
@@ -805,6 +878,7 @@
       <button id="gpsClear" type="button" disabled>清空</button>
     </div>
     <div class="gps-actions gps-event-actions">
+      <button id="gpsBoard" type="button" disabled>上车上报</button>
       <button id="gpsArrive" type="button" disabled>到站</button>
       <button id="gpsDepart" type="button" disabled>离站</button>
     </div>
@@ -814,6 +888,10 @@
       <span id="gpsAccuracy">精度 --</span>
       <span id="gpsUpdated">--:--</span>
     </div>
+  </section>
+  <section id="routeMessagePanel" class="route-message-panel" aria-label="线路消息" hidden>
+    <strong id="routeMessageTitle">线路消息</strong>
+    <div id="routeMessageBody" class="route-message-body"></div>
   </section>
   <main id="map" aria-label="香港中文大学地图"></main>
   <section class="panel" aria-hidden="true">
@@ -911,7 +989,9 @@
     const gpsClear = document.getElementById("gpsClear");
     const gpsRoute = document.getElementById("gpsRoute");
     const gpsDirection = document.getElementById("gpsDirection");
+    const gpsBoardStop = document.getElementById("gpsBoardStop");
     const gpsNote = document.getElementById("gpsNote");
+    const gpsBoard = document.getElementById("gpsBoard");
     const gpsArrive = document.getElementById("gpsArrive");
     const gpsDepart = document.getElementById("gpsDepart");
     const gpsStatus = document.getElementById("gpsStatus");
@@ -919,16 +999,23 @@
     const gpsEventCount = document.getElementById("gpsEventCount");
     const gpsAccuracy = document.getElementById("gpsAccuracy");
     const gpsUpdated = document.getElementById("gpsUpdated");
+    const routeMessagePanel = document.getElementById("routeMessagePanel");
+    const routeMessageTitle = document.getElementById("routeMessageTitle");
+    const routeMessageBody = document.getElementById("routeMessageBody");
     const busStopsLayer = L.layerGroup().addTo(map);
     const gpsLayer = L.layerGroup().addTo(map);
+    const passengerReportLayer = L.layerGroup().addTo(map);
     const routeLayerGroups = {};
     const routeVehicleLayers = {};
     const busStopPopupRefs = [];
     const GPS_STORAGE_KEY = "cuhk-gps-samples-v1";
     const GPS_EVENTS_STORAGE_KEY = "cuhk-gps-events-v1";
+    const PASSENGER_REPORTS_STORAGE_KEY = "cuhk-passenger-board-reports-v1";
+    const PASSENGER_REPORT_TTL_MINUTES = 30;
     let allBusStopEntriesCache = null;
     let gpsPoints = loadStoredGpsPoints();
     let gpsEvents = loadStoredGpsEvents();
+    let passengerReports = loadStoredPassengerReports();
     let gpsCurrentPoint = null;
     let gpsWatchId = null;
     let gpsLiveMarker = null;
@@ -950,18 +1037,24 @@
     const compactViewport = window.matchMedia("(max-width: 720px)").matches;
     L.control.layers(null, {
       ...poiLayers,
+      "乘客上报": passengerReportLayer,
       "GPS采集": gpsLayer
     }, {
       collapsed: compactViewport,
       position: "topright"
     }).addTo(map);
     renderGpsRouteOptions();
+    updateBoardStopOptions();
     renderGpsLayer();
+    renderPassengerReports();
     updateGpsUi();
+    updateRouteMessagePanel();
     gpsToggle.addEventListener("click", toggleGpsCollection);
     gpsExport.addEventListener("click", exportGpsGeoJson);
     gpsClear.addEventListener("click", clearGpsSamples);
     gpsRoute.addEventListener("change", handleGpsRouteChange);
+    gpsBoardStop.addEventListener("change", updateGpsUi);
+    gpsBoard.addEventListener("click", recordPassengerBoardingReport);
     gpsArrive.addEventListener("click", () => recordGpsEvent("arrive"));
     gpsDepart.addEventListener("click", () => recordGpsEvent("depart"));
 
@@ -1028,6 +1121,8 @@
       });
       updateBusStops();
       updateBusVehicles();
+      renderPassengerReports();
+      updateRouteMessagePanel();
       syncBusRouteDock();
     }
 
@@ -1208,6 +1303,7 @@
       const route = gpsSelectedRoute();
       const direction = route ? CUHK_BUS_UTILS.routeDirectionLabel(route) : "";
       gpsDirection.value = direction || "";
+      updateBoardStopOptions();
       updateGpsUi();
     }
 
@@ -1224,6 +1320,112 @@
         direction: gpsDirection.value || (route ? CUHK_BUS_UTILS.routeDirectionLabel(route) || null : null),
         note: gpsNote.value.trim() || null
       };
+    }
+
+    function updateBoardStopOptions() {
+      const route = gpsSelectedRoute();
+      if (!route) {
+        gpsBoardStop.innerHTML = "<option value=\"\">先选线路</option>";
+        return;
+      }
+      const options = routeStopOptions(route);
+      gpsBoardStop.innerHTML = [
+        "<option value=\"\">选择上车站</option>",
+        ...options.map((item) => `
+          <option value="${escapeHtml(item.value)}">${escapeHtml(item.label)}</option>
+        `)
+      ].join("");
+    }
+
+    function routeStopOptions(route) {
+      return (route.stops || [])
+        .map((stopId, stopIndex) => {
+          const stop = CUHK_BUS_DATA.stops[stopId];
+          if (!stop || stop.kind === "waypoint") return null;
+          const direction = CUHK_BUS_UTILS.routeStopDirectionLabel(route, stopIndex);
+          return {
+            value: `${stopId}:${stopIndex}`,
+            stop,
+            stopId,
+            stopIndex,
+            label: direction ? `${stop.name} · ${direction}` : stop.name
+          };
+        })
+        .filter(Boolean);
+    }
+
+    function selectedBoardStop() {
+      const route = gpsSelectedRoute();
+      if (!route || !gpsBoardStop.value) return null;
+      const [stopId, stopIndexText] = gpsBoardStop.value.split(":");
+      const stopIndex = Number(stopIndexText);
+      const stop = CUHK_BUS_DATA.stops[stopId];
+      if (!stop || !Number.isInteger(stopIndex)) return null;
+      return { route, stop, stopId, stopIndex };
+    }
+
+    function recordPassengerBoardingReport() {
+      const selection = selectedBoardStop();
+      if (!selection) {
+        updateGpsUi("先选上车站");
+        return;
+      }
+      const context = gpsCollectionContext();
+      const report = {
+        id: `board-${Date.now()}-${passengerReports.length + 1}`,
+        event: "board",
+        routeId: selection.route.id,
+        routeName: selection.route.name,
+        routeService: selection.route.service,
+        direction: context.direction || CUHK_BUS_UTILS.routeDirectionLabel(selection.route) || null,
+        stopId: selection.stopId,
+        stopName: selection.stop.name,
+        stopIndex: selection.stopIndex,
+        timestamp: new Date().toISOString(),
+        note: context.note,
+        source: "local_demo",
+        ttlMinutes: PASSENGER_REPORT_TTL_MINUTES
+      };
+      passengerReports.unshift(report);
+      prunePassengerReports();
+      persistPassengerReports();
+      if (!map.hasLayer(routeLayerGroups[selection.route.id])) {
+        CUHK_BUS_DATA.routes.forEach((route) => {
+          setRouteVisible(route, route.id === selection.route.id);
+        });
+        updateBusStops();
+        updateBusVehicles();
+        syncBusRouteDock();
+      }
+      renderPassengerReports();
+      updateRouteMessagePanel(selection.route);
+      updateGpsUi("已上报上车");
+    }
+
+    function loadStoredPassengerReports() {
+      try {
+        const raw = localStorage.getItem(PASSENGER_REPORTS_STORAGE_KEY);
+        if (!raw) return [];
+        const reports = JSON.parse(raw);
+        return Array.isArray(reports) ? reports.filter((report) => report.routeId && report.stopId && report.timestamp) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function persistPassengerReports() {
+      try {
+        localStorage.setItem(PASSENGER_REPORTS_STORAGE_KEY, JSON.stringify(passengerReports));
+      } catch {
+        updateGpsUi("上报保存失败");
+      }
+    }
+
+    function prunePassengerReports(now = new Date()) {
+      const cutoff = now.getTime() - PASSENGER_REPORT_TTL_MINUTES * 60 * 1000;
+      passengerReports = passengerReports
+        .filter((report) => Date.parse(report.timestamp) >= cutoff)
+        .sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp));
     }
 
     function toggleGpsCollection() {
@@ -1469,6 +1671,7 @@
         : "--:--";
       gpsExport.disabled = gpsPoints.length === 0 && gpsEvents.length === 0;
       gpsClear.disabled = gpsPoints.length === 0 && gpsEvents.length === 0;
+      gpsBoard.disabled = !selectedBoardStop();
       gpsArrive.disabled = !gpsCurrentPoint;
       gpsDepart.disabled = !gpsCurrentPoint;
     }
@@ -1624,6 +1827,122 @@
       updateGpsUi(gpsWatchId !== null ? "采集中" : "已清空");
     }
 
+    function visibleRouteForMessages(explicitRoute = null) {
+      if (explicitRoute) return explicitRoute;
+      const routes = visibleBusRoutes();
+      return routes.length === 1 ? routes[0] : null;
+    }
+
+    function reportsForRoute(route, now = new Date()) {
+      prunePassengerReports(now);
+      return passengerReports.filter((report) => report.routeId === route.id);
+    }
+
+    function renderPassengerReports() {
+      passengerReportLayer.clearLayers();
+      prunePassengerReports();
+      persistPassengerReports();
+      const visibleRouteIds = new Set(visibleBusRoutes().map((route) => route.id));
+      passengerReports.forEach((report) => {
+        if (!visibleRouteIds.has(report.routeId)) return;
+        const estimate = estimatePassengerReportPosition(report);
+        if (!estimate) return;
+        L.marker([estimate.coord[1], estimate.coord[0]], {
+          icon: L.divIcon({
+            className: "",
+            html: `<div class="passenger-report-marker" style="background:${estimate.route.color}">${escapeHtml(busVehicleLabel(estimate.route))}</div>`,
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+          }),
+          zIndexOffset: 920
+        })
+          .bindPopup(passengerReportPopupHtml(report, estimate))
+          .addTo(passengerReportLayer);
+      });
+    }
+
+    function estimatePassengerReportPosition(report, at = new Date()) {
+      const route = CUHK_BUS_DATA.routes.find((item) => item.id === report.routeId);
+      if (!route || !Number.isInteger(report.stopIndex)) return null;
+      const coords = CUHK_BUS_UTILS.routeCoordinates(route);
+      if (coords.length < 2) return null;
+      const tripMinutes = route.schedule && route.schedule.estimatedTripMinutes || 15;
+      const elapsedMinutes = Math.max(0, (at.getTime() - Date.parse(report.timestamp)) / 60000);
+      const startProgress = CUHK_BUS_UTILS.routeStopProgress(route, report.stopIndex);
+      const progress = Math.max(0, Math.min(1, startProgress + elapsedMinutes / tripMinutes));
+      const point = CUHK_BUS_UTILS.coordAtProgress(coords, progress);
+      return {
+        route,
+        coord: point.coord,
+        bearing: point.bearing,
+        elapsedMinutes,
+        progress,
+        nextStop: nextStopForProgress(route, progress)
+      };
+    }
+
+    function nextStopForProgress(route, progress) {
+      const stops = routeStopOptions(route);
+      return stops.find((item) => CUHK_BUS_UTILS.routeStopProgress(route, item.stopIndex) > progress + 0.005) || null;
+    }
+
+    function passengerReportPopupHtml(report, estimate) {
+      const nextText = estimate.nextStop ? `估计前往：${estimate.nextStop.stop.name}` : "估计接近线路终点";
+      return `
+        <strong>乘客上报 · 校巴 ${escapeHtml(report.routeId)}</strong>
+        <div>${escapeHtml(report.stopName)} 上车 · ${escapeHtml(reportRelativeTime(report.timestamp))}</div>
+        <div>${escapeHtml(nextText)}</div>
+        <div>${escapeHtml(report.routeName || "")}${report.direction ? ` · ${escapeHtml(report.direction)}` : ""}</div>
+        ${report.note ? `<div>备注：${escapeHtml(report.note)}</div>` : ""}
+        <div>本地演示数据，接入小程序云数据库后可共享给所有人。</div>
+      `;
+    }
+
+    function updateRouteMessagePanel(explicitRoute = null) {
+      const route = visibleRouteForMessages(explicitRoute);
+      if (!route) {
+        routeMessagePanel.hidden = true;
+        return;
+      }
+      const reports = reportsForRoute(route).slice(0, 4);
+      routeMessageTitle.textContent = `校巴 ${route.id} · ${route.name}`;
+      routeMessageBody.innerHTML = reports.length
+        ? reports.map((report) => {
+          const estimate = estimatePassengerReportPosition(report);
+          const nextText = estimate && estimate.nextStop ? `估计前往 ${estimate.nextStop.stop.name}` : "估计接近线路终点";
+          return `
+            <div class="route-report-row">
+              <span>${escapeHtml(report.stopName)} 上车 · ${escapeHtml(reportRelativeTime(report.timestamp))}</span>
+              <small>${escapeHtml(nextText)}${report.note ? ` · ${escapeHtml(report.note)}` : ""}</small>
+            </div>
+          `;
+        }).join("")
+        : "<div class=\"route-report-empty\">暂无乘客上报。接入微信小程序后，这里显示最新上车站和估计位置。</div>";
+      routeMessagePanel.hidden = false;
+    }
+
+    function routeReportsHtml(route) {
+      const reports = reportsForRoute(route).slice(0, 3);
+      if (!reports.length) return "<div>乘客上报：暂无</div>";
+      return `
+        <div>乘客上报：</div>
+        ${reports.map((report) => {
+          const estimate = estimatePassengerReportPosition(report);
+          const nextText = estimate && estimate.nextStop ? `，估计前往 ${estimate.nextStop.stop.name}` : "";
+          return `<div>${escapeHtml(report.stopName)} 上车 · ${escapeHtml(reportRelativeTime(report.timestamp))}${escapeHtml(nextText)}</div>`;
+        }).join("")}
+      `;
+    }
+
+    function reportRelativeTime(timestamp, now = new Date()) {
+      const seconds = Math.max(0, Math.floor((now.getTime() - Date.parse(timestamp)) / 1000));
+      if (seconds < 60) return "刚刚";
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return `${minutes}分钟前`;
+      const hours = Math.floor(minutes / 60);
+      return `${hours}小时前`;
+    }
+
     function addBusRoute(route, layer) {
       const latLngs = routeLatLngs(route);
       if (latLngs.length < 2) return;
@@ -1637,13 +1956,14 @@
         lineJoin: "round"
       }).addTo(layer);
 
-      line.bindPopup(`
+      line.bindPopup(() => `
         <strong>校巴 ${escapeHtml(route.id)} · ${escapeHtml(route.name)}</strong>
         <div>${escapeHtml(route.service)}</div>
         <div>方向：${escapeHtml(routeDirection)}</div>
         <div>时刻：${escapeHtml(CUHK_BUS_UTILS.scheduleSummary(route))}</div>
         <div>估算运行：${escapeHtml(String(route.schedule && route.schedule.estimatedTripMinutes || "未知"))} 分钟</div>
         <div><a href="${escapeHtml(CUHK_BUS_UTILS.scheduleSourceUrl(route))}" target="_blank" rel="noopener">官方时刻表</a></div>
+        ${routeReportsHtml(route)}
         <div>${routeStopNames(route).map(escapeHtml).join(" → ")}</div>
       `);
 
@@ -1692,6 +2012,8 @@
           marker.setPopupContent(busStopPopupHtml(entry));
         }
       });
+      renderPassengerReports();
+      updateRouteMessagePanel();
     }
 
     function tagsOf(feature) {
