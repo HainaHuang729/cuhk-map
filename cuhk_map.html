@@ -510,7 +510,7 @@
     </div>
     <div class="layers" aria-label="图层">
       <label><span>校内楼宇名称</span><input id="showBuildingLabels" type="checkbox" checked></label>
-      <label><span>常用信息</span><input id="showPoi" type="checkbox" checked></label>
+      <label><span>常用信息</span><input id="showPoi" type="checkbox"></label>
       <div id="poiCategoryLayers" class="category-layers"></div>
       <label><span>校巴路线</span><input id="showBusRoutes" type="checkbox"></label>
       <div class="layer-divider">校巴线路</div>
@@ -812,7 +812,7 @@
               ${poiLayerGroupSymbols(group, "mini-symbol-group")}
               ${group.label} · ${poiLayerGroupCount(group).toLocaleString("zh-CN")}
             </span>
-            <input class="poi-category-toggle" type="checkbox" data-poi-group="${group.id}" checked>
+            <input class="poi-category-toggle" type="checkbox" data-poi-group="${group.id}">
           </label>
         `)
         .join("");

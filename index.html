@@ -977,7 +977,7 @@
     const POI_LAYER_GROUP_BY_CATEGORY = Object.fromEntries(
       POI_LAYER_GROUPS.flatMap((group) => group.categoryIds.map((id) => [id, group]))
     );
-    const poiLayerGroups = Object.fromEntries(POI_LAYER_GROUPS.map((group) => [group.id, L.layerGroup().addTo(map)]));
+    const poiLayerGroups = Object.fromEntries(POI_LAYER_GROUPS.map((group) => [group.id, L.layerGroup()]));
     const poiLayers = Object.fromEntries(POI_LAYER_GROUPS.map((group) => [
       poiLayerGroupKeyHtml(group),
       poiLayerGroups[group.id],
