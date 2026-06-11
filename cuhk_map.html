@@ -560,6 +560,7 @@
     let dragMoved = false;
     let pointer = { x: 0, y: 0 };
     let hoverFeature = null;
+    let allBusStopEntriesCache = null;
 
     const POI_CATEGORIES = [
       { id: "restaurant", label: "餐厅/饭堂", color: "#b35a2a", marker: "square", glyph: "食" },
@@ -901,6 +902,21 @@
         });
       });
       return [...entries.values()].sort((a, b) => a.stop.name.localeCompare(b.stop.name, "zh-Hant"));
+    }
+
+    function allBusStopEntries() {
+      if (!allBusStopEntriesCache) {
+        allBusStopEntriesCache = buildBusStopEntries(CUHK_BUS_DATA.routes);
+      }
+      return allBusStopEntriesCache;
+    }
+
+    function allBusStopEntryById(id) {
+      return allBusStopEntries().find((entry) => entry.id === id) || null;
+    }
+
+    function fullBusStopEntry(entry) {
+      return allBusStopEntryById(entry.id) || entry;
     }
 
     function visibleBusStopEntries() {
@@ -1604,8 +1620,9 @@
     }
 
     function showBusStopDetails(entry) {
+      const detailEntry = fullBusStopEntry(entry);
       const routeMap = new Map();
-      entry.occurrences.forEach((item) => {
+      detailEntry.occurrences.forEach((item) => {
         if (!routeMap.has(item.route.id)) {
           routeMap.set(item.route.id, {
             route: item.route,
@@ -1616,7 +1633,7 @@
       });
 
       const arrivalsByRoute = new Map(
-        CUHK_BUS_UTILS.nextStopArrivals(entry.occurrences).map((arrival) => [arrival.route.id, arrival])
+        CUHK_BUS_UTILS.nextStopArrivals(detailEntry.occurrences).map((arrival) => [arrival.route.id, arrival])
       );
       const routeRows = [...routeMap.values()].map(({ route, directions }) => {
         const directionText = directions.size ? ` · ${[...directions].join(" / ")}` : "";
@@ -1625,16 +1642,16 @@
         const arrivalText = CUHK_BUS_UTILS.stopArrivalSummary(arrivalsByRoute.get(route.id));
         return [`校巴 ${route.id}`, `${route.name}${directionText}${vehicleText} · ${arrivalText}`];
       });
-      const stopDirection = CUHK_BUS_UTILS.stopDirectionSummary(entry.occurrences);
+      const stopDirection = CUHK_BUS_UTILS.stopDirectionSummary(detailEntry.occurrences);
       const rows = [
-        ["名称", entry.stop.name],
+        ["名称", detailEntry.stop.name],
         ["类型", "校巴站点"],
         ...(stopDirection === "按线路方向" ? [] : [["站点方向", stopDirection]]),
         ["途经线路", `${routeMap.size.toLocaleString("zh-CN")} 条`],
         ...routeRows,
       ];
 
-      details.querySelector("strong").textContent = entry.stop.name;
+      details.querySelector("strong").textContent = detailEntry.stop.name;
       detailsList.innerHTML = rows.map(([k, v]) => `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(String(v))}</dd>`).join("");
     }
 

@@ -658,6 +658,7 @@
     const routeLayerGroups = {};
     const routeVehicleLayers = {};
     const busStopPopupRefs = [];
+    let allBusStopEntriesCache = null;
     let latestStats = null;
 
     CUHK_BUS_DATA.routes.forEach((route) => {
@@ -798,6 +799,21 @@
       return [...entries.values()].sort((a, b) => a.stop.name.localeCompare(b.stop.name, "zh-Hant"));
     }
 
+    function allBusStopEntries() {
+      if (!allBusStopEntriesCache) {
+        allBusStopEntriesCache = buildBusStopEntries(CUHK_BUS_DATA.routes);
+      }
+      return allBusStopEntriesCache;
+    }
+
+    function allBusStopEntryById(id) {
+      return allBusStopEntries().find((entry) => entry.id === id) || null;
+    }
+
+    function fullBusStopEntry(entry) {
+      return allBusStopEntryById(entry.id) || entry;
+    }
+
     function updateBusStops() {
       busStopsLayer.clearLayers();
       busStopPopupRefs.length = 0;
@@ -848,8 +864,9 @@
     }
 
     function busStopPopupHtml(entry) {
+      const popupEntry = fullBusStopEntry(entry);
       const routeMap = new Map();
-      entry.occurrences.forEach((item) => {
+      popupEntry.occurrences.forEach((item) => {
         if (!routeMap.has(item.route.id)) {
           routeMap.set(item.route.id, {
             route: item.route,
@@ -858,12 +875,12 @@
         }
         if (item.direction) routeMap.get(item.route.id).directions.add(item.direction);
       });
-      const stopDirection = CUHK_BUS_UTILS.stopDirectionSummary(entry.occurrences);
+      const stopDirection = CUHK_BUS_UTILS.stopDirectionSummary(popupEntry.occurrences);
       const stopDirectionLine = stopDirection === "按线路方向"
         ? ""
         : `<div>站点方向：${escapeHtml(stopDirection)}</div>`;
       const arrivalsByRoute = new Map(
-        CUHK_BUS_UTILS.nextStopArrivals(entry.occurrences).map((arrival) => [arrival.route.id, arrival])
+        CUHK_BUS_UTILS.nextStopArrivals(popupEntry.occurrences).map((arrival) => [arrival.route.id, arrival])
       );
       const routeRows = [...routeMap.values()]
         .map(({ route, directions }) => {
@@ -879,7 +896,7 @@
         })
         .join("");
       return `
-        <strong>${escapeHtml(entry.stop.name)}</strong>
+        <strong>${escapeHtml(popupEntry.stop.name)}</strong>
         <div>校巴站点</div>
         ${stopDirectionLine}
         <div>途经线路：${routeMap.size.toLocaleString("zh-CN")} 条</div>
