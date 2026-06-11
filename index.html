@@ -31,43 +31,9 @@
       overflow: hidden;
     }
 
-    header {
-      position: fixed;
-      z-index: 500;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 0 16px;
-      background: rgba(255, 255, 255, 0.9);
-      border-bottom: 1px solid var(--line);
-      backdrop-filter: blur(12px);
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 19px;
-      font-weight: 760;
-      letter-spacing: 0;
-      white-space: nowrap;
-    }
-
-    .meta {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      color: var(--muted);
-      font-size: 12px;
-      white-space: nowrap;
-    }
-
     #map {
       position: fixed;
-      inset: 100px 0 0 0;
+      inset: 0;
       background: #e8eee8;
     }
 
@@ -108,18 +74,21 @@
 
     .bus-route-dock {
       position: fixed;
-      z-index: 510;
-      top: 56px;
-      left: 0;
-      right: 0;
+      z-index: 900;
+      left: 50%;
+      right: auto;
+      bottom: calc(12px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      width: min(720px, calc(100vw - 24px));
       height: 44px;
       display: flex;
       align-items: center;
       gap: 7px;
-      padding: 6px 12px;
-      border-bottom: 1px solid var(--line);
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
       background: rgba(255, 255, 255, 0.92);
-      box-shadow: 0 8px 22px rgba(24, 36, 31, 0.1);
+      box-shadow: 0 12px 28px rgba(24, 36, 31, 0.16);
       backdrop-filter: blur(12px);
       overflow-x: auto;
       overflow-y: hidden;
@@ -182,6 +151,10 @@
     .leaflet-control-layers label {
       margin: 6px 0;
       font-size: 13px;
+    }
+
+    .leaflet-bottom .leaflet-control {
+      margin-bottom: 68px;
     }
 
     .poi-marker {
@@ -458,9 +431,9 @@
 
     .loading {
       position: fixed;
-      z-index: 530;
+      z-index: 930;
       left: 16px;
-      bottom: 16px;
+      bottom: calc(72px + env(safe-area-inset-bottom));
       max-width: min(420px, calc(100vw - 32px));
       padding: 12px 14px;
       border: 1px solid var(--line);
@@ -476,24 +449,10 @@
     }
 
     @media (max-width: 720px) {
-      header {
-        height: 48px;
-        min-height: 48px;
-        align-items: center;
-        flex-direction: row;
-        padding: 0 10px;
-        gap: 8px;
-      }
-
-      h1 { font-size: 16px; }
-
-      .meta {
-        display: none;
-      }
-
       .bus-route-dock {
-        top: 48px;
-        height: 42px;
+        bottom: calc(10px + env(safe-area-inset-bottom));
+        width: min(520px, calc(100vw - 16px));
+        height: 40px;
         gap: 6px;
         padding: 6px 8px;
       }
@@ -509,8 +468,6 @@
         width: 12px;
         border-top-width: 3px;
       }
-
-      #map { inset-top: 90px; }
 
       .leaflet-left .leaflet-control {
         margin-left: 8px;
@@ -555,6 +512,10 @@
         font-size: 12px;
       }
 
+      .leaflet-bottom .leaflet-control {
+        margin-bottom: 62px;
+      }
+
       .route-key {
         max-width: 198px;
         gap: 5px;
@@ -590,18 +551,18 @@
         bottom: 12px;
         width: auto;
       }
+
+      .loading {
+        left: 10px;
+        right: 10px;
+        bottom: calc(66px + env(safe-area-inset-bottom));
+        max-width: none;
+      }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>香港中文大学餐饮校巴地图</h1>
-    <div class="meta">
-      <span id="count">正在加载 OSM 数据</span>
-      <span>常用信息 / 校巴</span>
-      <span>© OpenStreetMap contributors</span>
-    </div>
-  </header>
+  <span id="count" hidden>正在加载 OSM 数据</span>
   <nav id="busRouteDock" class="bus-route-dock" aria-label="校巴线路"></nav>
   <main id="map" aria-label="香港中文大学地图"></main>
   <section class="panel" aria-hidden="true">
