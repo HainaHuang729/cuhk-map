@@ -1054,15 +1054,18 @@
       const stopDirectionLine = stopDirection === "按线路方向"
         ? ""
         : `<div>站点方向：${escapeHtml(stopDirection)}</div>`;
-      const arrivalsByRoute = new Map(
-        CUHK_BUS_UTILS.nextStopArrivals(popupEntry.occurrences).map((arrival) => [arrival.route.id, arrival])
-      );
-      const routeRows = [...routeMap.values()]
-        .map(({ route, directions }) => {
-          const directionText = directions.size ? ` · ${[...directions].join(" / ")}` : "";
+      const scheduledArrivals = CUHK_BUS_UTILS.nextStopArrivals(popupEntry.occurrences)
+        .filter((arrival) => arrival.status === "scheduled");
+      const routeRows = scheduledArrivals
+        .map((arrival) => {
+          const route = arrival.route;
+          const directions = routeMap.get(route.id)?.directions || new Set();
+          const directionText = arrival.direction
+            ? ` · ${arrival.direction}`
+            : (directions.size ? ` · ${[...directions].join(" / ")}` : "");
           const vehicles = CUHK_BUS_UTILS.activeVehicles(route).length;
           const vehicleText = vehicles ? ` · 当前估算 ${vehicles.toLocaleString("zh-CN")} 辆` : "";
-          const arrivalText = CUHK_BUS_UTILS.stopArrivalSummary(arrivalsByRoute.get(route.id));
+          const arrivalText = CUHK_BUS_UTILS.stopArrivalSummary(arrival);
           return `
             <div><strong>校巴 ${escapeHtml(route.id)}</strong> ${escapeHtml(route.name)}${escapeHtml(directionText)}${escapeHtml(vehicleText)}</div>
             <div>${escapeHtml(arrivalText)}</div>
@@ -1070,11 +1073,13 @@
           `;
         })
         .join("");
+      const emptyLine = scheduledArrivals.length ? "" : "<div>当前没有预计会经过本站的班次</div>";
       return `
         <strong>${escapeHtml(popupEntry.stop.name)}</strong>
         <div>校巴站点</div>
         ${stopDirectionLine}
-        <div>途经线路：${routeMap.size.toLocaleString("zh-CN")} 条</div>
+        <div>预计经过：${scheduledArrivals.length.toLocaleString("zh-CN")} 条线路</div>
+        ${emptyLine}
         ${routeRows}
       `;
     }

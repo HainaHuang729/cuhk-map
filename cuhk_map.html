@@ -1632,14 +1632,17 @@
         if (item.direction) routeMap.get(item.route.id).directions.add(item.direction);
       });
 
-      const arrivalsByRoute = new Map(
-        CUHK_BUS_UTILS.nextStopArrivals(detailEntry.occurrences).map((arrival) => [arrival.route.id, arrival])
-      );
-      const routeRows = [...routeMap.values()].map(({ route, directions }) => {
-        const directionText = directions.size ? ` · ${[...directions].join(" / ")}` : "";
+      const scheduledArrivals = CUHK_BUS_UTILS.nextStopArrivals(detailEntry.occurrences)
+        .filter((arrival) => arrival.status === "scheduled");
+      const routeRows = scheduledArrivals.map((arrival) => {
+        const route = arrival.route;
+        const directions = routeMap.get(route.id)?.directions || new Set();
+        const directionText = arrival.direction
+          ? ` · ${arrival.direction}`
+          : (directions.size ? ` · ${[...directions].join(" / ")}` : "");
         const vehicles = CUHK_BUS_UTILS.activeVehicles(route).length;
         const vehicleText = vehicles ? ` · 估算 ${vehicles} 辆` : "";
-        const arrivalText = CUHK_BUS_UTILS.stopArrivalSummary(arrivalsByRoute.get(route.id));
+        const arrivalText = CUHK_BUS_UTILS.stopArrivalSummary(arrival);
         return [`校巴 ${route.id}`, `${route.name}${directionText}${vehicleText} · ${arrivalText}`];
       });
       const stopDirection = CUHK_BUS_UTILS.stopDirectionSummary(detailEntry.occurrences);
@@ -1647,7 +1650,7 @@
         ["名称", detailEntry.stop.name],
         ["类型", "校巴站点"],
         ...(stopDirection === "按线路方向" ? [] : [["站点方向", stopDirection]]),
-        ["途经线路", `${routeMap.size.toLocaleString("zh-CN")} 条`],
+        ["预计经过", scheduledArrivals.length ? `${scheduledArrivals.length.toLocaleString("zh-CN")} 条线路` : "当前没有预计会经过本站的班次"],
         ...routeRows,
       ];
 
