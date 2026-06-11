@@ -67,11 +67,12 @@
 
     #map {
       position: fixed;
-      inset: 56px 0 0 0;
+      inset: 100px 0 0 0;
       background: #e8eee8;
     }
 
     .panel {
+      display: none;
       position: fixed;
       z-index: 520;
       right: 16px;
@@ -103,6 +104,67 @@
     .row span:last-child {
       color: var(--ink);
       overflow-wrap: anywhere;
+    }
+
+    .bus-route-dock {
+      position: fixed;
+      z-index: 510;
+      top: 56px;
+      left: 0;
+      right: 0;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 12px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 8px 22px rgba(24, 36, 31, 0.1);
+      backdrop-filter: blur(12px);
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .bus-route-dock::-webkit-scrollbar {
+      display: none;
+    }
+
+    .bus-route-chip {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      height: 30px;
+      min-width: 42px;
+      padding: 0 9px;
+      border: 1px solid rgba(20, 33, 29, 0.16);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--route-color);
+      box-shadow: 0 2px 8px rgba(24, 36, 31, 0.1);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 850;
+      line-height: 1;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .bus-route-chip.is-active {
+      border-color: var(--route-color);
+      background: var(--route-color);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(24, 36, 31, 0.18);
+    }
+
+    .bus-route-chip-mark {
+      width: 14px;
+      height: 0;
+      border-top: 4px solid currentColor;
+      border-radius: 999px;
     }
 
     .leaflet-control-layers,
@@ -415,23 +477,40 @@
 
     @media (max-width: 720px) {
       header {
-        height: auto;
-        min-height: 64px;
-        align-items: flex-start;
-        flex-direction: column;
-        padding: 10px 12px;
-        gap: 4px;
+        height: 48px;
+        min-height: 48px;
+        align-items: center;
+        flex-direction: row;
+        padding: 0 10px;
+        gap: 8px;
       }
 
-      h1 { font-size: 17px; }
+      h1 { font-size: 16px; }
 
       .meta {
-        flex-wrap: wrap;
-        gap: 6px 10px;
-        white-space: normal;
+        display: none;
       }
 
-      #map { inset-top: 82px; }
+      .bus-route-dock {
+        top: 48px;
+        height: 42px;
+        gap: 6px;
+        padding: 6px 8px;
+      }
+
+      .bus-route-chip {
+        height: 28px;
+        min-width: 38px;
+        padding: 0 8px;
+        font-size: 11px;
+      }
+
+      .bus-route-chip-mark {
+        width: 12px;
+        border-top-width: 3px;
+      }
+
+      #map { inset-top: 90px; }
 
       .leaflet-left .leaflet-control {
         margin-left: 8px;
@@ -523,8 +602,9 @@
       <span>© OpenStreetMap contributors</span>
     </div>
   </header>
+  <nav id="busRouteDock" class="bus-route-dock" aria-label="校巴线路"></nav>
   <main id="map" aria-label="香港中文大学地图"></main>
-  <section class="panel">
+  <section class="panel" aria-hidden="true">
     <strong>香港中文大学</strong>
     <div id="stats">
       <div class="row"><span>状态</span><span>正在读取 OpenStreetMap / Overpass</span></div>
@@ -612,14 +692,11 @@
       poiLayerGroupKeyHtml(group),
       poiLayerGroups[group.id],
     ]));
-    const busMasterLayer = L.layerGroup();
+    const busRouteDock = document.getElementById("busRouteDock");
     const busStopsLayer = L.layerGroup().addTo(map);
-    const busRouteLayers = {};
     const routeLayerGroups = {};
     const routeVehicleLayers = {};
     const busStopPopupRefs = [];
-    let syncingBusMaster = false;
-    let syncingBusRoutes = false;
     let latestStats = null;
 
     CUHK_BUS_DATA.routes.forEach((route) => {
@@ -627,15 +704,14 @@
       addBusRoute(route, layer);
       routeLayerGroups[route.id] = layer;
       routeVehicleLayers[route.id] = L.layerGroup().addTo(layer);
-      busRouteLayers[`<span class="route-key" style="color:${route.color}"><span class="route-swatch"></span><span class="route-key-text"><span>校巴 ${escapeHtml(route.id)} · ${escapeHtml(route.name)}</span><small>${escapeHtml(CUHK_BUS_UTILS.scheduleSummary(route))}</small></span></span>`] = layer;
     });
+    renderBusRouteDock();
+    busRouteDock.addEventListener("click", handleBusRouteDockClick);
     updateBusStops();
 
     const compactViewport = window.matchMedia("(max-width: 720px)").matches;
     L.control.layers(null, {
-      ...poiLayers,
-      "校巴路线": busMasterLayer,
-      ...busRouteLayers
+      ...poiLayers
     }, {
       collapsed: compactViewport,
       position: "topright"
@@ -655,6 +731,56 @@
 
     function busVehicleLabel(route) {
       return String(route.id).replace(/^MINI-/, "M-");
+    }
+
+    function renderBusRouteDock() {
+      busRouteDock.innerHTML = CUHK_BUS_DATA.routes.map((route) => `
+        <button
+          class="bus-route-chip"
+          type="button"
+          data-route-id="${escapeHtml(route.id)}"
+          style="--route-color:${route.color}"
+          aria-pressed="false"
+          title="校巴 ${escapeHtml(route.id)} · ${escapeHtml(route.name)}"
+        >
+          <span class="bus-route-chip-mark"></span>
+          <span>${escapeHtml(busVehicleLabel(route))}</span>
+        </button>
+      `).join("");
+      syncBusRouteDock();
+    }
+
+    function handleBusRouteDockClick(event) {
+      const button = event.target.closest(".bus-route-chip");
+      if (!button) return;
+      setOnlyBusRoute(button.dataset.routeId);
+    }
+
+    function syncBusRouteDock() {
+      busRouteDock.querySelectorAll(".bus-route-chip").forEach((button) => {
+        const route = CUHK_BUS_DATA.routes.find((item) => item.id === button.dataset.routeId);
+        const active = Boolean(route && map.hasLayer(routeLayerGroups[route.id]));
+        button.classList.toggle("is-active", active);
+        button.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+    }
+
+    function setRouteVisible(route, visible) {
+      const layer = routeLayerGroups[route.id];
+      if (!layer) return;
+      if (visible && !map.hasLayer(layer)) map.addLayer(layer);
+      if (!visible && map.hasLayer(layer)) map.removeLayer(layer);
+    }
+
+    function setOnlyBusRoute(routeId) {
+      const target = CUHK_BUS_DATA.routes.find((route) => route.id === routeId);
+      const shouldShowTarget = Boolean(target && !map.hasLayer(routeLayerGroups[target.id]));
+      CUHK_BUS_DATA.routes.forEach((route) => {
+        setRouteVisible(route, shouldShowTarget && route.id === routeId);
+      });
+      updateBusStops();
+      updateBusVehicles();
+      syncBusRouteDock();
     }
 
     function poiLayerGroupKeyHtml(group) {
@@ -1101,61 +1227,6 @@
       `;
     }
 
-    function isBusRouteLayer(layer) {
-      return Object.values(routeLayerGroups).includes(layer);
-    }
-
-    function setBusMasterLayerVisible(visible) {
-      if (map.hasLayer(busMasterLayer) === visible) return;
-      syncingBusMaster = true;
-      if (visible) {
-        map.addLayer(busMasterLayer);
-      } else {
-        map.removeLayer(busMasterLayer);
-      }
-      syncingBusMaster = false;
-    }
-
-    function syncBusMasterLayer() {
-      const allRoutesVisible = CUHK_BUS_DATA.routes.every((route) => map.hasLayer(routeLayerGroups[route.id]));
-      setBusMasterLayerVisible(allRoutesVisible);
-    }
-
-    function setAllBusRoutesVisible(visible) {
-      syncingBusRoutes = true;
-      CUHK_BUS_DATA.routes.forEach((route) => {
-        const layer = routeLayerGroups[route.id];
-        if (visible && !map.hasLayer(layer)) map.addLayer(layer);
-        if (!visible && map.hasLayer(layer)) map.removeLayer(layer);
-      });
-      syncingBusRoutes = false;
-      setBusMasterLayerVisible(visible);
-      updateBusStops();
-      updateBusVehicles();
-    }
-
-    map.on("overlayadd", (event) => {
-      if (event.layer === busMasterLayer) {
-        if (!syncingBusMaster) setAllBusRoutesVisible(true);
-        return;
-      }
-      if (isBusRouteLayer(event.layer) && !syncingBusRoutes) {
-        syncBusMasterLayer();
-        updateBusStops();
-      }
-      updateBusVehicles();
-    });
-    map.on("overlayremove", (event) => {
-      if (event.layer === busMasterLayer) {
-        if (!syncingBusMaster) setAllBusRoutesVisible(false);
-        return;
-      }
-      if (isBusRouteLayer(event.layer) && !syncingBusRoutes) {
-        syncBusMasterLayer();
-        updateBusStops();
-      }
-      updateBusVehicles();
-    });
     window.setInterval(updateBusVehicles, 30000);
     updateBusVehicles();
 
@@ -1196,7 +1267,7 @@
         map.fitBounds(fitBounds, { padding: [28, 28] });
       }
       updateStats(stats);
-      loading.textContent = "加载完成。可在右上角选择显示或隐藏常用信息和每条校巴线路。";
+      loading.textContent = "加载完成。点击顶部校巴标志显示线路；右上角可显示或隐藏常用信息。";
       setTimeout(() => loading.remove(), 4200);
     }
 
