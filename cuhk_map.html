@@ -455,7 +455,7 @@
     <h1>香港中文大学地图</h1>
     <div class="meta">
       <span id="featureCount"></span>
-      <span>道路未按边界裁剪</span>
+      <span>常用信息 / 校巴</span>
       <span>校园 POI / 校巴地图（OSM）</span>
       <span>© OpenStreetMap contributors</span>
       <span>ODbL</span>
@@ -469,7 +469,6 @@
       <button id="reset" title="重置视图" aria-label="重置视图">↺</button>
     </div>
     <div class="layers" aria-label="图层">
-      <label><span>道路</span><input id="showRoads" type="checkbox" checked></label>
       <label><span>校内楼宇名称</span><input id="showBuildingLabels" type="checkbox" checked></label>
       <label><span>常用信息</span><input id="showPoi" type="checkbox" checked></label>
       <div id="poiCategoryLayers" class="category-layers"></div>
@@ -478,9 +477,6 @@
       <div id="busRouteLayers" class="route-layers"></div>
     </div>
     <div class="legend">
-      <div class="legend-row"><span class="sample primary"></span><span>主干道路</span></div>
-      <div class="legend-row"><span class="sample"></span><span>其他道路</span></div>
-      <div class="legend-row"><span class="sample footway"></span><span>步道 / 楼梯</span></div>
       <div class="legend-row"><span class="sample building"></span><span>楼宇轮廓</span></div>
       <div class="legend-row"><span class="sample label">名</span><span>校内楼宇名称</span></div>
       <div class="legend-divider">常用信息</div>
@@ -504,7 +500,6 @@
     const canvas = document.getElementById("map");
     const ctx = canvas.getContext("2d");
     const controls = {
-      roads: document.getElementById("showRoads"),
       buildingLabels: document.getElementById("showBuildingLabels"),
       poi: document.getElementById("showPoi"),
       bus: document.getElementById("showBusRoutes"),
@@ -525,20 +520,6 @@
     let dragMoved = false;
     let pointer = { x: 0, y: 0 };
     let hoverFeature = null;
-
-    const roadTypes = new Set([
-      "motorway",
-      "trunk",
-      "primary",
-      "secondary",
-      "tertiary",
-      "motorway_link",
-      "trunk_link",
-      "primary_link",
-      "secondary_link",
-      "tertiary_link",
-    ]);
-    const displayBoundaryData = createUnifiedBoundaryData(boundaryData);
 
     const POI_CATEGORIES = [
       { id: "restaurant", label: "餐厅/饭堂", color: "#b35a2a", marker: "square", glyph: "食" },
@@ -574,7 +555,6 @@
     const busStops = Object.values(CUHK_BUS_DATA.stops).filter((stop) => stop.kind !== "waypoint");
     const busStopCount = busStops.length;
     const busOsmStopCount = busStops.filter((stop) => stop.osmId).length;
-    const busStopEntries = buildBusStopEntries();
     const buildingCount = mapData.features.filter((feature) => {
       const properties = feature.properties || {};
       const geometry = feature.geometry || {};
@@ -613,42 +593,6 @@
       }
     }
 
-    function createUnifiedBoundaryData(collection) {
-      const points = [];
-      collection.features.forEach((feature) => {
-        collectOuterRingCoordinates(feature.geometry, points);
-      });
-      const unique = Array.from(
-        new Map(points.map(([lon, lat]) => [`${lon.toFixed(7)},${lat.toFixed(7)}`, [lon, lat]])).values()
-      );
-      const hull = convexHull(unique);
-      if (hull.length < 3) return collection;
-      hull.push(hull[0]);
-      return {
-        type: "FeatureCollection",
-        name: "cuhk_boundary_unified_display",
-        features: [{
-          type: "Feature",
-          properties: {
-            ...(collection.features[0] && collection.features[0].properties || {}),
-            display_boundary: "single unified convex hull",
-          },
-          geometry: { type: "Polygon", coordinates: [hull] },
-        }],
-      };
-    }
-
-    function collectOuterRingCoordinates(geometry, points) {
-      if (!geometry) return;
-      if (geometry.type === "Polygon") {
-        (geometry.coordinates[0] || []).forEach((coord) => points.push(coord));
-      } else if (geometry.type === "MultiPolygon") {
-        geometry.coordinates.forEach((polygon) => {
-          (polygon[0] || []).forEach((coord) => points.push(coord));
-        });
-      }
-    }
-
     function extractBoundaryPolygons(collection) {
       const polygons = [];
       collection.features.forEach((feature) => {
@@ -684,29 +628,6 @@
       return inside;
     }
 
-    function convexHull(points) {
-      if (points.length <= 1) return points.slice();
-      const sorted = points.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-      const lower = [];
-      for (const point of sorted) {
-        while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], point) <= 0) lower.pop();
-        lower.push(point);
-      }
-      const upper = [];
-      for (let i = sorted.length - 1; i >= 0; i -= 1) {
-        const point = sorted[i];
-        while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], point) <= 0) upper.pop();
-        upper.push(point);
-      }
-      lower.pop();
-      upper.pop();
-      return lower.concat(upper);
-    }
-
-    function cross(origin, a, b) {
-      return (a[0] - origin[0]) * (b[1] - origin[1]) - (a[1] - origin[1]) * (b[0] - origin[0]);
-    }
-
     function getBounds(collections) {
       const bounds = {
         minX: Infinity,
@@ -727,8 +648,39 @@
       return bounds;
     }
 
+    function extendBounds(bounds, coord) {
+      if (!coord) return;
+      const [lon, lat] = coord;
+      bounds.minX = Math.min(bounds.minX, lon);
+      bounds.maxX = Math.max(bounds.maxX, lon);
+      bounds.minY = Math.min(bounds.minY, lat);
+      bounds.maxY = Math.max(bounds.maxY, lat);
+    }
+
+    function getDisplayBounds() {
+      const bounds = {
+        minX: Infinity,
+        minY: Infinity,
+        maxX: -Infinity,
+        maxY: -Infinity,
+      };
+      mapData.features.forEach((feature) => {
+        const geometry = feature.geometry || {};
+        if (geometry.type === "Point" || isBuilding(feature)) {
+          eachCoordinate(geometry, (coord) => extendBounds(bounds, coord));
+        }
+      });
+      Object.values(CUHK_BUS_DATA.stops).forEach((stop) => {
+        if (stop.kind !== "waypoint") extendBounds(bounds, stop.coord);
+      });
+      CUHK_BUS_DATA.routes.forEach((route) => {
+        busRouteCoordinates(route).forEach((coord) => extendBounds(bounds, coord));
+      });
+      return bounds.minX === Infinity ? getBounds([mapData]) : bounds;
+    }
+
     function fitView() {
-      const bounds = getBounds([mapData]);
+      const bounds = getDisplayBounds();
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
       const pad = Math.min(width, height) < 720 ? 34 : 68;
@@ -771,57 +723,6 @@
       } else if (geometry.type === "MultiPolygon") {
         geometry.coordinates.forEach((polygon) => polygon.forEach(drawLine));
       }
-    }
-
-    function lineWidth(feature) {
-      const highway = feature.properties && feature.properties.highway;
-      if (["motorway", "trunk", "primary", "secondary", "tertiary"].includes(highway)) return 3.5;
-      if (["residential", "unclassified"].includes(highway)) return 2.5;
-      if (highway === "service") return 1.85;
-      if (["pedestrian", "corridor"].includes(highway)) return 1.2;
-      if (["footway", "steps", "path", "cycleway", "track"].includes(highway)) return 0.92;
-      return 1;
-    }
-
-    function roadStyle(feature) {
-      const highway = feature.properties && feature.properties.highway;
-      if (roadTypes.has(highway) || ["residential", "unclassified"].includes(highway)) {
-        return {
-          color: roadTypes.has(highway) ? getStyle("--primary-road") : getStyle("--road"),
-          alpha: roadTypes.has(highway) ? 0.9 : 0.75,
-          width: lineWidth(feature),
-          minWidth: roadTypes.has(highway) ? 1.7 : 1.25,
-          casingWidth: lineWidth(feature) + 2.2,
-          casingMin: 2.4,
-          casingAlpha: 0.78,
-        };
-      }
-      if (highway === "service") {
-        return {
-          color: getStyle("--service-road"),
-          alpha: 0.66,
-          width: lineWidth(feature),
-          minWidth: 0.95,
-          casingWidth: lineWidth(feature) + 1.6,
-          casingMin: 1.8,
-          casingAlpha: 0.58,
-        };
-      }
-      if (isWalkway(feature)) {
-        return {
-          color: getStyle("--footway"),
-          alpha: highway === "steps" ? 0.7 : 0.58,
-          width: lineWidth(feature),
-          minWidth: 0.55,
-          dash: highway === "steps" ? [2.2, 2.8] : [4, 4],
-        };
-      }
-      return {
-        color: getStyle("--service-road"),
-        alpha: 0.5,
-        width: lineWidth(feature),
-        minWidth: 0.65,
-      };
     }
 
     function categorizePoi(feature) {
@@ -934,9 +835,13 @@
       return Boolean(toggle && toggle.checked);
     }
 
-    function buildBusStopEntries() {
+    function visibleBusRoutes() {
+      return CUHK_BUS_DATA.routes.filter(isBusRouteVisible);
+    }
+
+    function buildBusStopEntries(routes = CUHK_BUS_DATA.routes) {
       const entries = new Map();
-      CUHK_BUS_DATA.routes.forEach((route) => {
+      routes.forEach((route) => {
         route.stops.forEach((id, stopIndex) => {
           const stop = CUHK_BUS_DATA.stops[id];
           if (!stop || stop.kind === "waypoint") return;
@@ -956,6 +861,22 @@
         });
       });
       return [...entries.values()].sort((a, b) => a.stop.name.localeCompare(b.stop.name, "zh-Hant"));
+    }
+
+    function visibleBusStopEntries() {
+      return buildBusStopEntries(visibleBusRoutes());
+    }
+
+    function visibleBusStopEntryById(id) {
+      return visibleBusStopEntries().find((item) => item.id === id) || null;
+    }
+
+    function syncHoveredBusStop() {
+      if (!hoverFeature || hoverFeature._kind !== "bus_stop") return false;
+      const entry = visibleBusStopEntryById(hoverFeature.entry.id);
+      hoverFeature = entry ? { _kind: "bus_stop", entry } : null;
+      showDetails(hoverFeature);
+      return true;
     }
 
     function busRouteToggles() {
@@ -980,30 +901,8 @@
       return CUHK_BUS_UTILS.routeCoordinates(route);
     }
 
-    function drawBoundary() {
-      ctx.save();
-      displayBoundaryData.features.forEach((feature) => {
-        ctx.beginPath();
-        pathGeometry(feature.geometry);
-        ctx.setLineDash([9, 6]);
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.88)";
-        ctx.lineWidth = Math.max(3.2, 5 / Math.sqrt(view.scale));
-        ctx.stroke();
-        ctx.strokeStyle = getStyle("--boundary");
-        ctx.lineWidth = Math.max(1.05, 1.55 / Math.sqrt(view.scale));
-        ctx.stroke();
-      });
-      ctx.restore();
-    }
-
-    function isWalkway(feature) {
-      const highway = feature.properties && feature.properties.highway;
-      return ["footway", "steps", "path", "pedestrian", "corridor", "cycleway", "track"].includes(highway);
-    }
-
-    function isServiceRoad(feature) {
-      const highway = feature.properties && feature.properties.highway;
-      return ["service", "unclassified", "residential"].includes(highway);
+    function busVehicleLabel(route) {
+      return String(route.id).replace(/^MINI-/, "M-");
     }
 
     function isBuilding(feature) {
@@ -1167,35 +1066,6 @@
       };
     }
 
-    function drawRoads() {
-      const roads = mapData.features.filter((feature) => {
-        const properties = feature.properties || {};
-        return feature.geometry.type !== "Point" && properties.highway;
-      });
-      roads.sort((a, b) => lineWidth(a) - lineWidth(b));
-      roads.forEach((feature) => {
-        const style = roadStyle(feature);
-        ctx.beginPath();
-        pathGeometry(feature.geometry);
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.setLineDash([]);
-        if (style.casingWidth) {
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.72)";
-          ctx.globalAlpha = style.casingAlpha;
-          ctx.lineWidth = Math.max(style.casingMin, style.casingWidth / Math.sqrt(view.scale));
-          ctx.stroke();
-        }
-        ctx.setLineDash(style.dash || []);
-        ctx.strokeStyle = style.color;
-        ctx.globalAlpha = style.alpha;
-        ctx.lineWidth = Math.max(style.minWidth, style.width / Math.sqrt(view.scale));
-        ctx.stroke();
-      });
-      ctx.setLineDash([]);
-      ctx.globalAlpha = 1;
-    }
-
     function drawBusRoutes() {
       ctx.save();
       CUHK_BUS_DATA.routes.forEach((route) => {
@@ -1247,7 +1117,7 @@
     }
 
     function drawBusStops() {
-      busStopEntries.forEach((entry) => {
+      visibleBusStopEntries().forEach((entry) => {
         busStopDisplayMarkers(entry).forEach((marker) => {
           const p = busStopDisplayPoint(marker);
           const size = Math.max(9.5, 13 / Math.sqrt(Math.min(view.scale, 2.4)));
@@ -1451,9 +1321,10 @@
       ctx.textBaseline = "middle";
       ctx.lineWidth = 3;
       ctx.strokeStyle = "#ffffff";
-      ctx.strokeText(route.id, x, y + 0.5);
+      const label = busVehicleLabel(route);
+      ctx.strokeText(label, x, y + 0.5);
       ctx.fillStyle = route.color;
-      ctx.fillText(route.id, x, y + 0.5);
+      ctx.fillText(label, x, y + 0.5);
       ctx.restore();
     }
 
@@ -1590,30 +1461,10 @@
       }
     }
 
-    function drawWaterAndParks() {
-      mapData.features.forEach((feature) => {
-        const props = feature.properties || {};
-        const geom = feature.geometry || {};
-        if (geom.type === "Point") return;
-        if (props.building) return;
-        if (!props.natural && !props.leisure && !props.landuse) return;
-        ctx.beginPath();
-        pathGeometry(geom);
-        const water = props.natural === "water" || props.waterway || props.water;
-        ctx.fillStyle = water ? "rgba(70, 148, 172, 0.24)" : "rgba(119, 159, 92, 0.15)";
-        ctx.strokeStyle = water ? "rgba(70, 148, 172, 0.38)" : "rgba(119, 159, 92, 0.26)";
-        ctx.lineWidth = Math.max(0.55, 0.9 / Math.sqrt(view.scale));
-        if (geom.type.includes("Polygon")) ctx.fill();
-        ctx.stroke();
-      });
-    }
-
     function draw() {
       if (!base) return;
       ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-      drawWaterAndParks();
       drawBuildings();
-      if (controls.roads.checked) drawRoads();
       if (controls.buildingLabels.checked) drawBuildingLabels();
       drawBusRoutes();
       if (controls.poi.checked) drawPoi();
@@ -1643,7 +1494,7 @@
     function nearestPoint(x, y) {
       let best = null;
       let bestDist = 14;
-      for (const entry of busStopEntries) {
+      for (const entry of visibleBusStopEntries()) {
         busStopDisplayMarkers(entry).forEach((marker) => {
           const p = busStopDisplayPoint(marker);
           const dist = Math.hypot(p.x - x, p.y - y);
@@ -1681,7 +1532,6 @@
           ["地图要素", `${mapData.features.length.toLocaleString("zh-CN")} 个`],
           ["楼宇轮廓", `${buildingCount.toLocaleString("zh-CN")} 个`],
           ["校内楼宇名称", `${namedBuildingFeatures.length.toLocaleString("zh-CN")} 个`],
-          ["道路/线面", `${mapData.features.filter((f) => f.geometry.type !== "Point").length.toLocaleString("zh-CN")} 个`],
           ["POI", `${poiFeatures.length.toLocaleString("zh-CN")} 个`],
           ["校巴线路", `${CUHK_BUS_DATA.routes.length.toLocaleString("zh-CN")} 条`],
           ["校巴站点", `${busStopCount.toLocaleString("zh-CN")} 个（${busOsmStopCount.toLocaleString("zh-CN")} 个 OSM 节点 / ${(busStopCount - busOsmStopCount).toLocaleString("zh-CN")} 个近似锚点）`],
@@ -1839,7 +1689,8 @@
     });
     controls.bus.addEventListener("change", () => {
       setAllBusRouteToggles(controls.bus.checked);
-      if (hoverFeature && hoverFeature._kind !== "bus_stop" && !isPoiCategoryVisible(hoverFeature._poiCategory)) {
+      const syncedBusStop = syncHoveredBusStop();
+      if (!syncedBusStop && hoverFeature && hoverFeature._kind !== "bus_stop" && !isPoiCategoryVisible(hoverFeature._poiCategory)) {
         hoverFeature = null;
         showDetails(null);
       }
@@ -1856,12 +1707,13 @@
     });
     busRouteLayers.addEventListener("change", () => {
       syncBusRouteMasterToggle();
+      syncHoveredBusStop();
       if (!hoverFeature) showDetails(null);
       draw();
     });
     window.addEventListener("resize", resize);
     window.setInterval(() => {
-      showDetails(hoverFeature);
+      if (!syncHoveredBusStop()) showDetails(hoverFeature);
       draw();
     }, 30000);
     showDetails(null);
