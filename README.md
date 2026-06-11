@@ -4,7 +4,7 @@
 
 ## Files
 
-- `index.html`: GitHub Pages 入口页，使用 Leaflet、OpenStreetMap 底图，并通过 Overpass API 实时读取校园 POI，同时显示可开关的校巴路线。
+- `index.html`: GitHub Pages 入口页，使用 Leaflet、OpenStreetMap 底图，并通过 Overpass API 实时读取校园 POI，同时显示可开关的校巴路线和手机 GPS 采集面板。
 - `cuhk_map.html`: 本地生成的离线版页面，已经内嵌扩展道路、楼宇、绿地/水体、餐饮和功能 POI 数据；前台当前只绘制楼宇、常用信息和校巴，并引用本地校巴路线数据。
 - `data/cuhk_bus_routes.js`: CUHK 校巴路线、站点、颜色、官方时刻表规则和小车位置估算函数。路线站序来自公开校内交通资料；可匹配的站点使用 OSM bus-stop/platform 节点，线路沿本地 OSM 校园道路中心线绘制。
 - `data/cuhk_boundary.geojson`: CUHK 校园边界原始数据，当前页面不再显示边界图层。
@@ -20,6 +20,8 @@
 离线页面已补充 196 个 OSM 建筑轮廓，当前绘制楼宇轮廓和楼宇名称；自有道路、绿地/水体覆盖层已移除，避免和线上 OSM 底图视觉冲突。
 
 当前地图取消显示校园边界；路线折线仍使用本地道路中心线数据生成，但前台不再单独显示道路层。
+
+线上页面带有 GPS 采集面板。手机打开 GitHub Pages 的 HTTPS 页面后，允许定位并点击“开始”即可记录实地 GPS 点；点击“停止”暂停，点击“导出”会下载 GeoJSON。采集数据只保存在当前手机浏览器本地，导出文件包含 `gps_sample` 点和可选的 `gps_track` 轨迹线。
 
 校巴路线包括 1A、1B、2、3、4、8、N、H、5、6A、6B、7 和收费穿梭小巴上下行。每条线路使用独立颜色，估算小车本体带方向箭头；线路默认关闭，线上页面顶部校巴标志可单独切换线路显示，路线弹窗会显示对应时刻表。
 
