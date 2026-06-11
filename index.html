@@ -437,9 +437,57 @@
       white-space: nowrap;
     }
 
+    .gps-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .gps-fields label {
+      display: grid;
+      gap: 3px;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 750;
+      line-height: 1.1;
+    }
+
+    .gps-fields label.wide {
+      grid-column: 1 / -1;
+    }
+
+    .gps-fields select,
+    .gps-fields input {
+      width: 100%;
+      min-width: 0;
+      height: 30px;
+      border: 1px solid rgba(20, 33, 29, 0.16);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .gps-fields select {
+      padding: 0 6px;
+    }
+
+    .gps-fields input {
+      padding: 0 8px;
+    }
+
     .gps-actions {
       display: flex;
       gap: 6px;
+    }
+
+    .gps-event-actions {
+      margin-top: 6px;
     }
 
     .gps-actions button {
@@ -469,7 +517,7 @@
 
     .gps-stats {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 6px;
       margin-top: 8px;
       color: var(--muted);
@@ -513,6 +561,25 @@
       height: 9px;
       background: #19704e;
       opacity: 0.78;
+    }
+
+    .gps-event-marker {
+      display: grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      border: 2px solid #fff;
+      border-radius: 999px;
+      background: #19704e;
+      box-shadow: 0 3px 10px rgba(20, 33, 29, 0.3);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .gps-event-depart {
+      background: #b45f18;
     }
 
     .route-key {
@@ -620,7 +687,14 @@
 
       .gps-stats {
         gap: 4px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         font-size: 10px;
+      }
+
+      .gps-fields select,
+      .gps-fields input {
+        height: 28px;
+        font-size: 11px;
       }
 
       .leaflet-control-layers:not(.leaflet-control-layers-expanded) {
@@ -706,13 +780,37 @@
       <strong>GPS采集</strong>
       <span id="gpsStatus" class="gps-status">未开始</span>
     </div>
+    <div class="gps-fields">
+      <label>
+        <span>线路</span>
+        <select id="gpsRoute" aria-label="采集线路"></select>
+      </label>
+      <label>
+        <span>方向</span>
+        <select id="gpsDirection" aria-label="采集方向">
+          <option value="">按线路</option>
+          <option value="上行">上行</option>
+          <option value="下行">下行</option>
+          <option value="环线">环线</option>
+        </select>
+      </label>
+      <label class="wide">
+        <span>备注</span>
+        <input id="gpsNote" type="text" maxlength="80" autocomplete="off" placeholder="车辆、拥堵、异常">
+      </label>
+    </div>
     <div class="gps-actions">
       <button id="gpsToggle" class="primary" type="button">开始</button>
       <button id="gpsExport" type="button" disabled>导出</button>
       <button id="gpsClear" type="button" disabled>清空</button>
     </div>
+    <div class="gps-actions gps-event-actions">
+      <button id="gpsArrive" type="button" disabled>到站</button>
+      <button id="gpsDepart" type="button" disabled>离站</button>
+    </div>
     <div class="gps-stats" aria-live="polite">
       <span id="gpsPointCount">0 点</span>
+      <span id="gpsEventCount">0 记</span>
       <span id="gpsAccuracy">精度 --</span>
       <span id="gpsUpdated">--:--</span>
     </div>
@@ -811,8 +909,14 @@
     const gpsToggle = document.getElementById("gpsToggle");
     const gpsExport = document.getElementById("gpsExport");
     const gpsClear = document.getElementById("gpsClear");
+    const gpsRoute = document.getElementById("gpsRoute");
+    const gpsDirection = document.getElementById("gpsDirection");
+    const gpsNote = document.getElementById("gpsNote");
+    const gpsArrive = document.getElementById("gpsArrive");
+    const gpsDepart = document.getElementById("gpsDepart");
     const gpsStatus = document.getElementById("gpsStatus");
     const gpsPointCount = document.getElementById("gpsPointCount");
+    const gpsEventCount = document.getElementById("gpsEventCount");
     const gpsAccuracy = document.getElementById("gpsAccuracy");
     const gpsUpdated = document.getElementById("gpsUpdated");
     const busStopsLayer = L.layerGroup().addTo(map);
@@ -821,8 +925,11 @@
     const routeVehicleLayers = {};
     const busStopPopupRefs = [];
     const GPS_STORAGE_KEY = "cuhk-gps-samples-v1";
+    const GPS_EVENTS_STORAGE_KEY = "cuhk-gps-events-v1";
     let allBusStopEntriesCache = null;
     let gpsPoints = loadStoredGpsPoints();
+    let gpsEvents = loadStoredGpsEvents();
+    let gpsCurrentPoint = null;
     let gpsWatchId = null;
     let gpsLiveMarker = null;
     let gpsAccuracyCircle = null;
@@ -848,11 +955,15 @@
       collapsed: compactViewport,
       position: "topright"
     }).addTo(map);
+    renderGpsRouteOptions();
     renderGpsLayer();
     updateGpsUi();
     gpsToggle.addEventListener("click", toggleGpsCollection);
     gpsExport.addEventListener("click", exportGpsGeoJson);
     gpsClear.addEventListener("click", clearGpsSamples);
+    gpsRoute.addEventListener("change", handleGpsRouteChange);
+    gpsArrive.addEventListener("click", () => recordGpsEvent("arrive"));
+    gpsDepart.addEventListener("click", () => recordGpsEvent("depart"));
 
     function routeLatLngs(route) {
       const coords = CUHK_BUS_UTILS.routeCoordinates(route);
@@ -1084,6 +1195,37 @@
       `;
     }
 
+    function renderGpsRouteOptions() {
+      gpsRoute.innerHTML = [
+        "<option value=\"\">未选择</option>",
+        ...CUHK_BUS_DATA.routes.map((route) => `
+          <option value="${escapeHtml(route.id)}">${escapeHtml(busVehicleLabel(route))} · ${escapeHtml(route.name)}</option>
+        `)
+      ].join("");
+    }
+
+    function handleGpsRouteChange() {
+      const route = gpsSelectedRoute();
+      const direction = route ? CUHK_BUS_UTILS.routeDirectionLabel(route) : "";
+      gpsDirection.value = direction || "";
+      updateGpsUi();
+    }
+
+    function gpsSelectedRoute() {
+      return CUHK_BUS_DATA.routes.find((route) => route.id === gpsRoute.value) || null;
+    }
+
+    function gpsCollectionContext() {
+      const route = gpsSelectedRoute();
+      return {
+        routeId: route ? route.id : null,
+        routeName: route ? route.name : null,
+        routeService: route ? route.service : null,
+        direction: gpsDirection.value || (route ? CUHK_BUS_UTILS.routeDirectionLabel(route) || null : null),
+        note: gpsNote.value.trim() || null
+      };
+    }
+
     function toggleGpsCollection() {
       if (gpsWatchId !== null) {
         stopGpsCollection("已停止");
@@ -1128,6 +1270,7 @@
 
     function handleGpsPosition(position) {
       const point = gpsPointFromPosition(position);
+      gpsCurrentPoint = point;
       const shouldStore = shouldStoreGpsPoint(point);
       if (shouldStore) {
         gpsPoints.push(point);
@@ -1152,6 +1295,7 @@
 
     function gpsPointFromPosition(position) {
       const coords = position.coords;
+      const context = gpsCollectionContext();
       return {
         lon: coords.longitude,
         lat: coords.latitude,
@@ -1160,7 +1304,11 @@
         altitudeAccuracy: Number.isFinite(coords.altitudeAccuracy) ? coords.altitudeAccuracy : null,
         heading: Number.isFinite(coords.heading) ? coords.heading : null,
         speed: Number.isFinite(coords.speed) ? coords.speed : null,
-        timestamp: new Date(position.timestamp).toISOString()
+        timestamp: new Date(position.timestamp).toISOString(),
+        routeId: context.routeId,
+        routeName: context.routeName,
+        routeService: context.routeService,
+        direction: context.direction
       };
     }
 
@@ -1181,6 +1329,52 @@
       const lat2 = toRad(b.lat);
       const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
       return 2 * radius * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+    }
+
+    function recordGpsEvent(eventType) {
+      const point = gpsCurrentPoint;
+      if (!point) {
+        updateGpsUi("等待定位");
+        return;
+      }
+      const context = gpsCollectionContext();
+      const nearest = nearestBusStop(point);
+      const eventLabel = eventType === "depart" ? "离站" : "到站";
+      gpsEvents.push({
+        id: `gps-event-${Date.now()}-${gpsEvents.length + 1}`,
+        event: eventType,
+        eventLabel,
+        lon: point.lon,
+        lat: point.lat,
+        accuracy: point.accuracy,
+        timestamp: new Date().toISOString(),
+        sourcePointTimestamp: point.timestamp,
+        routeId: context.routeId,
+        routeName: context.routeName,
+        routeService: context.routeService,
+        direction: context.direction,
+        stopId: nearest ? nearest.id : null,
+        stopName: nearest ? nearest.stop.name : null,
+        stopDistanceMeters: nearest ? Math.round(nearest.distanceMeters) : null,
+        note: context.note
+      });
+      persistGpsEvents();
+      renderGpsLayer(point);
+      updateGpsUi(`已记录${eventLabel}`);
+    }
+
+    function nearestBusStop(point) {
+      let nearest = null;
+      allBusStopEntries().forEach((entry) => {
+        const distanceMeters = gpsDistanceMeters(point, {
+          lon: entry.coord[0],
+          lat: entry.coord[1]
+        });
+        if (!nearest || distanceMeters < nearest.distanceMeters) {
+          nearest = { ...entry, distanceMeters };
+        }
+      });
+      return nearest;
     }
 
     function renderGpsLayer(livePoint = null) {
@@ -1209,6 +1403,20 @@
           zIndexOffset: 760 + index
         }).addTo(gpsLayer);
       });
+      gpsEvents.forEach((event, index) => {
+        const eventClass = event.event === "depart" ? "depart" : "arrive";
+        L.marker([event.lat, event.lon], {
+          icon: L.divIcon({
+            className: "",
+            html: `<span class="gps-event-marker gps-event-${eventClass}">${event.event === "depart" ? "离" : "到"}</span>`,
+            iconSize: [22, 22],
+            iconAnchor: [11, 11]
+          }),
+          zIndexOffset: 860 + index
+        })
+          .bindPopup(gpsEventPopupHtml(event))
+          .addTo(gpsLayer);
+      });
       const current = livePoint || gpsPoints[gpsPoints.length - 1];
       if (current) {
         gpsAccuracyCircle = L.circle([current.lat, current.lon], {
@@ -1231,18 +1439,38 @@
       }
     }
 
+    function gpsEventPopupHtml(event) {
+      const routeText = event.routeId
+        ? `校巴 ${event.routeId}${event.routeName ? ` · ${event.routeName}` : ""}`
+        : "未选择线路";
+      const stopText = event.stopName
+        ? `${event.stopName}${Number.isFinite(event.stopDistanceMeters) ? ` · ${event.stopDistanceMeters}m` : ""}`
+        : "未匹配站点";
+      return `
+        <strong>${escapeHtml(event.eventLabel || "GPS事件")}</strong>
+        <div>${escapeHtml(routeText)}</div>
+        <div>方向：${escapeHtml(event.direction || "未标注")}</div>
+        <div>最近站点：${escapeHtml(stopText)}</div>
+        <div>时间：${escapeHtml(new Date(event.timestamp).toLocaleString("zh-CN", { hour12: false }))}</div>
+        ${event.note ? `<div>备注：${escapeHtml(event.note)}</div>` : ""}
+      `;
+    }
+
     function updateGpsUi(status) {
-      const latest = gpsPoints[gpsPoints.length - 1];
+      const latest = gpsCurrentPoint || gpsPoints[gpsPoints.length - 1];
       gpsStatus.textContent = status || (gpsWatchId !== null ? "采集中" : "未开始");
       gpsPointCount.textContent = `${gpsPoints.length.toLocaleString("zh-CN")} 点`;
+      gpsEventCount.textContent = `${gpsEvents.length.toLocaleString("zh-CN")} 记`;
       gpsAccuracy.textContent = latest && Number.isFinite(latest.accuracy)
         ? `精度 ${Math.round(latest.accuracy).toLocaleString("zh-CN")}m`
         : "精度 --";
       gpsUpdated.textContent = latest
         ? new Date(latest.timestamp).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
         : "--:--";
-      gpsExport.disabled = gpsPoints.length === 0;
-      gpsClear.disabled = gpsPoints.length === 0;
+      gpsExport.disabled = gpsPoints.length === 0 && gpsEvents.length === 0;
+      gpsClear.disabled = gpsPoints.length === 0 && gpsEvents.length === 0;
+      gpsArrive.disabled = !gpsCurrentPoint;
+      gpsDepart.disabled = !gpsCurrentPoint;
     }
 
     function loadStoredGpsPoints() {
@@ -1258,11 +1486,32 @@
       }
     }
 
+    function loadStoredGpsEvents() {
+      try {
+        const raw = localStorage.getItem(GPS_EVENTS_STORAGE_KEY);
+        if (!raw) return [];
+        const events = JSON.parse(raw);
+        return Array.isArray(events)
+          ? events.filter((event) => Number.isFinite(event.lat) && Number.isFinite(event.lon) && event.event)
+          : [];
+      } catch {
+        return [];
+      }
+    }
+
     function persistGpsPoints() {
       try {
         localStorage.setItem(GPS_STORAGE_KEY, JSON.stringify(gpsPoints));
       } catch {
         updateGpsUi("本地保存失败");
+      }
+    }
+
+    function persistGpsEvents() {
+      try {
+        localStorage.setItem(GPS_EVENTS_STORAGE_KEY, JSON.stringify(gpsEvents));
+      } catch {
+        updateGpsUi("事件保存失败");
       }
     }
 
@@ -1277,19 +1526,54 @@
           altitude: point.altitude,
           altitudeAccuracy: point.altitudeAccuracy,
           heading: point.heading,
-          speed: point.speed
+          speed: point.speed,
+          routeId: point.routeId || null,
+          routeName: point.routeName || null,
+          routeService: point.routeService || null,
+          direction: point.direction || null
         },
         geometry: {
           type: "Point",
           coordinates: [point.lon, point.lat]
         }
       }));
+      gpsEvents.forEach((event, index) => {
+        features.push({
+          type: "Feature",
+          properties: {
+            type: "gps_event",
+            sequence: index + 1,
+            event: event.event,
+            eventLabel: event.eventLabel,
+            timestamp: event.timestamp,
+            sourcePointTimestamp: event.sourcePointTimestamp,
+            accuracy: event.accuracy,
+            routeId: event.routeId,
+            routeName: event.routeName,
+            routeService: event.routeService,
+            direction: event.direction,
+            stopId: event.stopId,
+            stopName: event.stopName,
+            stopDistanceMeters: event.stopDistanceMeters,
+            note: event.note
+          },
+          geometry: {
+            type: "Point",
+            coordinates: [event.lon, event.lat]
+          }
+        });
+      });
       if (gpsPoints.length >= 2) {
+        const routeIds = [...new Set(gpsPoints.map((point) => point.routeId).filter(Boolean))];
+        const directions = [...new Set(gpsPoints.map((point) => point.direction).filter(Boolean))];
         features.unshift({
           type: "Feature",
           properties: {
             type: "gps_track",
             pointCount: gpsPoints.length,
+            eventCount: gpsEvents.length,
+            routeIds,
+            directions,
             startedAt: gpsPoints[0].timestamp,
             endedAt: gpsPoints[gpsPoints.length - 1].timestamp
           },
@@ -1305,6 +1589,9 @@
         metadata: {
           source: "Browser Geolocation API",
           app: "cuhk-map",
+          schema: "gps_samples_track_events_v2",
+          pointCount: gpsPoints.length,
+          eventCount: gpsEvents.length,
           exportedAt: new Date().toISOString()
         },
         features
@@ -1312,7 +1599,7 @@
     }
 
     function exportGpsGeoJson() {
-      if (!gpsPoints.length) return;
+      if (!gpsPoints.length && !gpsEvents.length) return;
       const blob = new Blob([JSON.stringify(gpsGeoJson(), null, 2)], { type: "application/geo+json;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -1326,10 +1613,13 @@
     }
 
     function clearGpsSamples() {
-      if (gpsPoints.length && !window.confirm("清空已采集的 GPS 点？")) return;
+      if ((gpsPoints.length || gpsEvents.length) && !window.confirm("清空已采集的 GPS 点和事件？")) return;
       gpsPoints = [];
+      gpsEvents = [];
+      gpsCurrentPoint = null;
       gpsCentered = false;
       localStorage.removeItem(GPS_STORAGE_KEY);
+      localStorage.removeItem(GPS_EVENTS_STORAGE_KEY);
       renderGpsLayer();
       updateGpsUi(gpsWatchId !== null ? "采集中" : "已清空");
     }
