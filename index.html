@@ -577,6 +577,71 @@
       opacity: 0.45;
     }
 
+    .boarding-confirm {
+      display: grid;
+      gap: 7px;
+      margin-top: 8px;
+      padding: 8px;
+      border: 1px solid rgba(20, 33, 29, 0.14);
+      border-radius: 8px;
+      background: rgba(246, 248, 244, 0.96);
+    }
+
+    .boarding-confirm[hidden] {
+      display: none;
+    }
+
+    .boarding-confirm-text {
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 850;
+      line-height: 1.35;
+    }
+
+    .boarding-candidates {
+      display: grid;
+      gap: 6px;
+    }
+
+    .boarding-candidate {
+      display: grid;
+      gap: 2px;
+      width: 100%;
+      min-height: 44px;
+      padding: 7px 8px;
+      border: 1px solid rgba(20, 33, 29, 0.15);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .boarding-candidate strong {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .boarding-candidate i {
+      display: inline-block;
+      flex: 0 0 auto;
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+    }
+
+    .boarding-candidate small {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
     .gps-stats {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -864,10 +929,6 @@
         </select>
       </label>
       <label class="wide">
-        <span>上车站</span>
-        <select id="gpsBoardStop" aria-label="上车站"></select>
-      </label>
-      <label class="wide">
         <span>备注</span>
         <input id="gpsNote" type="text" maxlength="80" autocomplete="off" placeholder="车辆、拥堵、异常">
       </label>
@@ -878,9 +939,13 @@
       <button id="gpsClear" type="button" disabled>清空</button>
     </div>
     <div class="gps-actions gps-event-actions">
-      <button id="gpsBoard" type="button" disabled>上车上报</button>
+      <button id="gpsBoard" type="button">上车上报</button>
       <button id="gpsArrive" type="button" disabled>到站</button>
       <button id="gpsDepart" type="button" disabled>离站</button>
+    </div>
+    <div id="boardingConfirm" class="boarding-confirm" hidden>
+      <div id="boardingConfirmText" class="boarding-confirm-text"></div>
+      <div id="boardingCandidates" class="boarding-candidates"></div>
     </div>
     <div class="gps-stats" aria-live="polite">
       <span id="gpsPointCount">0 点</span>
@@ -989,7 +1054,6 @@
     const gpsClear = document.getElementById("gpsClear");
     const gpsRoute = document.getElementById("gpsRoute");
     const gpsDirection = document.getElementById("gpsDirection");
-    const gpsBoardStop = document.getElementById("gpsBoardStop");
     const gpsNote = document.getElementById("gpsNote");
     const gpsBoard = document.getElementById("gpsBoard");
     const gpsArrive = document.getElementById("gpsArrive");
@@ -999,6 +1063,9 @@
     const gpsEventCount = document.getElementById("gpsEventCount");
     const gpsAccuracy = document.getElementById("gpsAccuracy");
     const gpsUpdated = document.getElementById("gpsUpdated");
+    const boardingConfirm = document.getElementById("boardingConfirm");
+    const boardingConfirmText = document.getElementById("boardingConfirmText");
+    const boardingCandidates = document.getElementById("boardingCandidates");
     const routeMessagePanel = document.getElementById("routeMessagePanel");
     const routeMessageTitle = document.getElementById("routeMessageTitle");
     const routeMessageBody = document.getElementById("routeMessageBody");
@@ -1022,6 +1089,8 @@
     let gpsAccuracyCircle = null;
     let gpsTrackLine = null;
     let gpsCentered = false;
+    let awaitingBoardingGps = false;
+    let pendingBoardingReport = null;
     let latestStats = null;
 
     CUHK_BUS_DATA.routes.forEach((route) => {
@@ -1044,7 +1113,6 @@
       position: "topright"
     }).addTo(map);
     renderGpsRouteOptions();
-    updateBoardStopOptions();
     renderGpsLayer();
     renderPassengerReports();
     updateGpsUi();
@@ -1053,8 +1121,8 @@
     gpsExport.addEventListener("click", exportGpsGeoJson);
     gpsClear.addEventListener("click", clearGpsSamples);
     gpsRoute.addEventListener("change", handleGpsRouteChange);
-    gpsBoardStop.addEventListener("change", updateGpsUi);
     gpsBoard.addEventListener("click", recordPassengerBoardingReport);
+    boardingCandidates.addEventListener("click", handleBoardingCandidateClick);
     gpsArrive.addEventListener("click", () => recordGpsEvent("arrive"));
     gpsDepart.addEventListener("click", () => recordGpsEvent("depart"));
 
@@ -1303,7 +1371,6 @@
       const route = gpsSelectedRoute();
       const direction = route ? CUHK_BUS_UTILS.routeDirectionLabel(route) : "";
       gpsDirection.value = direction || "";
-      updateBoardStopOptions();
       updateGpsUi();
     }
 
@@ -1320,21 +1387,6 @@
         direction: gpsDirection.value || (route ? CUHK_BUS_UTILS.routeDirectionLabel(route) || null : null),
         note: gpsNote.value.trim() || null
       };
-    }
-
-    function updateBoardStopOptions() {
-      const route = gpsSelectedRoute();
-      if (!route) {
-        gpsBoardStop.innerHTML = "<option value=\"\">先选线路</option>";
-        return;
-      }
-      const options = routeStopOptions(route);
-      gpsBoardStop.innerHTML = [
-        "<option value=\"\">选择上车站</option>",
-        ...options.map((item) => `
-          <option value="${escapeHtml(item.value)}">${escapeHtml(item.label)}</option>
-        `)
-      ].join("");
     }
 
     function routeStopOptions(route) {
@@ -1354,51 +1406,138 @@
         .filter(Boolean);
     }
 
-    function selectedBoardStop() {
-      const route = gpsSelectedRoute();
-      if (!route || !gpsBoardStop.value) return null;
-      const [stopId, stopIndexText] = gpsBoardStop.value.split(":");
-      const stopIndex = Number(stopIndexText);
-      const stop = CUHK_BUS_DATA.stops[stopId];
-      if (!stop || !Number.isInteger(stopIndex)) return null;
-      return { route, stop, stopId, stopIndex };
-    }
-
     function recordPassengerBoardingReport() {
-      const selection = selectedBoardStop();
-      if (!selection) {
-        updateGpsUi("先选上车站");
+      if (!gpsCurrentPoint) {
+        awaitingBoardingGps = true;
+        if (gpsWatchId === null && !startGpsCollection()) {
+          awaitingBoardingGps = false;
+          return;
+        }
+        updateGpsUi("等待定位");
         return;
       }
+      awaitingBoardingGps = false;
+      const nearest = nearestBusStop(gpsCurrentPoint);
+      if (!nearest) {
+        updateGpsUi("未找到附近站点");
+        return;
+      }
+      const candidates = likelyBoardingCandidates(nearest);
+      if (!candidates.length) {
+        pendingBoardingReport = {
+          stopEntry: nearest,
+          point: gpsCurrentPoint,
+          candidates: []
+        };
+        renderBoardingConfirmation();
+        updateGpsUi("暂无可上报班次");
+        return;
+      }
+      pendingBoardingReport = {
+        stopEntry: nearest,
+        point: gpsCurrentPoint,
+        candidates
+      };
+      renderBoardingConfirmation();
+      updateGpsUi("确认上车线路");
+    }
+
+    function likelyBoardingCandidates(stopEntry) {
+      const fullEntry = fullBusStopEntry(stopEntry);
+      return CUHK_BUS_UTILS.nextStopArrivals(fullEntry.occurrences)
+        .filter((arrival) => arrival.status === "scheduled")
+        .slice(0, 6)
+        .map((arrival) => ({
+          route: arrival.route,
+          stopIndex: arrival.stopIndex,
+          direction: arrival.direction || CUHK_BUS_UTILS.routeStopDirectionLabel(arrival.route, arrival.stopIndex),
+          arrival
+        }));
+    }
+
+    function renderBoardingConfirmation() {
+      if (!pendingBoardingReport) {
+        boardingConfirm.hidden = true;
+        boardingConfirmText.textContent = "";
+        boardingCandidates.innerHTML = "";
+        return;
+      }
+      const { stopEntry, candidates } = pendingBoardingReport;
+      const distanceText = Number.isFinite(stopEntry.distanceMeters)
+        ? ` · ${Math.round(stopEntry.distanceMeters).toLocaleString("zh-CN")}m`
+        : "";
+      boardingConfirm.hidden = false;
+      boardingConfirmText.textContent = `最近站：${stopEntry.stop.name}${distanceText}`;
+      boardingCandidates.innerHTML = candidates.length
+        ? candidates.map((candidate, index) => {
+          const route = candidate.route;
+          return `
+            <button class="boarding-candidate" type="button" data-index="${index}">
+              <strong><i style="background:${escapeHtml(route.color)}"></i>校巴 ${escapeHtml(route.id)} · ${escapeHtml(route.name)}</strong>
+              <small>${escapeHtml(CUHK_BUS_UTILS.stopArrivalSummary(candidate.arrival))}</small>
+            </button>
+          `;
+        }).join("")
+        : "<small>这个站点当前没有正在预计经过的班次。</small>";
+    }
+
+    function handleBoardingCandidateClick(event) {
+      const button = event.target.closest(".boarding-candidate");
+      if (!button || !pendingBoardingReport) return;
+      const candidate = pendingBoardingReport.candidates[Number(button.dataset.index)];
+      if (!candidate) return;
+      submitPassengerBoardingReport(candidate);
+    }
+
+    function submitPassengerBoardingReport(candidate) {
+      const boarding = pendingBoardingReport;
+      if (!boarding) return;
+      const { stopEntry, point } = boarding;
       const context = gpsCollectionContext();
+      const direction = candidate.direction || CUHK_BUS_UTILS.routeDirectionLabel(candidate.route) || null;
+      const payload = {
+        event: "board",
+        routeId: candidate.route.id,
+        routeName: candidate.route.name,
+        stopId: stopEntry.id,
+        stopName: stopEntry.stop.name,
+        stopIndex: candidate.stopIndex,
+        direction,
+        timestamp: new Date().toISOString(),
+        gps: {
+          lon: point.lon,
+          lat: point.lat,
+          accuracy: point.accuracy,
+          timestamp: point.timestamp
+        },
+        nearestStopDistanceMeters: Number.isFinite(stopEntry.distanceMeters) ? Math.round(stopEntry.distanceMeters) : null,
+        note: context.note
+      };
       const report = {
         id: `board-${Date.now()}-${passengerReports.length + 1}`,
-        event: "board",
-        routeId: selection.route.id,
-        routeName: selection.route.name,
-        routeService: selection.route.service,
-        direction: context.direction || CUHK_BUS_UTILS.routeDirectionLabel(selection.route) || null,
-        stopId: selection.stopId,
-        stopName: selection.stop.name,
-        stopIndex: selection.stopIndex,
-        timestamp: new Date().toISOString(),
-        note: context.note,
+        ...payload,
+        routeService: candidate.route.service,
+        arrivalLabel: candidate.arrival ? candidate.arrival.arrivalLabel || null : null,
+        etaMinutes: candidate.arrival && Number.isFinite(candidate.arrival.etaMinutes) ? candidate.arrival.etaMinutes : null,
+        serverPayload: payload,
         source: "local_demo",
         ttlMinutes: PASSENGER_REPORT_TTL_MINUTES
       };
       passengerReports.unshift(report);
       prunePassengerReports();
       persistPassengerReports();
-      if (!map.hasLayer(routeLayerGroups[selection.route.id])) {
+      if (!map.hasLayer(routeLayerGroups[candidate.route.id])) {
         CUHK_BUS_DATA.routes.forEach((route) => {
-          setRouteVisible(route, route.id === selection.route.id);
+          setRouteVisible(route, route.id === candidate.route.id);
         });
         updateBusStops();
         updateBusVehicles();
         syncBusRouteDock();
       }
+      pendingBoardingReport = null;
+      renderBoardingConfirmation();
       renderPassengerReports();
-      updateRouteMessagePanel(selection.route);
+      updateRouteMessagePanel(candidate.route);
       updateGpsUi("已上报上车");
     }
 
@@ -1439,11 +1578,11 @@
     function startGpsCollection() {
       if (!navigator.geolocation) {
         updateGpsUi("此浏览器不支持 GPS");
-        return;
+        return false;
       }
       if (!window.isSecureContext && location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
         updateGpsUi("需要 HTTPS");
-        return;
+        return false;
       }
       updateGpsUi("请求定位");
       gpsCollector.classList.add("is-recording");
@@ -1458,6 +1597,7 @@
         }
       );
       updateGpsUi("采集中");
+      return true;
     }
 
     function stopGpsCollection(status = "已停止") {
@@ -1484,6 +1624,9 @@
         gpsCentered = true;
       }
       updateGpsUi(shouldStore ? "采集中" : "定位中");
+      if (awaitingBoardingGps) {
+        recordPassengerBoardingReport();
+      }
     }
 
     function handleGpsError(error) {
@@ -1492,6 +1635,7 @@
         2: "无法定位",
         3: "定位超时"
       };
+      awaitingBoardingGps = false;
       stopGpsCollection(messages[error.code] || "定位失败");
     }
 
@@ -1671,7 +1815,7 @@
         : "--:--";
       gpsExport.disabled = gpsPoints.length === 0 && gpsEvents.length === 0;
       gpsClear.disabled = gpsPoints.length === 0 && gpsEvents.length === 0;
-      gpsBoard.disabled = !selectedBoardStop();
+      gpsBoard.disabled = false;
       gpsArrive.disabled = !gpsCurrentPoint;
       gpsDepart.disabled = !gpsCurrentPoint;
     }
@@ -1821,9 +1965,12 @@
       gpsEvents = [];
       gpsCurrentPoint = null;
       gpsCentered = false;
+      awaitingBoardingGps = false;
+      pendingBoardingReport = null;
       localStorage.removeItem(GPS_STORAGE_KEY);
       localStorage.removeItem(GPS_EVENTS_STORAGE_KEY);
       renderGpsLayer();
+      renderBoardingConfirmation();
       updateGpsUi(gpsWatchId !== null ? "采集中" : "已清空");
     }
 
