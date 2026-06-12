@@ -23,6 +23,8 @@
       --boundary: #1f2c28;
       --bg: #edf0ec;
       --bg2: #dde7df;
+      --cuhk-purple: #5b2c84;
+      --cuhk-gold: #f2c14e;
       font-family: Inter, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
     }
 
@@ -121,15 +123,21 @@
     }
 
     button {
+      display: inline-grid;
+      place-items: center;
       width: 38px;
       height: 34px;
+      padding: 0;
       border: 1px solid rgba(21, 32, 29, 0.14);
       border-radius: 7px;
       background: #ffffff;
       color: var(--ink);
+      font-family: inherit;
       font-size: 19px;
       line-height: 1;
+      text-align: center;
       cursor: pointer;
+      appearance: none;
     }
 
     button:hover {
@@ -162,7 +170,7 @@
     input[type="checkbox"] {
       width: 18px;
       height: 18px;
-      accent-color: #236eb6;
+      accent-color: var(--cuhk-purple);
     }
 
     .layer-divider {
@@ -342,12 +350,14 @@
       margin-left: 4px;
       border: 2px solid #fff;
       border-radius: 5px;
-      background: #26332f;
+      background: var(--cuhk-purple);
       color: #fff;
-      box-shadow: 0 1px 4px rgba(21, 32, 29, 0.22);
+      box-shadow: 0 1px 4px rgba(91, 44, 132, 0.22);
       font-size: 10px;
       font-weight: 850;
       line-height: 1;
+      outline: 2px solid var(--cuhk-gold);
+      outline-offset: -2px;
     }
 
     .bus-stop-symbol::before {
@@ -363,8 +373,8 @@
       padding: 0 4px;
       border: 1px solid rgba(38, 51, 47, 0.28);
       border-radius: 5px;
-      background: #fff;
-      color: #26332f;
+      background: #fff8df;
+      color: var(--cuhk-purple);
       font-size: 10px;
       font-weight: 850;
       line-height: 1;
@@ -373,12 +383,11 @@
     .bus-vehicle-symbol {
       display: inline-block;
       width: 20px;
-      height: 12px;
+      height: 18px;
       margin-left: 3px;
-      border: 2px solid #fff;
-      border-radius: 4px;
-      background: #d95f02;
-      box-shadow: 0 1px 4px rgba(21, 32, 29, 0.22);
+      background: var(--cuhk-purple);
+      clip-path: polygon(50% 0, 100% 100%, 0 100%);
+      filter: drop-shadow(0 1px 2px rgba(91, 44, 132, 0.22));
     }
 
     .legend-name {
@@ -419,6 +428,37 @@
       margin: 0;
       min-width: 0;
       overflow-wrap: anywhere;
+    }
+
+    .map-tooltip {
+      position: absolute;
+      z-index: 4;
+      max-width: min(260px, calc(100vw - 32px));
+      padding: 8px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      border-radius: 8px;
+      background: var(--cuhk-purple);
+      color: #fff;
+      box-shadow: 0 10px 26px rgba(36, 19, 49, 0.24);
+      font-size: 12px;
+      font-weight: 720;
+      line-height: 1.35;
+      white-space: pre-line;
+      pointer-events: none;
+      transform: translate(-50%, calc(-100% - 14px));
+    }
+
+    .map-tooltip::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -7px;
+      width: 12px;
+      height: 12px;
+      background: inherit;
+      border-right: 1px solid rgba(255, 255, 255, 0.72);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.72);
+      transform: translateX(-50%) rotate(45deg);
     }
 
     @media (max-width: 720px) {
@@ -531,6 +571,7 @@
       <strong>香港中文大学</strong>
       <dl id="detailsList"></dl>
     </aside>
+    <div class="map-tooltip" id="mapTooltip" hidden></div>
   </main>
   <script src="data/cuhk_bus_routes.js"></script>
   <script>
@@ -546,6 +587,7 @@
     };
     const details = document.getElementById("details");
     const detailsList = document.getElementById("detailsList");
+    const mapTooltip = document.getElementById("mapTooltip");
     const featureCount = document.getElementById("featureCount");
     const poiLegend = document.getElementById("poiLegend");
     const poiCategoryLayers = document.getElementById("poiCategoryLayers");
@@ -561,6 +603,7 @@
     let pointer = { x: 0, y: 0 };
     let hoverFeature = null;
     let allBusStopEntriesCache = null;
+    const STOP_ETA_DISPLAY_LIMIT_MINUTES = 20;
 
     const POI_CATEGORIES = [
       { id: "restaurant", label: "餐厅/饭堂", color: "#b35a2a", marker: "square", glyph: "食" },
@@ -958,7 +1001,7 @@
     }
 
     function busVehicleLabel(route) {
-      return String(route.id).replace(/^MINI-/, "M-");
+      return String(route.id).replace(/^MINI-/, "M");
     }
 
     function isBuilding(feature) {
@@ -1267,17 +1310,20 @@
     function drawBusStopMarker(x, y, size) {
       ctx.save();
       ctx.translate(x, y);
-      ctx.shadowColor = "rgba(21, 32, 29, 0.2)";
+      ctx.shadowColor = "rgba(91, 44, 132, 0.22)";
       ctx.shadowBlur = 5;
       ctx.shadowOffsetY = 1.5;
       roundedRect(-size / 2, -size / 2, size, size, Math.max(3, size * 0.22));
-      ctx.fillStyle = "#26332f";
+      ctx.fillStyle = "#5b2c84";
       ctx.globalAlpha = 0.97;
       ctx.fill();
       ctx.globalAlpha = 1;
       ctx.shadowBlur = 0;
-      ctx.lineWidth = Math.max(1.2, size * 0.12);
-      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = Math.max(1.5, size * 0.18);
+      ctx.strokeStyle = "#f2c14e";
+      ctx.stroke();
+      ctx.lineWidth = Math.max(0.7, size * 0.07);
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.92)";
       ctx.stroke();
       ctx.fillStyle = "#ffffff";
       ctx.font = `850 ${Math.max(8, size * 0.62)}px Inter, "Microsoft YaHei", "Segoe UI", sans-serif`;
@@ -1312,9 +1358,9 @@
       ctx.fill();
       ctx.globalAlpha = 1;
       ctx.lineWidth = Math.max(0.7, 1.1 / scale);
-      ctx.strokeStyle = "rgba(38, 51, 47, 0.28)";
+      ctx.strokeStyle = "rgba(91, 44, 132, 0.28)";
       ctx.stroke();
-      ctx.fillStyle = directions.size === 1 && directionalItems[0] ? directionalItems[0].route.color : "#26332f";
+      ctx.fillStyle = directions.size === 1 && directionalItems[0] ? directionalItems[0].route.color : "#5b2c84";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(glyph, bx + width / 2, by + height / 2 + 0.5);
@@ -1336,51 +1382,35 @@
 
     function drawBusVehicleMarker(x, y, vehicle) {
       const route = vehicle.route;
-      const angle = (vehicle.bearing - 90) * Math.PI / 180;
-      const width = 27;
-      const height = 15;
-      const nose = 7;
+      const angle = vehicle.bearing * Math.PI / 180;
+      const size = Math.max(16, 19 / Math.sqrt(Math.min(view.scale, 1.6)));
+      const label = busVehicleLabel(route);
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(angle);
-      ctx.shadowColor = "rgba(21, 32, 29, 0.25)";
+      ctx.shadowColor = "rgba(91, 44, 132, 0.28)";
       ctx.shadowBlur = 8;
       ctx.shadowOffsetY = 2;
-      roundedRect(-width / 2, -height / 2, width, height, 4);
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 1.12);
+      ctx.lineTo(size * 0.96, size * 0.58);
+      ctx.lineTo(-size * 0.96, size * 0.58);
+      ctx.closePath();
       ctx.fillStyle = route.color;
       ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(width / 2 + nose, 0);
-      ctx.lineTo(width / 2 - 1, -height / 2 + 1);
-      ctx.lineTo(width / 2 - 1, height / 2 - 1);
-      ctx.closePath();
-      ctx.fill();
       ctx.shadowBlur = 0;
-      ctx.lineWidth = 2.2;
-      ctx.strokeStyle = "#ffffff";
-      roundedRect(-width / 2, -height / 2, width, height, 4);
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.92)";
       ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(width / 2 + nose, 0);
-      ctx.lineTo(width / 2 - 1, -height / 2 + 1);
-      ctx.lineTo(width / 2 - 1, height / 2 - 1);
-      ctx.closePath();
-      ctx.stroke();
-      ctx.fillStyle = "rgba(255, 255, 255, 0.88)";
-      ctx.fillRect(-width / 2 + 4, -height / 2 + 3, 6, 4);
-      ctx.fillRect(width / 2 - 12, -height / 2 + 3, 6, 4);
       ctx.restore();
 
       ctx.save();
-      ctx.font = "800 9px Inter, \"Segoe UI\", sans-serif";
+      const fontSize = label.length <= 1 ? 10.5 : label.length === 2 ? 9.2 : 7.8;
+      ctx.font = `850 ${fontSize}px Inter, "Segoe UI", sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = "#ffffff";
-      const label = busVehicleLabel(route);
-      ctx.strokeText(label, x, y + 0.5);
-      ctx.fillStyle = route.color;
-      ctx.fillText(label, x, y + 0.5);
+      ctx.fillStyle = tooltipReadableTextColor(route.color);
+      ctx.fillText(label, x, y + 1);
       ctx.restore();
     }
 
@@ -1525,6 +1555,7 @@
       drawBusRoutes();
       if (controls.poi.checked) drawPoi();
       drawBusStops();
+      refreshMapTooltipPosition();
     }
 
     function resize() {
@@ -1555,10 +1586,18 @@
           const p = busStopDisplayPoint(marker);
           const dist = Math.hypot(p.x - x, p.y - y);
           if (dist < bestDist) {
-            best = { _kind: "bus_stop", entry };
+            best = { _kind: "bus_stop", entry, marker };
             bestDist = dist;
           }
         });
+      }
+      for (const vehicle of visibleBusVehicles()) {
+        const p = project(vehicle.coord);
+        const dist = Math.hypot(p.x - x, p.y - y);
+        if (dist < bestDist) {
+          best = { _kind: "bus_vehicle", vehicle };
+          bestDist = dist;
+        }
       }
       for (const feature of poiFeatures) {
         if (!isPoiCategoryVisible(feature._poiCategory)) continue;
@@ -1574,6 +1613,7 @@
 
     function showDetails(feature) {
       if (!feature) {
+        hideMapTooltip();
         details.querySelector("strong").textContent = "香港中文大学";
         const clock = CUHK_BUS_UTILS.hongKongClock();
         const visibleRoutes = CUHK_BUS_DATA.routes.filter(isBusRouteVisible);
@@ -1600,7 +1640,14 @@
       }
 
       if (feature._kind === "bus_stop") {
+        showMapTooltip(feature, busStopTooltipText(feature.entry), "#5b2c84");
         showBusStopDetails(feature.entry);
+        return;
+      }
+
+      if (feature._kind === "bus_vehicle") {
+        showMapTooltip(feature, busVehicleTooltipText(feature.vehicle), feature.vehicle.route.color);
+        showBusVehicleDetails(feature.vehicle);
         return;
       }
 
@@ -1617,6 +1664,7 @@
 
       details.querySelector("strong").textContent = name || category.label;
       detailsList.innerHTML = rows.map(([k, v]) => `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(String(v))}</dd>`).join("");
+      showMapTooltip(feature, name || category.label, category.color);
     }
 
     function showBusStopDetails(entry) {
@@ -1632,8 +1680,7 @@
         if (item.direction) routeMap.get(item.route.id).directions.add(item.direction);
       });
 
-      const scheduledArrivals = CUHK_BUS_UTILS.nextStopArrivals(detailEntry.occurrences)
-        .filter((arrival) => arrival.status === "scheduled");
+      const scheduledArrivals = visibleStopArrivals(detailEntry.occurrences);
       const routeRows = scheduledArrivals.map((arrival) => {
         const route = arrival.route;
         const directions = routeMap.get(route.id)?.directions || new Set();
@@ -1656,6 +1703,113 @@
 
       details.querySelector("strong").textContent = detailEntry.stop.name;
       detailsList.innerHTML = rows.map(([k, v]) => `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(String(v))}</dd>`).join("");
+    }
+
+    function showBusVehicleDetails(vehicle) {
+      const nextStop = vehicle.nextStop && vehicle.nextStop.stop;
+      const eta = busVehicleNextStopEtaMinutes(vehicle);
+      const rows = [
+        ["线路", `${vehicle.route.id} · ${vehicle.route.name}`],
+        ["下一站", nextStop ? nextStop.name : "接近终点"],
+        ["预计到达", Number.isFinite(eta) ? CUHK_BUS_UTILS.stopArrivalSummary({
+          status: "scheduled",
+          route: vehicle.route,
+          etaMinutes: eta,
+          arrival: CUHK_BUS_UTILS.hongKongClock().minutes + eta,
+          direction: "",
+        }).replace(/^预计下一班\\s*/, "") : "暂无 ETA"],
+      ];
+      details.querySelector("strong").textContent = `校巴 ${vehicle.route.id}`;
+      detailsList.innerHTML = rows.map(([k, v]) => `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(String(v))}</dd>`).join("");
+    }
+
+    function busStopTooltipText(entry) {
+      const detailEntry = fullBusStopEntry(entry);
+      const arrivals = visibleStopArrivals(detailEntry.occurrences);
+      if (!arrivals.length) return `${detailEntry.stop.name}\n暂无预计班次`;
+      const rows = arrivals.slice(0, 6).map((arrival) => {
+        const direction = arrival.direction ? ` ${arrival.direction}` : "";
+        const eta = CUHK_BUS_UTILS.stopArrivalSummary(arrival).replace(/^预计下一班\\s*/, "");
+        return `${arrival.route.id}${direction} ${eta}`;
+      });
+      if (arrivals.length > rows.length) rows.push(`另有 ${arrivals.length - rows.length} 条`);
+      return `${detailEntry.stop.name}\n${rows.join("\n")}`;
+    }
+
+    function visibleStopArrivals(occurrences) {
+      return CUHK_BUS_UTILS.nextStopArrivals(occurrences).filter((arrival) => (
+        arrival.status === "scheduled" &&
+        Number.isFinite(arrival.etaMinutes) &&
+        arrival.etaMinutes <= STOP_ETA_DISPLAY_LIMIT_MINUTES
+      ));
+    }
+
+    function busVehicleTooltipText(vehicle) {
+      const nextStop = vehicle.nextStop && vehicle.nextStop.stop;
+      if (!nextStop) return `${vehicle.route.id} 接近终点`;
+      const eta = busVehicleNextStopEtaMinutes(vehicle);
+      const etaText = Number.isFinite(eta) ? formatTooltipEta(eta) : "暂无 ETA";
+      return `${vehicle.route.id} → ${nextStop.name}\n预计到达 ${etaText}`;
+    }
+
+    function busVehicleNextStopEtaMinutes(vehicle) {
+      if (!vehicle.nextStop || !Number.isInteger(vehicle.nextStop.stopIndex)) return NaN;
+      const tripMinutes = vehicle.tripMinutes || vehicle.route.schedule?.estimatedTripMinutes || 15;
+      const nextOffset = CUHK_BUS_UTILS.routeStopOffsetMinutes(vehicle.route, vehicle.nextStop.stopIndex, tripMinutes);
+      return Math.max(0, nextOffset - vehicle.elapsedMinutes);
+    }
+
+    function formatTooltipEta(value) {
+      if (!Number.isFinite(value)) return "暂无 ETA";
+      if (value < 0.75) return "即将到达";
+      return `约 ${Math.ceil(value)} 分钟`;
+    }
+
+    function showMapTooltip(feature, text, bgColor) {
+      const point = featureTooltipPoint(feature);
+      if (!point) {
+        hideMapTooltip();
+        return;
+      }
+      mapTooltip.textContent = text;
+      mapTooltip.style.left = `${point.x}px`;
+      mapTooltip.style.top = `${point.y}px`;
+      mapTooltip.style.background = bgColor || "#5b2c84";
+      mapTooltip.style.color = tooltipReadableTextColor(bgColor || "#5b2c84");
+      mapTooltip.hidden = false;
+    }
+
+    function hideMapTooltip() {
+      mapTooltip.hidden = true;
+    }
+
+    function refreshMapTooltipPosition() {
+      if (!hoverFeature || mapTooltip.hidden) return;
+      const point = featureTooltipPoint(hoverFeature);
+      if (!point) return;
+      mapTooltip.style.left = `${point.x}px`;
+      mapTooltip.style.top = `${point.y}px`;
+    }
+
+    function featureTooltipPoint(feature) {
+      if (!feature) return null;
+      if (feature._kind === "bus_stop") {
+        return feature.marker ? busStopDisplayPoint(feature.marker) : project(feature.entry.coord);
+      }
+      if (feature._kind === "bus_vehicle") return project(feature.vehicle.coord);
+      if (feature.geometry && feature.geometry.type === "Point") return project(feature.geometry.coordinates);
+      return null;
+    }
+
+    function tooltipReadableTextColor(bgColor) {
+      const match = String(bgColor || "").match(/^#?([0-9a-f]{6})$/i);
+      if (!match) return "#ffffff";
+      const hex = match[1];
+      const r = parseInt(hex.slice(0, 2), 16) / 255;
+      const g = parseInt(hex.slice(2, 4), 16) / 255;
+      const b = parseInt(hex.slice(4, 6), 16) / 255;
+      const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      return luminance > 0.62 ? "#241331" : "#ffffff";
     }
 
     function featureName(feature) {
