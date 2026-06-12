@@ -1187,6 +1187,7 @@
       CUHK_BUS_DATA.routes.forEach((route) => {
         setRouteVisible(route, shouldShowTarget && route.id === routeId);
       });
+      if (shouldShowTarget && target) syncGpsRouteSelection(target);
       updateBusStops();
       updateBusVehicles();
       renderPassengerReports();
@@ -1378,8 +1379,14 @@
       return CUHK_BUS_DATA.routes.find((route) => route.id === gpsRoute.value) || null;
     }
 
+    function syncGpsRouteSelection(route) {
+      if (!route) return;
+      if (gpsRoute.value !== route.id) gpsRoute.value = route.id;
+      handleGpsRouteChange();
+    }
+
     function gpsCollectionContext() {
-      const route = gpsSelectedRoute();
+      const route = gpsSelectedRoute() || visibleRouteForMessages();
       return {
         routeId: route ? route.id : null,
         routeName: route ? route.name : null,
@@ -1534,6 +1541,7 @@
         updateBusVehicles();
         syncBusRouteDock();
       }
+      syncGpsRouteSelection(candidate.route);
       pendingBoardingReport = null;
       renderBoardingConfirmation();
       renderPassengerReports();
@@ -2015,8 +2023,8 @@
       if (coords.length < 2) return null;
       const tripMinutes = route.schedule && route.schedule.estimatedTripMinutes || 15;
       const elapsedMinutes = Math.max(0, (at.getTime() - Date.parse(report.timestamp)) / 60000);
-      const startProgress = CUHK_BUS_UTILS.routeStopProgress(route, report.stopIndex);
-      const progress = Math.max(0, Math.min(1, startProgress + elapsedMinutes / tripMinutes));
+      const startOffset = CUHK_BUS_UTILS.routeStopOffsetMinutes(route, report.stopIndex, tripMinutes);
+      const progress = CUHK_BUS_UTILS.routeProgressAtElapsed(route, startOffset + elapsedMinutes, tripMinutes);
       const point = CUHK_BUS_UTILS.coordAtProgress(coords, progress);
       return {
         route,

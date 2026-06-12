@@ -168,6 +168,26 @@ root.CUHK_BUS_DATA = {
         "source": "shuttle",
         "estimatedTripMinutes": 15,
         "summary": "周一至周六（公众假期除外）07:40-18:50；每小时 10、20、40、50 分开出",
+        "stopOffsetsMinutes": [0, 2.72, 5.08, 9.14, 11.59, 15],
+        "calibration": {
+          "source": "gps_non_peak_2026_06_12_1149_hkt",
+          "routeIdInSource": null,
+          "assumedRouteId": "1A",
+          "period": "非繁忙时段",
+          "sampleCount": 219,
+          "startedAt": "2026-06-12T03:49:54.746Z",
+          "endedAt": "2026-06-12T03:55:00.000Z",
+          "observedStopOffsetsMinutes": [
+            { "stopId": "university_station", "event": "depart", "minutes": 0 },
+            { "stopId": "university_sports_centre", "event": "arrive", "minutes": 2.72 },
+            { "stopId": "university_sports_centre", "event": "depart", "minutes": 3.01 },
+            { "stopId": "shaw_hall", "event": "arrive", "minutes": 5.08 }
+          ],
+          "notes": [
+            "Route ID was missing in the exported GeoJSON; the trace and stop events were manually classified as 1A.",
+            "Later stops use distance-based offsets scaled to the 15-minute official trip estimate until more GPS samples are available."
+          ]
+        },
         "rules": [
           {
             "label": "周一至周六",
@@ -5838,14 +5858,15 @@ function activeVehicles(route, at = new Date()) {
     departuresForRule(rule).forEach((departure) => {
       const elapsed = clock.minutes - departure;
       if (elapsed < 0 || elapsed > tripMinutes) return;
-      const point = coordAtProgress(coords, elapsed / tripMinutes);
+      const progress = routeProgressAtElapsed(route, elapsed, tripMinutes);
+      const point = coordAtProgress(coords, progress);
       vehicles.push({
         id: `${route.id}-${formatTime(departure)}`,
         route,
         departure,
         elapsedMinutes: elapsed,
         tripMinutes,
-        progress: Math.max(0, Math.min(1, elapsed / tripMinutes)),
+        progress,
         coord: point.coord,
         bearing: point.bearing,
         ruleLabel: rule.label,
@@ -5884,7 +5905,7 @@ function nextStopArrival(route, stopIndex, at = new Date()) {
 
   const tripMinutes = schedule.estimatedTripMinutes || 15;
   const stopProgress = routeStopProgress(route, stopIndex);
-  const offsetMinutes = tripMinutes * stopProgress;
+  const offsetMinutes = routeStopOffsetMinutes(route, stopIndex, tripMinutes);
   let next = null;
 
   rules.forEach((rule) => {
@@ -6033,6 +6054,48 @@ function routeStopProgress(route, stopIndex) {
   return Math.max(0, Math.min(1, distance / profile.total));
 }
 
+function routeStopOffsetsMinutes(route) {
+  const offsets = route.schedule && route.schedule.stopOffsetsMinutes;
+  if (!Array.isArray(offsets)) return null;
+  return offsets.map((value) => Number(value));
+}
+
+function routeStopOffsetMinutes(route, stopIndex, tripMinutes = route.schedule && route.schedule.estimatedTripMinutes || 15) {
+  const offsets = routeStopOffsetsMinutes(route);
+  const explicit = offsets && offsets[stopIndex];
+  if (Number.isFinite(explicit)) return Math.max(0, Math.min(tripMinutes, explicit));
+  return tripMinutes * routeStopProgress(route, stopIndex);
+}
+
+function routeProgressAtElapsed(route, elapsedMinutes, tripMinutes = route.schedule && route.schedule.estimatedTripMinutes || 15) {
+  const fallback = Math.max(0, Math.min(1, elapsedMinutes / tripMinutes));
+  const offsets = routeStopOffsetsMinutes(route);
+  if (!offsets) return fallback;
+
+  const checkpoints = (route.stops || [])
+    .map((_, stopIndex) => ({
+      minutes: routeStopOffsetMinutes(route, stopIndex, tripMinutes),
+      progress: routeStopProgress(route, stopIndex),
+    }))
+    .filter((item) => Number.isFinite(item.minutes) && Number.isFinite(item.progress))
+    .sort((a, b) => a.minutes - b.minutes);
+
+  if (checkpoints.length < 2) return fallback;
+  const elapsed = Math.max(0, Math.min(tripMinutes, elapsedMinutes));
+  if (elapsed <= checkpoints[0].minutes) return checkpoints[0].progress;
+
+  for (let i = 1; i < checkpoints.length; i += 1) {
+    const previous = checkpoints[i - 1];
+    const next = checkpoints[i];
+    if (elapsed > next.minutes && i < checkpoints.length - 1) continue;
+    const span = next.minutes - previous.minutes;
+    const ratio = span > 0 ? (elapsed - previous.minutes) / span : 0;
+    return Math.max(0, Math.min(1, previous.progress + (next.progress - previous.progress) * ratio));
+  }
+
+  return checkpoints[checkpoints.length - 1].progress;
+}
+
 function routeStopDistances(route) {
   const cacheKey = route.id;
   if (ROUTE_STOP_DISTANCE_CACHE.has(cacheKey)) return ROUTE_STOP_DISTANCE_CACHE.get(cacheKey);
@@ -6068,6 +6131,7 @@ function routeDistanceProfile(route) {
 
 function projectCoordToRoute(coord, profile, minDistance = 0) {
   let best = null;
+  const comparableErrorMeters = 8;
   for (let i = 1; i < profile.coords.length; i += 1) {
     const segmentStartDistance = profile.cumulative[i - 1];
     const segmentEndDistance = profile.cumulative[i];
@@ -6076,7 +6140,11 @@ function projectCoordToRoute(coord, profile, minDistance = 0) {
     const projected = projectCoordToSegment(coord, profile.coords[i - 1], profile.coords[i]);
     const distance = segmentStartDistance + profile.segmentLengths[i - 1] * projected.ratio;
     if (distance + 1 < minDistance) continue;
-    if (!best || projected.errorMeters < best.errorMeters) {
+    if (
+      !best ||
+      projected.errorMeters < best.errorMeters - comparableErrorMeters ||
+      (Math.abs(projected.errorMeters - best.errorMeters) <= comparableErrorMeters && distance < best.distance)
+    ) {
       best = { distance, errorMeters: projected.errorMeters };
     }
   }
@@ -6131,6 +6199,8 @@ root.CUHK_BUS_UTILS = {
   routeCoordinates,
   routeDirectionGlyph,
   routeDirectionLabel,
+  routeProgressAtElapsed,
+  routeStopOffsetMinutes,
   routeStopProgress,
   routeStopDirectionGlyph,
   routeStopDirectionLabel,

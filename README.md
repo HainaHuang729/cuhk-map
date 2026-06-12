@@ -21,7 +21,7 @@
 
 当前地图取消显示校园边界；路线折线仍使用本地道路中心线数据生成，但前台不再单独显示道路层。
 
-线上页面带有 GPS 采集面板。手机打开 GitHub Pages 的 HTTPS 页面后，允许定位并点击“开始”即可记录实地 GPS 点；可先选择线路、方向并填写备注，车辆到站/离站时点击对应按钮记录事件。点击“停止”暂停，点击“导出”会下载 GeoJSON。采集数据只保存在当前手机浏览器本地，导出文件包含 `gps_sample` 点、可选的 `gps_track` 轨迹线，以及用于校准 ETA 的 `gps_event` 到站/离站事件。
+线上页面带有 GPS 采集面板。手机打开 GitHub Pages 的 HTTPS 页面后，允许定位并点击“开始”即可记录实地 GPS 点；可先选择线路、方向并填写备注，车辆到站/离站时点击对应按钮记录事件。点击底部某条线路标时，GPS 采集线路也会自动同步到该线路。点击“停止”暂停，点击“导出”会下载 GeoJSON。采集数据只保存在当前手机浏览器本地，导出文件包含 `gps_sample` 点、可选的 `gps_track` 轨迹线，以及用于校准 ETA 的 `gps_event` 到站/离站事件。
 
 线上页面也带有乘客上车上报雏形：点击“上车上报”后会先用手机 GPS 匹配最近校巴站点，再弹出当前预计会经过该站的候选线路；确认后生成“我坐上了几号车、在哪个站上车”的上报，并在该线路消息框和地图上显示一个本地模拟的车辆位置，30 分钟后自动过期。当前 GitHub Pages 版本只保存在本机浏览器；要让所有人共享上报，需要把同一份 `serverPayload` 发到微信小程序云数据库或其他后端 API。
 
@@ -31,4 +31,4 @@
 
 1A 使用已复核的 OSM 道路中心线路径；其他线路由 `scripts/generate_bus_route_paths.mjs` 将站点序列自动贴合到本地 OSM 可行车道路网络。收费小巴的部分中途点在 OSM 中没有独立 bus-stop 节点，仍使用地图锚点并贴近最近道路。
 
-时刻表来自 CUHK Transport Office 官方页面/PDF：Monday to Saturday Shuttle、Night-time & Public Holidays、Meet-Class、Paid Shuttle Up/Down。地图上的小车位置不是实时 GPS，而是按香港时间、官方发车分钟、估算全程运行时间和当前路线折线插值得到；离线页面暂不自动判断公众假期或教学日。
+时刻表来自 CUHK Transport Office 官方页面/PDF：Monday to Saturday Shuttle、Night-time & Public Holidays、Meet-Class、Paid Shuttle Up/Down。地图上的小车位置不是实时 GPS，而是按香港时间、官方发车分钟、估算全程运行时间和当前路线折线插值得到；离线页面暂不自动判断公众假期或教学日。1A 已加入 2026-06-12 11:49-11:55 HKT 非繁忙时段实测 GPS 校准样本：大学站至体育中心约 2.72 分钟，至邵逸夫堂约 5.08 分钟；该样本导出时没有 routeId，已按轨迹和事件归类为 1A。
