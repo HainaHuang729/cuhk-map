@@ -709,6 +709,10 @@
       background: #b45f18;
     }
 
+    .gps-event-alight {
+      background: #b45f18;
+    }
+
     .route-key {
       display: inline-flex;
       align-items: flex-start;
@@ -939,9 +943,8 @@
       <button id="gpsClear" type="button" disabled>清空</button>
     </div>
     <div class="gps-actions gps-event-actions">
-      <button id="gpsBoard" type="button">上车上报</button>
-      <button id="gpsArrive" type="button" disabled>到站</button>
-      <button id="gpsDepart" type="button" disabled>离站</button>
+      <button id="gpsBoard" type="button">上车</button>
+      <button id="gpsAlight" type="button" disabled>下车</button>
     </div>
     <div id="boardingConfirm" class="boarding-confirm" hidden>
       <div id="boardingConfirmText" class="boarding-confirm-text"></div>
@@ -1056,8 +1059,7 @@
     const gpsDirection = document.getElementById("gpsDirection");
     const gpsNote = document.getElementById("gpsNote");
     const gpsBoard = document.getElementById("gpsBoard");
-    const gpsArrive = document.getElementById("gpsArrive");
-    const gpsDepart = document.getElementById("gpsDepart");
+    const gpsAlight = document.getElementById("gpsAlight");
     const gpsStatus = document.getElementById("gpsStatus");
     const gpsPointCount = document.getElementById("gpsPointCount");
     const gpsEventCount = document.getElementById("gpsEventCount");
@@ -1123,8 +1125,7 @@
     gpsRoute.addEventListener("change", handleGpsRouteChange);
     gpsBoard.addEventListener("click", recordPassengerBoardingReport);
     boardingCandidates.addEventListener("click", handleBoardingCandidateClick);
-    gpsArrive.addEventListener("click", () => recordGpsEvent("arrive"));
-    gpsDepart.addEventListener("click", () => recordGpsEvent("depart"));
+    gpsAlight.addEventListener("click", () => recordGpsEvent("alight"));
 
     function routeLatLngs(route) {
       const coords = CUHK_BUS_UTILS.routeCoordinates(route);
@@ -1429,6 +1430,7 @@
         updateGpsUi("未找到附近站点");
         return;
       }
+      recordGpsEvent("board", { point: gpsCurrentPoint, nearest, silent: true });
       const candidates = likelyBoardingCandidates(nearest);
       if (!candidates.length) {
         pendingBoardingReport = {
@@ -1437,7 +1439,7 @@
           candidates: []
         };
         renderBoardingConfirmation();
-        updateGpsUi("暂无可上报班次");
+        updateGpsUi("已记录上车；暂无可上报班次");
         return;
       }
       pendingBoardingReport = {
@@ -1685,15 +1687,18 @@
       return 2 * radius * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
     }
 
-    function recordGpsEvent(eventType) {
-      const point = gpsCurrentPoint;
+    function recordGpsEvent(eventType, options = {}) {
+      const point = options.point || gpsCurrentPoint;
       if (!point) {
         updateGpsUi("等待定位");
         return;
       }
       const context = gpsCollectionContext();
-      const nearest = nearestBusStop(point);
-      const eventLabel = eventType === "depart" ? "离站" : "到站";
+      const nearest = options.nearest || nearestBusStop(point);
+      const occurrence = nearest && context.routeId
+        ? nearest.occurrences.find((item) => item.route.id === context.routeId)
+        : null;
+      const eventLabel = gpsEventLabel(eventType);
       gpsEvents.push({
         id: `gps-event-${Date.now()}-${gpsEvents.length + 1}`,
         event: eventType,
@@ -1709,12 +1714,38 @@
         direction: context.direction,
         stopId: nearest ? nearest.id : null,
         stopName: nearest ? nearest.stop.name : null,
+        stopIndex: occurrence ? occurrence.stopIndex : null,
         stopDistanceMeters: nearest ? Math.round(nearest.distanceMeters) : null,
         note: context.note
       });
       persistGpsEvents();
       renderGpsLayer(point);
-      updateGpsUi(`已记录${eventLabel}`);
+      if (!options.silent) updateGpsUi(`已记录${eventLabel}`);
+    }
+
+    function gpsEventLabel(eventType) {
+      return {
+        board: "上车",
+        alight: "下车",
+        arrive: "到站",
+        depart: "离站"
+      }[eventType] || "GPS事件";
+    }
+
+    function gpsEventGlyph(eventType) {
+      return {
+        board: "上",
+        alight: "下",
+        arrive: "到",
+        depart: "离"
+      }[eventType] || "记";
+    }
+
+    function gpsEventClass(eventType) {
+      if (eventType === "alight") return "alight";
+      if (eventType === "depart") return "depart";
+      if (eventType === "arrive") return "arrive";
+      return "board";
     }
 
     function nearestBusStop(point) {
@@ -1758,11 +1789,11 @@
         }).addTo(gpsLayer);
       });
       gpsEvents.forEach((event, index) => {
-        const eventClass = event.event === "depart" ? "depart" : "arrive";
+        const eventClass = gpsEventClass(event.event);
         L.marker([event.lat, event.lon], {
           icon: L.divIcon({
             className: "",
-            html: `<span class="gps-event-marker gps-event-${eventClass}">${event.event === "depart" ? "离" : "到"}</span>`,
+            html: `<span class="gps-event-marker gps-event-${eventClass}">${escapeHtml(gpsEventGlyph(event.event))}</span>`,
             iconSize: [22, 22],
             iconAnchor: [11, 11]
           }),
@@ -1824,8 +1855,7 @@
       gpsExport.disabled = gpsPoints.length === 0 && gpsEvents.length === 0;
       gpsClear.disabled = gpsPoints.length === 0 && gpsEvents.length === 0;
       gpsBoard.disabled = false;
-      gpsArrive.disabled = !gpsCurrentPoint;
-      gpsDepart.disabled = !gpsCurrentPoint;
+      gpsAlight.disabled = !gpsCurrentPoint;
     }
 
     function loadStoredGpsPoints() {
@@ -1909,6 +1939,7 @@
             direction: event.direction,
             stopId: event.stopId,
             stopName: event.stopName,
+            stopIndex: Number.isInteger(event.stopIndex) ? event.stopIndex : null,
             stopDistanceMeters: event.stopDistanceMeters,
             note: event.note
           },
@@ -1944,7 +1975,7 @@
         metadata: {
           source: "Browser Geolocation API",
           app: "cuhk-map",
-          schema: "gps_samples_track_events_v2",
+          schema: "gps_samples_track_events_v3",
           pointCount: gpsPoints.length,
           eventCount: gpsEvents.length,
           exportedAt: new Date().toISOString()
