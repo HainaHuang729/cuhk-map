@@ -2674,7 +2674,7 @@
       const tripMinutes = route.schedule && route.schedule.estimatedTripMinutes || 15;
       const elapsedMinutes = Math.max(0, (at.getTime() - Date.parse(report.timestamp)) / 60000);
       const startOffset = CUHK_BUS_UTILS.routeStopOffsetMinutes(route, report.stopIndex, tripMinutes);
-      const progress = CUHK_BUS_UTILS.routeProgressAtElapsed(route, startOffset + elapsedMinutes, tripMinutes);
+      const progress = CUHK_BUS_UTILS.routeProgressAtElapsed(route, startOffset + elapsedMinutes, tripMinutes, at);
       const point = CUHK_BUS_UTILS.coordAtProgress(coords, progress);
       return {
         route,

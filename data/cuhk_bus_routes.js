@@ -5485,6 +5485,25 @@ const DEFAULT_ROUTE_SEGMENT_TRAVEL_MINUTES = {
   "N:university_admin->sh_ho": { minutes: 1.24, samples: 1, source: "cloud_gps_2026_06_13_route_N_passage" },
   "N:sh_ho->postgraduate_hostel": { minutes: 1.4, samples: 1, source: "cloud_gps_2026_06_13_route_N_passage" },
 };
+const DEFAULT_STOP_DWELL_SECONDS = {
+  university_station: 35,
+  university_station_piazza: 24,
+  postgraduate_hostel: 24,
+  shaw_hall: 28,
+  science_centre: 24,
+  university_admin: 28,
+  sh_ho: 22,
+  new_asia: 22,
+  united_college: 22,
+  residences_3_4: 20,
+  shaw_college: 24,
+  area_39: 18,
+  cw_chu: 18,
+  campus_circuit_east: 12,
+};
+const DEFAULT_STOP_DWELL_SECONDS_FALLBACK = 14;
+const STOP_DWELL_MAX_SECONDS = 95;
+const STOP_DWELL_SEGMENT_MAX_RATIO = 0.45;
 const ROUTE_STOP_DISTANCE_CACHE = new Map();
 const clockFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: HK_TIME_ZONE,
@@ -5624,7 +5643,7 @@ function activeVehicles(route, at = new Date()) {
     departuresForRule(rule).forEach((departure) => {
       const elapsed = clock.minutes - departure;
       if (elapsed < 0 || elapsed > tripMinutes) return;
-      const progress = routeProgressAtElapsed(route, elapsed, tripMinutes);
+      const progress = routeProgressAtElapsed(route, elapsed, tripMinutes, at);
       const point = coordAtProgress(coords, progress);
       vehicles.push({
         id: `${route.id}-${formatTime(departure)}`,
@@ -5885,11 +5904,12 @@ function effectiveRouteTripMinutes(route, scheduledTripMinutes = route && route.
     : scheduledTripMinutes;
 }
 
-function routeProgressAtElapsed(route, elapsedMinutes, tripMinutes = route.schedule && route.schedule.estimatedTripMinutes || 15) {
+function routeProgressAtElapsed(route, elapsedMinutes, tripMinutes = route.schedule && route.schedule.estimatedTripMinutes || 15, at = new Date()) {
   const fallback = Math.max(0, Math.min(1, elapsedMinutes / tripMinutes));
 
   const checkpoints = (route.stops || [])
     .map((_, stopIndex) => ({
+      stopIndex,
       minutes: routeStopOffsetMinutes(route, stopIndex, tripMinutes),
       progress: routeStopProgress(route, stopIndex),
     }))
@@ -5906,11 +5926,45 @@ function routeProgressAtElapsed(route, elapsedMinutes, tripMinutes = route.sched
     const next = checkpoints[i];
     if (elapsed > next.minutes && i < checkpoints.length - 1) continue;
     const span = next.minutes - previous.minutes;
-    const ratio = span > 0 ? (elapsed - previous.minutes) / span : 0;
+    if (span <= 0) return next.progress;
+    const dwellMinutes = routeStopDwellMinutes(route, previous.stopIndex, span, at);
+    const departTime = previous.minutes + dwellMinutes;
+    if (elapsed <= departTime) return previous.progress;
+    const motionSpan = Math.max(0.05, next.minutes - departTime);
+    const ratio = (elapsed - departTime) / motionSpan;
     return Math.max(0, Math.min(1, previous.progress + (next.progress - previous.progress) * ratio));
   }
 
   return checkpoints[checkpoints.length - 1].progress;
+}
+
+function routeStopDwellMinutes(route, stopIndex, segmentMinutes = 1, at = new Date()) {
+  if (!route || !Array.isArray(route.stops) || stopIndex < 0 || stopIndex >= route.stops.length - 1) return 0;
+  const stopId = route.stops[stopIndex];
+  const seconds = defaultStopDwellSeconds(stopId, at);
+  return Math.max(
+    0,
+    Math.min(STOP_DWELL_MAX_SECONDS, seconds, segmentMinutes * 60 * STOP_DWELL_SEGMENT_MAX_RATIO)
+  ) / 60;
+}
+
+function defaultStopDwellSeconds(stopId, at = new Date()) {
+  const base = DEFAULT_STOP_DWELL_SECONDS[stopId] || DEFAULT_STOP_DWELL_SECONDS_FALLBACK;
+  return Math.round(base * stopDwellTimeMultiplier(at));
+}
+
+function stopDwellTimeMultiplier(at = new Date()) {
+  const clock = hongKongClock(at);
+  const minute = clock.minutes;
+  let multiplier = 1;
+  if (minute < 330) multiplier = 0.75;
+  else if (minute < 450) multiplier = 0.85;
+  else if (minute < 570) multiplier = 1.45;
+  else if (minute >= 690 && minute < 840) multiplier = 1.2;
+  else if (minute >= 990 && minute < 1170) multiplier = 1.35;
+  else if (minute >= 1170) multiplier = 0.85;
+  const dayMultiplier = clock.weekday >= 1 && clock.weekday <= 5 ? 1 : 0.8;
+  return multiplier * dayMultiplier;
 }
 
 function routeStopDistances(route) {
