@@ -5459,6 +5459,32 @@ const ROUTE_STOP_DIRECTIONS = {
   "6B": { 1: "下行" },
   "7": { 0: "下行", 1: "下行", 3: "下行" },
 };
+const DEFAULT_SEGMENT_TRAVEL_MINUTES = {
+  "science_centre->new_asia": { minutes: 2.76, samples: 1, source: "local_gps_2026_06_12_route_8" },
+  "new_asia->united_college": { minutes: 1.02, samples: 1, source: "local_gps_2026_06_12_route_8" },
+  "united_college->residences_3_4": { minutes: 1.7, samples: 1, source: "local_gps_2026_06_12_route_8" },
+  "residences_3_4->shaw_college": { minutes: 1.08, samples: 1, source: "local_gps_2026_06_12_route_8" },
+  "shaw_college->area_39": { minutes: 4.52, samples: 1, source: "local_gps_2026_06_12_route_8" },
+  "area_39->cw_chu": { minutes: 1.22, samples: 1, source: "local_gps_2026_06_12_route_8" },
+  "cw_chu->residence_15": { minutes: 0.84, samples: 1, source: "local_gps_2026_06_12_route_3" },
+  "residence_15->united_residence": { minutes: 1.2, samples: 1, source: "local_gps_2026_06_12_route_3" },
+  "united_residence->lee_woo_sing": { minutes: 1.2, samples: 1, source: "local_gps_2026_06_12_route_3" },
+  "lee_woo_sing->shaw_college": { minutes: 1.7, samples: 1, source: "local_gps_2026_06_12_route_3" },
+  "shaw_college->residences_3_4": { minutes: 1.46, samples: 1, source: "local_gps_2026_06_12_route_3" },
+  "residences_3_4->university_admin": { minutes: 1.39, samples: 1, source: "local_gps_2026_06_12_route_3" },
+  "shaw_hall->university_admin": { minutes: 2.25, samples: 1, source: "cloud_gps_2026_06_12_route_1b" },
+  "university_admin->sh_ho": { minutes: 1.25, samples: 1, source: "cloud_gps_2026_06_12_route_1b" },
+  "sh_ho->postgraduate_hostel": { minutes: 1.83, samples: 1, source: "cloud_gps_2026_06_12_route_1b" },
+  "postgraduate_hostel->university_station": { minutes: 2.14, samples: 1, source: "cloud_gps_2026_06_12_route_1b" },
+};
+const DEFAULT_ROUTE_SEGMENT_TRAVEL_MINUTES = {
+  "N:shaw_college->residences_3_4": { minutes: 1.94, samples: 1, source: "cloud_gps_2026_06_13_route_N_passage" },
+  "N:residences_3_4->new_asia": { minutes: 0.63, samples: 1, source: "cloud_gps_2026_06_13_route_N_passage" },
+  "N:new_asia->united_college": { minutes: 1.22, samples: 1, source: "cloud_gps_2026_06_13_route_N_interpolated" },
+  "N:united_college->university_admin": { minutes: 2.88, samples: 1, source: "cloud_gps_2026_06_13_route_N_interpolated" },
+  "N:university_admin->sh_ho": { minutes: 1.24, samples: 1, source: "cloud_gps_2026_06_13_route_N_passage" },
+  "N:sh_ho->postgraduate_hostel": { minutes: 1.4, samples: 1, source: "cloud_gps_2026_06_13_route_N_passage" },
+};
 const ROUTE_STOP_DISTANCE_CACHE = new Map();
 const clockFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: HK_TIME_ZONE,
@@ -5592,7 +5618,7 @@ function activeVehicles(route, at = new Date()) {
   if (!schedule || coords.length < 2) return [];
 
   const clock = hongKongClock(at);
-  const tripMinutes = schedule.estimatedTripMinutes || 15;
+  const tripMinutes = effectiveRouteTripMinutes(route);
   const vehicles = [];
   todayRules(route, clock).forEach((rule) => {
     departuresForRule(rule).forEach((departure) => {
@@ -5643,7 +5669,7 @@ function nextStopArrival(route, stopIndex, at = new Date()) {
     return { route, stopIndex, status: "no_service_today", label: "今日无常规班次", clock };
   }
 
-  const tripMinutes = schedule.estimatedTripMinutes || 15;
+  const tripMinutes = effectiveRouteTripMinutes(route);
   const stopProgress = routeStopProgress(route, stopIndex);
   const offsetMinutes = routeStopOffsetMinutes(route, stopIndex, tripMinutes);
   let next = null;
@@ -5808,16 +5834,59 @@ function routeStopOffsetsMinutes(route) {
 }
 
 function routeStopOffsetMinutes(route, stopIndex, tripMinutes = route.schedule && route.schedule.estimatedTripMinutes || 15) {
+  const segmentOffset = segmentBasedRouteStopOffsetMinutes(route, stopIndex, tripMinutes);
+  if (Number.isFinite(segmentOffset)) return Math.max(0, Math.min(tripMinutes + 8, segmentOffset));
+  return baseRouteStopOffsetMinutes(route, stopIndex, tripMinutes);
+}
+
+function baseRouteStopOffsetMinutes(route, stopIndex, tripMinutes = route.schedule && route.schedule.estimatedTripMinutes || 15) {
   const offsets = routeStopOffsetsMinutes(route);
   const explicit = offsets && offsets[stopIndex];
   if (Number.isFinite(explicit)) return Math.max(0, Math.min(tripMinutes, explicit));
   return tripMinutes * routeStopProgress(route, stopIndex);
 }
 
+function segmentBasedRouteStopOffsetMinutes(route, stopIndex, tripMinutes = route.schedule && route.schedule.estimatedTripMinutes || 15) {
+  if (!route || stopIndex < 0 || !Array.isArray(route.stops)) return NaN;
+  let offset = baseRouteStopOffsetMinutes(route, 0, tripMinutes);
+  for (let i = 1; i <= stopIndex; i += 1) {
+    offset += routeSegmentTravelMinutes(route, i, tripMinutes);
+  }
+  return offset;
+}
+
+function routeSegmentTravelMinutes(route, toStopIndex, tripMinutes = route.schedule && route.schedule.estimatedTripMinutes || 15) {
+  if (!route || !Array.isArray(route.stops) || toStopIndex <= 0 || toStopIndex >= route.stops.length) return 0;
+  const fromStopId = route.stops[toStopIndex - 1];
+  const toStopId = route.stops[toStopIndex];
+  const calibrated = defaultSegmentTravelMinutes(route.id, fromStopId, toStopId);
+  if (Number.isFinite(calibrated)) return Math.max(0, calibrated);
+  const basePrevious = baseRouteStopOffsetMinutes(route, toStopIndex - 1, tripMinutes);
+  const baseCurrent = baseRouteStopOffsetMinutes(route, toStopIndex, tripMinutes);
+  return Math.max(0, baseCurrent - basePrevious);
+}
+
+function defaultSegmentTravelMinutes(routeId, fromStopId, toStopId) {
+  const key = segmentKey(fromStopId, toStopId);
+  const routeKey = `${routeId}:${key}`;
+  const item = DEFAULT_ROUTE_SEGMENT_TRAVEL_MINUTES[routeKey] || DEFAULT_SEGMENT_TRAVEL_MINUTES[key];
+  return item && Number.isFinite(item.minutes) ? item.minutes : NaN;
+}
+
+function segmentKey(fromStopId, toStopId) {
+  return `${fromStopId}->${toStopId}`;
+}
+
+function effectiveRouteTripMinutes(route, scheduledTripMinutes = route && route.schedule && route.schedule.estimatedTripMinutes || 15) {
+  if (!route || !Array.isArray(route.stops) || !route.stops.length) return scheduledTripMinutes;
+  const finalOffset = segmentBasedRouteStopOffsetMinutes(route, route.stops.length - 1, scheduledTripMinutes);
+  return Number.isFinite(finalOffset) && finalOffset > 0
+    ? Math.max(1, finalOffset)
+    : scheduledTripMinutes;
+}
+
 function routeProgressAtElapsed(route, elapsedMinutes, tripMinutes = route.schedule && route.schedule.estimatedTripMinutes || 15) {
   const fallback = Math.max(0, Math.min(1, elapsedMinutes / tripMinutes));
-  const offsets = routeStopOffsetsMinutes(route);
-  if (!offsets) return fallback;
 
   const checkpoints = (route.stops || [])
     .map((_, stopIndex) => ({
@@ -5828,7 +5897,8 @@ function routeProgressAtElapsed(route, elapsedMinutes, tripMinutes = route.sched
     .sort((a, b) => a.minutes - b.minutes);
 
   if (checkpoints.length < 2) return fallback;
-  const elapsed = Math.max(0, Math.min(tripMinutes, elapsedMinutes));
+  const routeEnd = Math.max(tripMinutes, checkpoints[checkpoints.length - 1].minutes);
+  const elapsed = Math.max(0, Math.min(routeEnd, elapsedMinutes));
   if (elapsed <= checkpoints[0].minutes) return checkpoints[0].progress;
 
   for (let i = 1; i < checkpoints.length; i += 1) {
