@@ -177,7 +177,7 @@
       z-index: 820;
       inset: 0;
       padding: calc(64px + env(safe-area-inset-top)) 16px calc(72px + env(safe-area-inset-bottom));
-      background: #F6F1F8;
+      background: #EAD8F7;
       overflow: auto;
     }
 
@@ -287,23 +287,6 @@
       color: #F3EAF9;
     }
 
-    .lcd-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .lcd-title {
-      min-width: 0;
-      color: #fff;
-      font-size: 14px;
-      font-weight: 850;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
     .lcd-scroll {
       overflow-x: auto;
       overflow-y: hidden;
@@ -350,7 +333,8 @@
     }
 
     .lcd-segment.is-next {
-      animation: lcdSegmentPulse 1.15s ease-in-out infinite;
+      background: #E0B33C;
+      box-shadow: 0 0 10px rgba(224, 179, 60, 0.52);
     }
 
     .lcd-dot {
@@ -379,27 +363,6 @@
       animation: lcdPulse 1.2s ease-in-out infinite;
     }
 
-    .lcd-status {
-      display: none;
-      position: absolute;
-      top: -25px;
-      left: 50%;
-      padding: 2px 6px;
-      border: 1px solid rgba(224, 179, 60, 0.78);
-      border-radius: 999px;
-      background: rgba(224, 179, 60, 0.16);
-      color: #E0B33C;
-      font-size: 10px;
-      font-weight: 900;
-      line-height: 1.2;
-      white-space: nowrap;
-      transform: translateX(-50%);
-    }
-
-    .lcd-stop.is-next .lcd-status {
-      display: block;
-    }
-
     .lcd-name {
       color: rgba(243, 234, 249, 0.7);
       font-size: 11px;
@@ -416,11 +379,6 @@
     @keyframes lcdPulse {
       0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
       50% { opacity: 0.36; transform: translate(-50%, -50%) scale(1.24); }
-    }
-
-    @keyframes lcdSegmentPulse {
-      0%, 100% { opacity: 0.92; }
-      50% { opacity: 0.38; }
     }
 
     .route-message-panel {
@@ -1492,8 +1450,17 @@
       const scroller = main && main.closest(".metro-card")?.querySelector(".lcd-scroll");
       const nextStop = scroller && scroller.querySelector(".lcd-stop.is-next");
       if (!scroller || !nextStop) return;
-      const targetLeft = nextStop.offsetLeft - (scroller.clientWidth - nextStop.clientWidth) / 2;
+      const anchorStop = previousLcdStop(nextStop) || nextStop;
+      const targetLeft = anchorStop.offsetLeft - (scroller.clientWidth - anchorStop.clientWidth) / 2;
       scroller.scrollTo({ left: Math.max(0, targetLeft), behavior: "smooth" });
+    }
+
+    function previousLcdStop(stopElement) {
+      let previous = stopElement.previousElementSibling;
+      while (previous && !previous.classList.contains("lcd-stop")) {
+        previous = previous.previousElementSibling;
+      }
+      return previous || null;
     }
 
     function buildMetroItems(at = new Date()) {
@@ -1526,7 +1493,6 @@
         textColor: readableRouteTextColor(vehicle.route.color),
         routeOrder: CUHK_BUS_DATA.routes.findIndex((route) => route.id === vehicle.route.id),
         expanded: selectedMetroItemId === id,
-        lcdTitle: originDeparture && originStop ? `始发站 ${originStop.name}` : (nextStop ? `下一站 ${nextStop.name}` : "接近终点"),
         lcdStops: selectedMetroItemId === id ? buildLcdStops(vehicle.route, lcdStopIndex) : [],
       };
     }
@@ -1557,15 +1523,11 @@
     function lcdPanelHtml(item) {
       return `
         <div class="lcd-panel">
-          <div class="lcd-header">
-            <span class="lcd-title">${escapeHtml(item.lcdTitle)}</span>
-          </div>
           <div class="lcd-scroll">
             <div class="lcd-track">
               ${item.lcdStops.map((stop) => `
                 <div class="lcd-stop is-${escapeHtml(stop.state)}${stop.terminal ? " is-terminal" : ""}">
                   <span class="lcd-segment is-${escapeHtml(stop.segmentState)}"></span>
-                  <span class="lcd-status">下一站</span>
                   <span class="lcd-dot"></span>
                   <span class="lcd-name">${escapeHtml(stop.shortName)}</span>
                 </div>
