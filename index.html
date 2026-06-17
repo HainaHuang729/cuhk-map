@@ -1405,10 +1405,10 @@
     const routeMessageTitle = document.getElementById("routeMessageTitle");
     const routeMessageBody = document.getElementById("routeMessageBody");
     const busStopsLayer = L.layerGroup().addTo(map);
+    const busVehiclesLayer = L.layerGroup().addTo(map);
     const gpsLayer = L.layerGroup();
     const passengerReportLayer = L.layerGroup();
     const routeLayerGroups = {};
-    const routeVehicleLayers = {};
     const busStopPopupRefs = [];
     const GPS_STORAGE_KEY = "cuhk-gps-samples-v1";
     const GPS_EVENTS_STORAGE_KEY = "cuhk-gps-events-v1";
@@ -1434,7 +1434,6 @@
       const layer = L.layerGroup();
       addBusRoute(route, layer);
       routeLayerGroups[route.id] = layer;
-      routeVehicleLayers[route.id] = L.layerGroup().addTo(layer);
     });
     renderBusRouteDock();
     busRouteDock.addEventListener("click", handleBusRouteDockClick);
@@ -1476,7 +1475,7 @@
     function routeStopNames(route) {
       return route.stops
         .map((id) => CUHK_BUS_DATA.stops[id])
-        .filter(Boolean)
+        .filter((stop) => stop && stop.kind !== "waypoint")
         .map((stop) => stop.name);
     }
 
@@ -1798,15 +1797,14 @@
       if (!visible && map.hasLayer(layer)) map.removeLayer(layer);
     }
 
-    function setOnlyBusRoute(routeId) {
+    function setOnlyBusRoute(routeId, options = {}) {
       const target = CUHK_BUS_DATA.routes.find((route) => route.id === routeId);
-      const shouldShowTarget = Boolean(target && !map.hasLayer(routeLayerGroups[target.id]));
+      const shouldShowTarget = Boolean(target && (options.forceVisible || !map.hasLayer(routeLayerGroups[target.id])));
       CUHK_BUS_DATA.routes.forEach((route) => {
         setRouteVisible(route, shouldShowTarget && route.id === routeId);
       });
       if (ENABLE_WEB_GPS_COLLECTION && shouldShowTarget && target) syncGpsRouteSelection(target);
       updateBusStops();
-      updateBusVehicles();
       if (ENABLE_WEB_PASSENGER_REPORTS) {
         renderPassengerReports();
         updateRouteMessagePanel();
@@ -2793,11 +2791,8 @@
     }
 
     function updateBusVehicles() {
+      busVehiclesLayer.clearLayers();
       CUHK_BUS_DATA.routes.forEach((route) => {
-        const vehicleLayer = routeVehicleLayers[route.id];
-        if (!vehicleLayer) return;
-        vehicleLayer.clearLayers();
-        if (!map.hasLayer(routeLayerGroups[route.id])) return;
         CUHK_BUS_UTILS.activeVehicles(route).forEach((vehicle) => {
           const vehicleLabel = busVehicleLabel(route);
           const nextStopInfo = nextStopForVehicle(vehicle);
@@ -2816,7 +2811,7 @@
               iconAnchor: [19, 11],
             }),
             zIndexOffset: 900,
-          }).addTo(vehicleLayer);
+          }).addTo(busVehiclesLayer);
           marker.bindPopup(`
             <strong>估算小车 · 校巴 ${escapeHtml(route.id)}</strong>
             <div>发车：${escapeHtml(CUHK_BUS_UTILS.formatTime(vehicle.departure))}</div>
@@ -2824,8 +2819,13 @@
             <div>预计：${escapeHtml(etaText)}</div>
             <div>已行驶：${Math.floor(vehicle.elapsedMinutes).toLocaleString("zh-CN")} / ${vehicle.tripMinutes.toLocaleString("zh-CN")} 分钟</div>
             <div>${escapeHtml(route.name)} · ${escapeHtml(route.service)}</div>
+            <div>站点：${routeStopNames(route).map(escapeHtml).join(" → ")}</div>
             <div>非实时 GPS，按官方时刻表和路线折线估算。</div>
           `);
+          marker.on("click", () => {
+            setOnlyBusRoute(route.id, { forceVisible: true });
+            if (ENABLE_WEB_PASSENGER_REPORTS) updateRouteMessagePanel(route);
+          });
         });
       });
       if (latestStats) updateStats(latestStats);
@@ -2975,8 +2975,7 @@
       const busStops = Object.values(CUHK_BUS_DATA.stops).filter((stop) => stop.kind !== "waypoint");
       const busOsmStops = busStops.filter((stop) => stop.osmId).length;
       const clock = CUHK_BUS_UTILS.hongKongClock();
-      const visibleRoutes = CUHK_BUS_DATA.routes.filter((route) => map.hasLayer(routeLayerGroups[route.id]));
-      const activeCount = visibleRoutes.flatMap((route) => CUHK_BUS_UTILS.activeVehicles(route)).length;
+      const activeCount = CUHK_BUS_DATA.routes.flatMap((route) => CUHK_BUS_UTILS.activeVehicles(route)).length;
       const categoryRows = POI_LAYER_GROUPS
         .filter((group) => poiLayerGroupCount(group, stats) > 0)
         .map((group) => `
@@ -2987,7 +2986,7 @@
       document.getElementById("stats").innerHTML = `
         ${categoryRows}
         <div class="row"><span>校巴</span><span>${CUHK_BUS_DATA.routes.length} 条线路 · ${busStops.length} 个站点（${busOsmStops} 个 OSM 节点）</span></div>
-        <div class="row"><span>小车估算</span><span>香港时间 ${clock.label} · 已开启线路 ${activeCount.toLocaleString("zh-CN")} 辆</span></div>
+        <div class="row"><span>小车估算</span><span>香港时间 ${clock.label} · 当前 ${activeCount.toLocaleString("zh-CN")} 辆</span></div>
         <div class="row"><span>数据源</span><span>OpenStreetMap / Overpass 实时读取</span></div>
       `;
     }
