@@ -1561,11 +1561,24 @@
       const main = [...metroList.querySelectorAll(".metro-main")]
         .find((element) => element.dataset.id === selectedMetroItemId);
       const scroller = main && main.closest(".metro-card")?.querySelector(".lcd-scroll");
-      const nextStop = scroller && scroller.querySelector(".lcd-stop.is-next");
-      if (!scroller || !nextStop) return;
+      if (!scroller) return;
+      const busStop = scroller.querySelector(".lcd-stop.has-bus");
+      if (busStop) {
+        const busLeft = parseFloat(getComputedStyle(busStop).getPropertyValue("--bus-left")) || 50;
+        const busCenter = busStop.offsetLeft + busStop.clientWidth * busLeft / 100;
+        scroller.scrollTo({ left: clampLcdScrollLeft(scroller, busCenter - scroller.clientWidth / 2), behavior: "smooth" });
+        return;
+      }
+      const nextStop = scroller.querySelector(".lcd-stop.is-next");
+      if (!nextStop) return;
       const anchorStop = previousLcdStop(nextStop) || nextStop;
       const targetLeft = anchorStop.offsetLeft - (scroller.clientWidth - anchorStop.clientWidth) / 2;
-      scroller.scrollTo({ left: Math.max(0, targetLeft), behavior: "smooth" });
+      scroller.scrollTo({ left: clampLcdScrollLeft(scroller, targetLeft), behavior: "smooth" });
+    }
+
+    function clampLcdScrollLeft(scroller, value) {
+      const maxLeft = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+      return Math.max(0, Math.min(maxLeft, value));
     }
 
     function previousLcdStop(stopElement) {
