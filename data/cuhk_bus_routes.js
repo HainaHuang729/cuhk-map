@@ -5460,21 +5460,23 @@ const ROUTE_STOP_DIRECTIONS = {
   "7": { 0: "下行", 1: "下行", 3: "下行" },
 };
 const DEFAULT_SEGMENT_TRAVEL_MINUTES = {
-  "science_centre->new_asia": { minutes: 2.76, samples: 1, source: "local_gps_2026_06_12_route_8" },
-  "new_asia->united_college": { minutes: 1.02, samples: 1, source: "local_gps_2026_06_12_route_8" },
-  "united_college->residences_3_4": { minutes: 1.7, samples: 1, source: "local_gps_2026_06_12_route_8" },
-  "residences_3_4->shaw_college": { minutes: 1.08, samples: 1, source: "local_gps_2026_06_12_route_8" },
-  "shaw_college->area_39": { minutes: 4.52, samples: 1, source: "local_gps_2026_06_12_route_8" },
-  "area_39->cw_chu": { minutes: 1.22, samples: 1, source: "local_gps_2026_06_12_route_8" },
+  "science_centre->new_asia": { minutes: 1.94, samples: 2, source: "merged_gps_2026_06_12_15_route_8" },
+  "new_asia->united_college": { minutes: 1.2, samples: 2, source: "merged_gps_2026_06_12_15_route_8" },
+  "united_college->residences_3_4": { minutes: 1.52, samples: 2, source: "merged_gps_2026_06_12_15_route_8" },
+  "residences_3_4->shaw_college": { minutes: 1.32, samples: 2, source: "merged_gps_2026_06_12_15_route_8" },
+  "shaw_college->area_39": { minutes: 3.84, samples: 2, source: "merged_gps_2026_06_12_15_route_8" },
+  "area_39->cw_chu": { minutes: 1.75, samples: 2, source: "merged_gps_2026_06_12_15_route_8" },
+  "cw_chu->campus_circuit_east": { minutes: 1.79, samples: 1, source: "cloud_gps_2026_06_15_route_8" },
+  "campus_circuit_east->university_station": { minutes: 1.73, samples: 1, source: "cloud_gps_2026_06_15_route_8" },
   "cw_chu->residence_15": { minutes: 0.84, samples: 1, source: "local_gps_2026_06_12_route_3" },
   "residence_15->united_residence": { minutes: 1.2, samples: 1, source: "local_gps_2026_06_12_route_3" },
   "united_residence->lee_woo_sing": { minutes: 1.2, samples: 1, source: "local_gps_2026_06_12_route_3" },
   "lee_woo_sing->shaw_college": { minutes: 1.7, samples: 1, source: "local_gps_2026_06_12_route_3" },
   "shaw_college->residences_3_4": { minutes: 1.46, samples: 1, source: "local_gps_2026_06_12_route_3" },
   "residences_3_4->university_admin": { minutes: 1.39, samples: 1, source: "local_gps_2026_06_12_route_3" },
-  "shaw_hall->university_admin": { minutes: 2.25, samples: 1, source: "cloud_gps_2026_06_12_route_1b" },
-  "university_admin->sh_ho": { minutes: 1.25, samples: 1, source: "cloud_gps_2026_06_12_route_1b" },
-  "sh_ho->postgraduate_hostel": { minutes: 1.83, samples: 1, source: "cloud_gps_2026_06_12_route_1b" },
+  "shaw_hall->university_admin": { minutes: 1.66, samples: 2, source: "merged_gps_2026_06_12_17_route_1b" },
+  "university_admin->sh_ho": { minutes: 2.03, samples: 2, source: "merged_gps_2026_06_12_17_route_1b" },
+  "sh_ho->postgraduate_hostel": { minutes: 1.73, samples: 2, source: "merged_gps_2026_06_12_17_route_1b" },
   "postgraduate_hostel->university_station": { minutes: 2.14, samples: 1, source: "cloud_gps_2026_06_12_route_1b" },
 };
 const DEFAULT_ROUTE_SEGMENT_TRAVEL_MINUTES = {
@@ -5484,6 +5486,8 @@ const DEFAULT_ROUTE_SEGMENT_TRAVEL_MINUTES = {
   "N:united_college->university_admin": { minutes: 2.88, samples: 1, source: "cloud_gps_2026_06_13_route_N_interpolated" },
   "N:university_admin->sh_ho": { minutes: 1.24, samples: 1, source: "cloud_gps_2026_06_13_route_N_passage" },
   "N:sh_ho->postgraduate_hostel": { minutes: 1.4, samples: 1, source: "cloud_gps_2026_06_13_route_N_passage" },
+  "1B:postgraduate_hostel->university_sports_centre": { minutes: 1.44, samples: 1, source: "cloud_gps_2026_06_17_route_1b_interpolated" },
+  "1B:university_sports_centre->shaw_hall": { minutes: 1.79, samples: 1, source: "cloud_gps_2026_06_17_route_1b_interpolated" },
 };
 const DEFAULT_STOP_DWELL_SECONDS = {
   university_station: 35,
