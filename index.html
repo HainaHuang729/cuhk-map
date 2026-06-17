@@ -324,6 +324,15 @@
       transform: translateY(-50%);
     }
 
+    .lcd-segment::before,
+    .lcd-segment::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      border-radius: inherit;
+    }
+
     .lcd-stop.is-terminal .lcd-segment {
       display: none;
     }
@@ -333,8 +342,66 @@
     }
 
     .lcd-segment.is-next {
+      background: rgba(255, 255, 255, 0.34);
+    }
+
+    .lcd-segment.is-upcoming {
       background: #E0B33C;
-      box-shadow: 0 0 10px rgba(224, 179, 60, 0.52);
+      box-shadow: 0 0 9px rgba(224, 179, 60, 0.42);
+    }
+
+    .lcd-segment.has-bus {
+      background: rgba(255, 255, 255, 0.24);
+    }
+
+    .lcd-segment.has-bus::before {
+      left: var(--bus-progress, 52%);
+      right: 0;
+      background: #E0B33C;
+      box-shadow: 0 0 10px rgba(224, 179, 60, 0.54);
+      transition: left 950ms linear;
+    }
+
+    .lcd-bus-model {
+      position: absolute;
+      z-index: 2;
+      top: 0;
+      left: var(--bus-left, 102%);
+      width: 28px;
+      height: 16px;
+      border: 2px solid #E0B33C;
+      border-radius: 5px 7px 5px 5px;
+      background: #5B2C84;
+      box-shadow: 0 0 14px rgba(224, 179, 60, 0.56);
+      transform: translate(-50%, -50%);
+      transition: left 950ms linear;
+    }
+
+    .lcd-stop.is-first .lcd-bus-model {
+      left: var(--bus-left, 50%);
+    }
+
+    .lcd-bus-model::before {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 5px;
+      right: 5px;
+      height: 5px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.86);
+    }
+
+    .lcd-bus-model::after {
+      content: "";
+      position: absolute;
+      left: 5px;
+      right: 5px;
+      bottom: -5px;
+      height: 5px;
+      background:
+        radial-gradient(circle, #E0B33C 0 3px, transparent 3.2px) left center / 7px 5px no-repeat,
+        radial-gradient(circle, #E0B33C 0 3px, transparent 3.2px) right center / 7px 5px no-repeat;
     }
 
     .lcd-dot {
@@ -360,7 +427,13 @@
       border-color: #E0B33C;
       background: #E0B33C;
       box-shadow: 0 0 16px rgba(224, 179, 60, 0.76);
-      animation: lcdPulse 1.2s ease-in-out infinite;
+      animation: none;
+    }
+
+    .lcd-stop.is-upcoming .lcd-dot {
+      border-color: #E0B33C;
+      background: #E0B33C;
+      box-shadow: 0 0 10px rgba(224, 179, 60, 0.45);
     }
 
     .lcd-name {
@@ -1354,6 +1427,7 @@
     let awaitingBoardingGps = false;
     let pendingBoardingReport = null;
     let selectedMetroItemId = "";
+    let metroMotionTimer = null;
     let latestStats = null;
 
     CUHK_BUS_DATA.routes.forEach((route) => {
@@ -1425,7 +1499,12 @@
         button.classList.toggle("is-active", active);
         button.setAttribute("aria-pressed", active ? "true" : "false");
       });
-      if (metroMode) renderMetroPanel();
+      if (metroMode) {
+        renderMetroPanel();
+        startMetroMotionTimer();
+      } else {
+        stopMetroMotionTimer();
+      }
     }
 
     function handleMetroListClick(event) {
@@ -1435,12 +1514,40 @@
       renderMetroPanel();
     }
 
-    function renderMetroPanel() {
+    function renderMetroPanel(options = {}) {
       const items = buildMetroItems();
       metroList.innerHTML = items.length
         ? items.map(metroItemHtml).join("")
         : `<div class="metro-empty">暂无运行中的校巴</div>`;
-      requestAnimationFrame(centerSelectedLcdStop);
+      if (options.center !== false) requestAnimationFrame(centerSelectedLcdStop);
+    }
+
+    function startMetroMotionTimer() {
+      stopMetroMotionTimer();
+      metroMotionTimer = window.setInterval(updateExpandedLcdMotion, 1000);
+    }
+
+    function stopMetroMotionTimer() {
+      if (!metroMotionTimer) return;
+      window.clearInterval(metroMotionTimer);
+      metroMotionTimer = null;
+    }
+
+    function updateExpandedLcdMotion() {
+      if (metroPanel.hidden || !selectedMetroItemId) return;
+      const item = buildMetroItems().find((candidate) => candidate.id === selectedMetroItemId);
+      if (!item || !item.lcdStops.length) return;
+      const nextBusIndex = item.lcdStops.findIndex((stop) => stop.busHere);
+      const card = [...metroList.querySelectorAll(".metro-card")]
+        .find((element) => element.querySelector(".metro-main")?.dataset.id === selectedMetroItemId);
+      const currentBusStop = card && card.querySelector(".lcd-stop.has-bus");
+      if (!card || !currentBusStop || Number(currentBusStop.dataset.index) !== nextBusIndex) {
+        renderMetroPanel({ center: false });
+        return;
+      }
+      const nextStop = item.lcdStops[nextBusIndex];
+      currentBusStop.style.setProperty("--bus-progress", nextStop.busProgress || "0%");
+      currentBusStop.style.setProperty("--bus-left", nextStop.busLeft || "50%");
     }
 
     function centerSelectedLcdStop() {
@@ -1493,7 +1600,7 @@
         textColor: readableRouteTextColor(vehicle.route.color),
         routeOrder: CUHK_BUS_DATA.routes.findIndex((route) => route.id === vehicle.route.id),
         expanded: selectedMetroItemId === id,
-        lcdStops: selectedMetroItemId === id ? buildLcdStops(vehicle.route, lcdStopIndex) : [],
+        lcdStops: selectedMetroItemId === id ? buildLcdStops(vehicle.route, lcdStopIndex, vehicle.progress) : [],
       };
     }
 
@@ -1526,8 +1633,9 @@
           <div class="lcd-scroll">
             <div class="lcd-track">
               ${item.lcdStops.map((stop) => `
-                <div class="lcd-stop is-${escapeHtml(stop.state)}${stop.terminal ? " is-terminal" : ""}">
-                  <span class="lcd-segment is-${escapeHtml(stop.segmentState)}"></span>
+                <div class="lcd-stop is-${escapeHtml(stop.state)}${stop.terminal ? " is-terminal" : ""}${stop.first ? " is-first" : ""}${stop.busHere ? " has-bus" : ""}" data-index="${stop.index}" style="--bus-progress:${escapeHtml(stop.busProgress || "0%")}; --bus-left:${escapeHtml(stop.busLeft || "50%")}">
+                  <span class="lcd-segment is-${escapeHtml(stop.segmentState)}${stop.busHere ? " has-bus" : ""}"></span>
+                  ${stop.busHere ? "<span class=\"lcd-bus-model\"></span>" : ""}
                   <span class="lcd-dot"></span>
                   <span class="lcd-name">${escapeHtml(stop.shortName)}</span>
                 </div>
@@ -1538,7 +1646,7 @@
       `;
     }
 
-    function buildLcdStops(route, nextStopIndex) {
+    function buildLcdStops(route, nextStopIndex, vehicleProgress = NaN) {
       const stops = (route.stops || [])
         .map((stopId, stopIndex) => {
           const stop = CUHK_BUS_DATA.stops[stopId];
@@ -1554,17 +1662,40 @@
         })
         .filter(Boolean);
       const nextVisibleIndex = stops.findIndex((stop) => stop.state === "next");
+      const busVisibleIndex = nextVisibleIndex > 0 ? nextVisibleIndex - 1 : nextVisibleIndex;
+      const busProgress = lcdBusSegmentProgress(route, stops, nextVisibleIndex, vehicleProgress);
+      const busLeft = `${Math.max(0, Math.min(150, 50 + busProgress.value))}%`;
       return stops.map((stop, index) => ({
         ...stop,
+        index,
         segmentState: lcdSegmentState(index, nextVisibleIndex),
+        busHere: index === busVisibleIndex,
+        busProgress: index === busVisibleIndex ? busProgress.label : "",
+        busLeft: index === busVisibleIndex ? busLeft : "",
+        first: index === 0,
         terminal: index === stops.length - 1,
       }));
     }
 
+    function lcdBusSegmentProgress(route, stops, nextVisibleIndex, vehicleProgress) {
+      if (nextVisibleIndex < 0) return { value: 100, label: "100%" };
+      if (nextVisibleIndex === 0) return { value: 0, label: "0%" };
+      const previousStop = stops[nextVisibleIndex - 1];
+      const nextStop = stops[nextVisibleIndex];
+      const previousProgress = CUHK_BUS_UTILS.routeStopProgress(route, previousStop.routeStopIndex);
+      const nextProgress = CUHK_BUS_UTILS.routeStopProgress(route, nextStop.routeStopIndex);
+      if (!Number.isFinite(previousProgress) || !Number.isFinite(nextProgress) || !Number.isFinite(vehicleProgress) || nextProgress <= previousProgress) {
+        return { value: 52, label: "52%" };
+      }
+      const value = Math.max(0, Math.min(100, ((vehicleProgress - previousProgress) / (nextProgress - previousProgress)) * 100));
+      return { value, label: `${value.toFixed(2)}%` };
+    }
+
     function lcdSegmentState(stopIndex, nextVisibleIndex) {
       if (nextVisibleIndex < 0) return "passed";
-      if (stopIndex < nextVisibleIndex - 1) return "passed";
-      if (stopIndex === nextVisibleIndex - 1) return "next";
+      const busSegmentIndex = nextVisibleIndex > 0 ? nextVisibleIndex - 1 : nextVisibleIndex;
+      if (stopIndex < busSegmentIndex) return "passed";
+      if (stopIndex === busSegmentIndex) return "next";
       return "upcoming";
     }
 
