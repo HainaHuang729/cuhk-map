@@ -425,7 +425,7 @@ root.CUHK_BUS_DATA = {
       "id": "1B",
       "name": "研究生宿舍线",
       "service": "常规穿梭校巴",
-      "color": "#59389A",
+      "color": "#6F3FA0",
       "schedule": {
         "source": "shuttle",
         "estimatedTripMinutes": 18,
@@ -766,7 +766,7 @@ root.CUHK_BUS_DATA = {
       "id": "2",
       "name": "新联线",
       "service": "常规穿梭校巴",
-      "color": "#4B5797",
+      "color": "#7D4E9E",
       "schedule": {
         "source": "shuttle",
         "estimatedTripMinutes": 20,
@@ -1043,7 +1043,7 @@ root.CUHK_BUS_DATA = {
       "id": "3",
       "name": "逸夫线",
       "service": "常规穿梭校巴",
-      "color": "#39729A",
+      "color": "#8E5A8F",
       "schedule": {
         "source": "shuttle",
         "estimatedTripMinutes": 25,
@@ -1483,7 +1483,7 @@ root.CUHK_BUS_DATA = {
       "id": "4",
       "name": "环迴线",
       "service": "常规穿梭校巴",
-      "color": "#2C878F",
+      "color": "#A06473",
       "schedule": {
         "source": "shuttle",
         "estimatedTripMinutes": 26,
@@ -1861,7 +1861,7 @@ root.CUHK_BUS_DATA = {
       "id": "8",
       "name": "西部线",
       "service": "常规穿梭校巴",
-      "color": "#249D82",
+      "color": "#B06D55",
       "schedule": {
         "source": "shuttle",
         "estimatedTripMinutes": 28,
@@ -2363,7 +2363,7 @@ root.CUHK_BUS_DATA = {
       "id": "N",
       "name": "晚间线",
       "service": "晚间穿梭校巴",
-      "color": "#35AD70",
+      "color": "#AD8324",
       "schedule": {
         "source": "nightHoliday",
         "estimatedTripMinutes": 30,
@@ -3063,7 +3063,7 @@ root.CUHK_BUS_DATA = {
       "id": "H",
       "name": "假日线",
       "service": "星期日及公众假期穿梭校巴",
-      "color": "#69BF54",
+      "color": "#BD9228",
       "schedule": {
         "source": "nightHoliday",
         "estimatedTripMinutes": 30,
@@ -3621,7 +3621,7 @@ root.CUHK_BUS_DATA = {
       "id": "5",
       "name": "上行线",
       "service": "转堂校巴",
-      "color": "#A4C63A",
+      "color": "#CEA02E",
       "schedule": {
         "source": "meetClass",
         "estimatedTripMinutes": 13,
@@ -3948,7 +3948,7 @@ root.CUHK_BUS_DATA = {
       "id": "6A",
       "name": "下行线",
       "service": "转堂校巴",
-      "color": "#D7CF35",
+      "color": "#D9AA2F",
       "schedule": {
         "source": "meetClass",
         "estimatedTripMinutes": 12,
@@ -4275,7 +4275,7 @@ root.CUHK_BUS_DATA = {
       "id": "6B",
       "name": "下行短线",
       "service": "转堂校巴",
-      "color": "#F2C14E",
+      "color": "#E4B63F",
       "schedule": {
         "source": "meetClass",
         "estimatedTripMinutes": 10,
@@ -4459,7 +4459,7 @@ root.CUHK_BUS_DATA = {
       "id": "7",
       "name": "逸夫下行线",
       "service": "转堂校巴",
-      "color": "#456299",
+      "color": "#4D3B78",
       "schedule": {
         "source": "meetClass",
         "estimatedTripMinutes": 12,
@@ -4696,7 +4696,7 @@ root.CUHK_BUS_DATA = {
       "id": "MINI-N",
       "name": "收费小巴上行",
       "service": "收费穿梭小巴",
-      "color": "#2B918C",
+      "color": "#6A4D8F",
       "schedule": {
         "source": "paidUp",
         "estimatedTripMinutes": 24,
@@ -5053,7 +5053,7 @@ root.CUHK_BUS_DATA = {
       "id": "MINI-S",
       "name": "收费小巴下行",
       "service": "收费穿梭小巴",
-      "color": "#B8C93C",
+      "color": "#D4A429",
       "schedule": {
         "source": "paidDown",
         "estimatedTripMinutes": 24,
@@ -5651,7 +5651,8 @@ function nextStopArrival(route, stopIndex, at = new Date()) {
   rules.forEach((rule) => {
     departuresForRule(rule).forEach((departure) => {
       const arrival = departure + offsetMinutes;
-      if (arrival + 0.25 < clock.minutes) return;
+      const graceMinutes = stopIndex === 0 ? 0.75 : 0.25;
+      if (arrival + graceMinutes < clock.minutes) return;
       if (!next || arrival < next.arrival) {
         next = {
           route,
@@ -5710,12 +5711,18 @@ function stopArrivalSummary(arrival) {
   if (!arrival) return "暂无预计到站";
   if (arrival.status === "scheduled") {
     const directionText = arrival.direction ? ` · ${arrival.direction}` : "";
-    return `预计下一班 ${formatTime(arrival.arrival)}（${formatEtaMinutes(arrival.etaMinutes)}${directionText}）`;
+    return `预计下一班 ${formatTime(arrival.arrival)}（${arrivalEtaText(arrival)}${directionText}）`;
   }
   if (arrival.status === "no_service_today") return "今日无常规班次";
   if (arrival.status === "ended") return "今日班次已结束";
   if (arrival.status === "no_schedule") return "暂无官方时刻表";
   return arrival.label || "暂无预计到站";
+}
+
+function arrivalEtaText(arrival) {
+  if (!arrival || arrival.status !== "scheduled") return "暂无 ETA";
+  if (arrival.stopIndex === 0 && Number.isFinite(arrival.etaMinutes) && arrival.etaMinutes < 0.75) return "即将出发";
+  return formatEtaMinutes(arrival.etaMinutes);
 }
 
 function formatEtaMinutes(value) {
@@ -5930,6 +5937,7 @@ function toRad(value) {
 
 root.CUHK_BUS_UTILS = {
   activeVehicles,
+  arrivalEtaText,
   coordAtProgress,
   formatTime,
   hongKongClock,
