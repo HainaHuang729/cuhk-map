@@ -14,11 +14,13 @@ if (!inputFiles.length) {
 
 const globalSegments = new Map();
 const routeSegments = new Map();
+const stopDwell = new Map();
 const summary = {
   files: 0,
   records: 0,
   rideSessions: 0,
   segmentObservations: 0,
+  dwellObservations: 0,
   skippedSegments: 0,
 };
 
@@ -43,6 +45,14 @@ for (const file of inputFiles) {
       target.get(targetKey).push(normalized);
       summary.segmentObservations += 1;
     }
+    const dwell = record.etaCalibration && record.etaCalibration.stopDwellSeconds || {};
+    for (const [stopId, item] of Object.entries(dwell)) {
+      const normalized = normalizeDwell(record, stopId, item);
+      if (!normalized) continue;
+      if (!stopDwell.has(normalized.stopId)) stopDwell.set(normalized.stopId, []);
+      stopDwell.get(normalized.stopId).push(normalized);
+      summary.dwellObservations += 1;
+    }
   }
 }
 
@@ -52,6 +62,7 @@ const output = {
   summary,
   segments: summarizeSegmentMap(globalSegments),
   routeSegments: summarizeSegmentMap(routeSegments),
+  stopDwellSeconds: summarizeDwellMap(stopDwell),
 };
 
 const text = `${JSON.stringify(output, null, 2)}\n`;
@@ -123,6 +134,22 @@ function isRouteSpecificSegment(segment) {
   return segment.shareAcrossRoutes === false;
 }
 
+function normalizeDwell(record, fallbackStopId, item) {
+  const seconds = Number(item && item.seconds);
+  const stopId = String(item && item.stopId || fallbackStopId || "");
+  if (!stopId || !Number.isFinite(seconds) || seconds < 3 || seconds > 180) return null;
+  return {
+    stopId,
+    stopName: item.stopName || "",
+    routeId: record.routeId || record.etaCalibration && record.etaCalibration.routeId || "",
+    routeName: record.routeName || record.etaCalibration && record.etaCalibration.routeName || "",
+    seconds,
+    source: item.source || "",
+    observedAt: record.etaCalibration && record.etaCalibration.observedAt || record.createdAt || "",
+    serviceBucket: item.serviceBucket || record.serviceBucket || "",
+  };
+}
+
 function summarizeSegmentMap(map) {
   const result = {};
   for (const [key, observations] of [...map.entries()].sort(([a], [b]) => a.localeCompare(b))) {
@@ -140,6 +167,27 @@ function summarizeSegmentMap(map) {
       meanMinutes: round(minutes.reduce((sum, value) => sum + value, 0) / minutes.length),
       samples: minutes.length,
       sourceRoutes: routeIds,
+      sources: [...new Set(observations.map((item) => item.source).filter(Boolean))].sort(),
+      lastObservedAt: observations.map((item) => item.observedAt).filter(Boolean).sort().at(-1) || "",
+    };
+  }
+  return result;
+}
+
+function summarizeDwellMap(map) {
+  const result = {};
+  for (const [stopId, observations] of [...map.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    const seconds = observations.map((item) => item.seconds).sort((a, b) => a - b);
+    const first = observations[0];
+    result[stopId] = {
+      stopId,
+      stopName: first.stopName,
+      seconds: Math.round(percentile(seconds, 0.5)),
+      p25Seconds: Math.round(percentile(seconds, 0.25)),
+      p75Seconds: Math.round(percentile(seconds, 0.75)),
+      meanSeconds: Math.round(seconds.reduce((sum, value) => sum + value, 0) / seconds.length),
+      samples: seconds.length,
+      sourceRoutes: [...new Set(observations.map((item) => item.routeId).filter(Boolean))].sort(),
       sources: [...new Set(observations.map((item) => item.source).filter(Boolean))].sort(),
       lastObservedAt: observations.map((item) => item.observedAt).filter(Boolean).sort().at(-1) || "",
     };
