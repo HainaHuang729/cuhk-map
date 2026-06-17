@@ -307,14 +307,20 @@
 
     .lcd-stop {
       position: relative;
+      z-index: 1;
       flex: 0 0 94px;
       min-height: 50px;
       padding-top: 22px;
       text-align: center;
     }
 
+    .lcd-stop.has-bus {
+      z-index: 5;
+    }
+
     .lcd-segment {
       position: absolute;
+      z-index: 0;
       top: 0;
       left: 50%;
       width: 100%;
@@ -364,7 +370,7 @@
 
     .lcd-bus-model {
       position: absolute;
-      z-index: 2;
+      z-index: 4;
       top: 0;
       left: var(--bus-left, 102%);
       width: 28px;
@@ -406,6 +412,7 @@
 
     .lcd-dot {
       position: absolute;
+      z-index: 1;
       top: 0;
       left: 50%;
       width: 16px;
@@ -1634,8 +1641,8 @@
               ${item.lcdStops.map((stop) => `
                 <div class="lcd-stop is-${escapeHtml(stop.state)}${stop.terminal ? " is-terminal" : ""}${stop.first ? " is-first" : ""}${stop.busHere ? " has-bus" : ""}" data-index="${stop.index}" style="--bus-progress:${escapeHtml(stop.busProgress || "0%")}; --bus-left:${escapeHtml(stop.busLeft || "50%")}">
                   <span class="lcd-segment is-${escapeHtml(stop.segmentState)}${stop.busHere ? " has-bus" : ""}"></span>
-                  ${stop.busHere ? "<span class=\"lcd-bus-model\"></span>" : ""}
                   <span class="lcd-dot"></span>
+                  ${stop.busHere ? "<span class=\"lcd-bus-model\"></span>" : ""}
                   <span class="lcd-name">${escapeHtml(stop.shortName)}</span>
                 </div>
               `).join("")}
