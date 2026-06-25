@@ -145,8 +145,8 @@ root.CUHK_BUS_DATA = {
       "coord": [114.20929, 22.41906]
     },
     "university_library": {
-      "name": "大学图书馆",
-      "coord": [114.20555, 22.41938]
+      "name": "大学图书馆 / 文物馆",
+      "coord": [114.20555, 22.41988]
     },
     "engineering": {
       "name": "何善衡工程学大楼",
@@ -4899,30 +4899,6 @@ root.CUHK_BUS_DATA = {
         [114.2056367, 22.41988],
         [114.204754, 22.4198697],
         [114.2043506, 22.4198723],
-        [114.2043556, 22.4187566],
-        [114.2048809, 22.4187595],
-        [114.2052579, 22.4187521],
-        [114.205505, 22.4187372],
-        [114.2055824, 22.4187297],
-        [114.2055993, 22.4188393],
-        [114.2056209, 22.4188768],
-        [114.2056535, 22.4189007],
-        [114.205685, 22.4189174],
-        [114.2056535, 22.4189007],
-        [114.2056209, 22.4188768],
-        [114.2055993, 22.4188393],
-        [114.2055824, 22.4187297],
-        [114.2054556, 22.418741],
-        [114.2052579, 22.4187521],
-        [114.2048809, 22.4187595],
-        [114.2043556, 22.4187566],
-        [114.2043528, 22.4192583],
-        [114.2042688, 22.4192581],
-        [114.2042366, 22.4192406],
-        [114.2042462, 22.419311],
-        [114.2042493, 22.4197591],
-        [114.2042372, 22.4198113],
-        [114.2042141, 22.4198427],
         [114.2041843, 22.4198695],
         [114.20408, 22.4198726],
         [114.2033988, 22.4198754],
@@ -5463,47 +5439,108 @@ const DEFAULT_SEGMENT_TRAVEL_MINUTES = {
   "science_centre->new_asia": { minutes: 1.94, samples: 2, source: "merged_gps_2026_06_12_15_route_8" },
   "new_asia->united_college": { minutes: 1.2, samples: 2, source: "merged_gps_2026_06_12_15_route_8" },
   "united_college->residences_3_4": { minutes: 1.52, samples: 2, source: "merged_gps_2026_06_12_15_route_8" },
-  "residences_3_4->shaw_college": { minutes: 1.32, samples: 2, source: "merged_gps_2026_06_12_15_route_8" },
-  "shaw_college->area_39": { minutes: 3.84, samples: 2, source: "merged_gps_2026_06_12_15_route_8" },
+  "residences_3_4->shaw_college": { minutes: 1.33, samples: 3, source: "merged_gps_2026_06_12_22_route_3_8" },
+  "shaw_college->area_39": { minutes: 2.94, samples: 4, source: "merged_gps_2026_06_12_24_route_8" },
   "area_39->cw_chu": { minutes: 1.75, samples: 2, source: "merged_gps_2026_06_12_15_route_8" },
-  "cw_chu->campus_circuit_east": { minutes: 1.79, samples: 1, source: "cloud_gps_2026_06_15_route_8" },
-  "campus_circuit_east->university_station": { minutes: 1.73, samples: 1, source: "cloud_gps_2026_06_15_route_8" },
-  "cw_chu->residence_15": { minutes: 0.84, samples: 1, source: "local_gps_2026_06_12_route_3" },
-  "residence_15->united_residence": { minutes: 1.2, samples: 1, source: "local_gps_2026_06_12_route_3" },
+  "cw_chu->campus_circuit_east": { minutes: 1.58, samples: 3, source: "merged_gps_2026_06_15_24_route_8" },
+  "campus_circuit_east->university_station": { minutes: 1.69, samples: 4, source: "merged_gps_2026_06_15_24_route_8" },
+  "yasumoto->university_sports_centre": { minutes: 1.13, samples: 1, source: "cloud_gps_2026_06_20_22_route_3" },
+  "university_sports_centre->science_centre": { minutes: 2.16, samples: 1, source: "cloud_gps_2026_06_20_22_route_3" },
+  "science_centre->fung_king_hey": { minutes: 0.84, samples: 2, source: "merged_gps_2026_06_20_22_route_3" },
+  "fung_king_hey->residences_3_4": { minutes: 0.71, samples: 2, source: "merged_gps_2026_06_20_22_route_3" },
+  "cw_chu->residence_15": { minutes: 1.71, samples: 2, source: "merged_gps_2026_06_12_22_route_3" },
+  "residence_15->united_residence": { minutes: 0.89, samples: 2, source: "merged_gps_2026_06_12_22_route_3_h" },
   "united_residence->lee_woo_sing": { minutes: 1.2, samples: 1, source: "local_gps_2026_06_12_route_3" },
   "lee_woo_sing->shaw_college": { minutes: 1.7, samples: 1, source: "local_gps_2026_06_12_route_3" },
-  "shaw_college->residences_3_4": { minutes: 1.46, samples: 1, source: "local_gps_2026_06_12_route_3" },
-  "residences_3_4->university_admin": { minutes: 1.39, samples: 1, source: "local_gps_2026_06_12_route_3" },
-  "shaw_hall->university_admin": { minutes: 1.66, samples: 2, source: "merged_gps_2026_06_12_17_route_1b" },
-  "university_admin->sh_ho": { minutes: 2.03, samples: 2, source: "merged_gps_2026_06_12_17_route_1b" },
-  "sh_ho->postgraduate_hostel": { minutes: 1.73, samples: 2, source: "merged_gps_2026_06_12_17_route_1b" },
+  "shaw_college->cw_chu": { minutes: 2.29, samples: 2, source: "merged_gps_2026_06_22_route_3" },
+  "shaw_college->residences_3_4": { minutes: 1.7, samples: 3, source: "merged_gps_2026_06_12_22_route_3_h" },
+  "residences_3_4->new_asia": { minutes: 1.54, samples: 1, source: "cloud_gps_2026_06_21_route_h" },
+  "residences_3_4->university_admin": { minutes: 1.34, samples: 3, source: "merged_gps_2026_06_12_24_route_3_8" },
+  "residence_10_11->residence_15": { minutes: 0.72, samples: 1, source: "cloud_gps_2026_06_21_route_h" },
+  "shaw_hall->university_admin": { minutes: 1.49, samples: 4, source: "merged_gps_2026_06_12_22_route_1b" },
+  "university_admin->sh_ho": { minutes: 1.66, samples: 7, source: "merged_gps_2026_06_12_22_route_1a_1b" },
+  "sh_ho->postgraduate_hostel": { minutes: 1.87, samples: 6, source: "merged_gps_2026_06_12_24_route_1b_n" },
+  "sh_ho->university_station": { minutes: 1.23, samples: 1, source: "cloud_gps_2026_06_18_route_2" },
   "postgraduate_hostel->university_station": { minutes: 2.14, samples: 1, source: "cloud_gps_2026_06_12_route_1b" },
+  "campus_circuit_east->cw_chu": { minutes: 3.64, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "chan_chun_ha_hostel->residences_3_4": { minutes: 0.54, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "chan_chun_ha_hostel->shaw_college": { minutes: 2.5, samples: 1, source: "cloud_gps_2026_06_22_route_3" },
+  "chung_chi_staff_quarters->ho_tim": { minutes: 1.36, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "chung_chi_staff_quarters->teaching_research_1": { minutes: 1.5, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "chung_chi_teaching->university_sports_centre": { minutes: 2.55, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "cw_chu->area_39": { minutes: 1.31, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "cw_chu->residence_10_11": { minutes: 0.99, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "cw_chu->united_residence": { minutes: 2.01, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "engineering->teaching_research_1": { minutes: 0.78, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "fung_king_hey->united_college": { minutes: 1.07, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "ho_tim->yasumoto": { minutes: 0.42, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "lee_woo_sing->united_residence": { minutes: 0.88, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "new_asia->residences_3_4": { minutes: 1.89, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "new_asia->university_admin": { minutes: 2.68, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "postgraduate_hostel->university_sports_centre": { minutes: 1.98, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "residence_15->residence_10_11": { minutes: 1.06, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "residences_3_4->lee_woo_sing": { minutes: 0.35, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "sh_ho->university_station_piazza": { minutes: 2.68, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "shaw_hall->fung_king_hey": { minutes: 1.36, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "shaw_hall->new_asia": { minutes: 1.57, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "shaw_hall->university_library": { minutes: 0.48, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "teaching_research_1->chung_chi_staff_quarters": { minutes: 1.54, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "teaching_research_1->university_health": { minutes: 1.48, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "united_college->new_asia": { minutes: 0.86, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "united_college->university_admin": { minutes: 2.1, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "united_residence->chan_chun_ha_hostel": { minutes: 0.47, samples: 1, source: "cloud_gps_2026_06_22_route_4" },
+  "united_residence->residence_15": { minutes: 0.64, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "university_admin->science_centre": { minutes: 2.34, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "university_admin->university_health": { minutes: 1.49, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "university_health->engineering": { minutes: 0.77, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "university_health->shaw_hall": { minutes: 1.36, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "university_library->fung_king_hey": { minutes: 0.87, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "university_sports_centre->shaw_hall": { minutes: 2.15, samples: 1, source: "cloud_gps_2026_06_24_route_1a" },
+  "university_station_piazza->chung_chi_teaching": { minutes: 1.06, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "university_station_piazza->university_sports_centre": { minutes: 2.45, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "university_station->postgraduate_hostel": { minutes: 2.73, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "university_station->university_sports_centre": { minutes: 1.61, samples: 1, source: "cloud_gps_2026_06_24_route_1a" },
+  "university_station->wong_foo_yuan": { minutes: 0.35, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "wong_foo_yuan->chung_chi_staff_quarters": { minutes: 1.07, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "yasumoto->campus_circuit_east": { minutes: 1.66, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "yasumoto->university_station": { minutes: 0.59, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
 };
 const DEFAULT_ROUTE_SEGMENT_TRAVEL_MINUTES = {
+  "8:shaw_college->area_39": { minutes: 2.04, samples: 1, source: "cloud_gps_2026_06_23_route_8" },
+  "8:residences_3_4->university_admin": { minutes: 0.92, samples: 1, source: "cloud_gps_2026_06_24_route_8_corrected" },
+  "8:cw_chu->campus_circuit_east": { minutes: 1.76, samples: 1, source: "cloud_gps_2026_06_24_route_8" },
+  "8:campus_circuit_east->university_station": { minutes: 1.68, samples: 2, source: "merged_gps_2026_06_23_24_route_8" },
+  "N:area_39->cw_chu": { minutes: 0.62, samples: 1, source: "cloud_gps_2026_06_22_route_N" },
+  "N:shaw_hall->new_asia": { minutes: 0.85, samples: 1, source: "cloud_gps_2026_06_22_route_N" },
   "N:shaw_college->residences_3_4": { minutes: 1.94, samples: 1, source: "cloud_gps_2026_06_13_route_N_passage" },
   "N:residences_3_4->new_asia": { minutes: 0.63, samples: 1, source: "cloud_gps_2026_06_13_route_N_passage" },
-  "N:new_asia->united_college": { minutes: 1.22, samples: 1, source: "cloud_gps_2026_06_13_route_N_interpolated" },
+  "N:new_asia->united_college": { minutes: 1.38, samples: 2, source: "merged_gps_2026_06_13_22_route_N" },
+  "N:united_college->residences_3_4": { minutes: 1.17, samples: 1, source: "cloud_gps_2026_06_22_route_N" },
   "N:united_college->university_admin": { minutes: 2.88, samples: 1, source: "cloud_gps_2026_06_13_route_N_interpolated" },
   "N:university_admin->sh_ho": { minutes: 1.24, samples: 1, source: "cloud_gps_2026_06_13_route_N_passage" },
-  "N:sh_ho->postgraduate_hostel": { minutes: 1.4, samples: 1, source: "cloud_gps_2026_06_13_route_N_passage" },
-  "1B:postgraduate_hostel->university_sports_centre": { minutes: 1.44, samples: 1, source: "cloud_gps_2026_06_17_route_1b_interpolated" },
-  "1B:university_sports_centre->shaw_hall": { minutes: 1.79, samples: 1, source: "cloud_gps_2026_06_17_route_1b_interpolated" },
+  "N:sh_ho->postgraduate_hostel": { minutes: 1.49, samples: 2, source: "merged_gps_2026_06_13_23_route_N" },
+  "1A:university_station->university_sports_centre": { minutes: 1.61, samples: 1, source: "cloud_gps_2026_06_24_route_1a" },
+  "1A:university_sports_centre->shaw_hall": { minutes: 2.15, samples: 1, source: "cloud_gps_2026_06_24_route_1a" },
+  "1B:university_station->postgraduate_hostel": { minutes: 2.99, samples: 1, source: "cloud_gps_2026_06_20_route_1b_passage" },
+  "1B:postgraduate_hostel->university_sports_centre": { minutes: 1.8, samples: 2, source: "merged_gps_2026_06_17_20_route_1b" },
+  "1B:university_sports_centre->shaw_hall": { minutes: 2.19, samples: 2, source: "merged_gps_2026_06_17_20_route_1b" },
 };
 const DEFAULT_STOP_DWELL_SECONDS = {
-  university_station: 35,
+  university_station: 28,
   university_station_piazza: 24,
-  postgraduate_hostel: 24,
+  postgraduate_hostel: 34,
   shaw_hall: 28,
   science_centre: 24,
-  university_admin: 28,
-  sh_ho: 22,
+  university_admin: 40,
+  sh_ho: 53,
   new_asia: 22,
   united_college: 22,
   residences_3_4: 20,
   shaw_college: 24,
   area_39: 18,
   cw_chu: 18,
-  campus_circuit_east: 12,
+  campus_circuit_east: 25,
+  university_sports_centre: 45,
 };
 const DEFAULT_STOP_DWELL_SECONDS_FALLBACK = 14;
 const STOP_DWELL_MAX_SECONDS = 95;
@@ -5811,6 +5848,63 @@ function scheduleSourceUrl(route) {
   return root.CUHK_BUS_DATA.metadata.timetableSources[route.schedule.source] || root.CUHK_BUS_DATA.metadata.sourceUrl;
 }
 
+function routeEtaConfidence(route) {
+  const evidence = routeSegmentEvidence(route);
+  const coverageText = evidence.total ? `${evidence.covered}/${evidence.total}站段` : "0站段";
+  if (evidence.samples >= 8 || evidence.covered >= 6) {
+    return { label: `GPS样本较多 · ${coverageText} · ${evidence.samples}个样本`, shortLabel: "样本较多" };
+  }
+  if (evidence.samples >= 2 || evidence.covered >= 2) {
+    return { label: `GPS校准 · ${coverageText} · ${evidence.samples}个样本`, shortLabel: "GPS校准" };
+  }
+  if (evidence.samples > 0 || evidence.covered > 0) {
+    return { label: `GPS样本少 · ${coverageText} · 需继续校准`, shortLabel: "样本少" };
+  }
+  return { label: "按时刻表和路线估算", shortLabel: "时刻表估算" };
+}
+
+function routeStopEtaConfidence(route, stopIndex) {
+  const evidence = routeSegmentEvidence(route, stopIndex);
+  if (!evidence.total) return { label: "时刻表估算", shortLabel: "时刻表估算" };
+  if (!evidence.covered) return { label: `时刻表估算 · 0/${evidence.total}站段`, shortLabel: "时刻表估算" };
+  if (evidence.covered === evidence.total && evidence.samples >= evidence.total) {
+    return { label: `GPS校准 · ${evidence.covered}/${evidence.total}站段 · ${evidence.samples}样本`, shortLabel: "全段校准" };
+  }
+  return { label: `部分GPS校准 · ${evidence.covered}/${evidence.total}站段 · ${evidence.samples}样本`, shortLabel: "部分校准" };
+}
+
+function routeSegmentEvidence(route, upToStopIndex = Infinity) {
+  let samples = 0;
+  let covered = 0;
+  let total = 0;
+  if (!route || !Array.isArray(route.stops)) return { samples, covered, total };
+  const limit = Math.min(route.stops.length - 1, Number.isFinite(upToStopIndex) ? Math.max(0, upToStopIndex) : route.stops.length - 1);
+  for (let i = 1; i <= limit; i += 1) {
+    const fromStopId = route.stops[i - 1];
+    const toStopId = route.stops[i];
+    const fromStop = root.CUHK_BUS_DATA.stops[fromStopId];
+    const toStop = root.CUHK_BUS_DATA.stops[toStopId];
+    if (!fromStop || !toStop || fromStop.kind === "waypoint" || toStop.kind === "waypoint") continue;
+    total += 1;
+    const key = segmentKey(fromStopId, toStopId);
+    const routeKey = `${route.id}:${key}`;
+    const item = DEFAULT_ROUTE_SEGMENT_TRAVEL_MINUTES[routeKey] || DEFAULT_SEGMENT_TRAVEL_MINUTES[key];
+    if (!item || item.estimated) continue;
+    covered += 1;
+    samples += Math.max(1, Number(item.samples) || 1);
+  }
+  return { samples, covered, total };
+}
+
+function servicePeriodHint(at = new Date()) {
+  const clock = hongKongClock(at);
+  const month = Number(new Intl.DateTimeFormat("en-US", { timeZone: HK_TIME_ZONE, month: "numeric" }).format(at));
+  if (clock.weekday === 0 || clock.weekday === 6) return "周末样本少，ETA仅供参考";
+  if (month >= 6 && month <= 8) return "暑期/假期班次和客流会变，ETA仅供参考";
+  if (month === 12 || month === 1) return "假期前后班次和客流会变，ETA仅供参考";
+  return "";
+}
+
 function coordAtProgress(coords, progress) {
   const target = Math.max(0, Math.min(1, progress));
   const segmentLengths = [];
@@ -6075,7 +6169,9 @@ root.CUHK_BUS_UTILS = {
   routeCoordinates,
   routeDirectionGlyph,
   routeDirectionLabel,
+  routeEtaConfidence,
   routeProgressAtElapsed,
+  routeStopEtaConfidence,
   routeStopOffsetMinutes,
   routeStopProgress,
   routeStopDirectionGlyph,
@@ -6083,6 +6179,7 @@ root.CUHK_BUS_UTILS = {
   stopArrivalSummary,
   scheduleSourceUrl,
   scheduleSummary,
+  servicePeriodHint,
   serviceStatus,
   stopDirectionGlyph,
   stopDirectionSummary,

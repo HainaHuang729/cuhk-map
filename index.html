@@ -176,7 +176,7 @@
       position: fixed;
       z-index: 820;
       inset: 0;
-      padding: calc(64px + env(safe-area-inset-top)) 16px calc(72px + env(safe-area-inset-bottom));
+      padding: calc(14px + env(safe-area-inset-top)) 16px calc(56px + env(safe-area-inset-bottom));
       background: #EAD8F7;
       overflow: auto;
     }
@@ -597,6 +597,23 @@
       inset: 2px 5px;
     }
 
+    .poi-glyph {
+      width: 24px;
+      height: 24px;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 950;
+      text-shadow:
+        -1.2px -1.2px 0 #FFB000,
+        1.2px -1.2px 0 #FFB000,
+        -1.2px 1.2px 0 #FFB000,
+        1.2px 1.2px 0 #FFB000,
+        0 2px 5px rgba(155, 92, 0, 0.36);
+    }
+
     .poi-cross {
       border: 0;
       clip-path: polygon(35% 0, 65% 0, 65% 35%, 100% 35%, 100% 65%, 65% 65%, 65% 100%, 35% 100%, 35% 65%, 0 65%, 0 35%, 35% 35%);
@@ -652,6 +669,21 @@
 
     .poi-layer-swatch.triangle span {
       transform: translateY(1px);
+    }
+
+    .poi-layer-swatch.glyph {
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      color: #fff !important;
+      font-size: 12px;
+      font-weight: 950;
+      text-shadow:
+        -1px -1px 0 #FFB000,
+        1px -1px 0 #FFB000,
+        -1px 1px 0 #FFB000,
+        1px 1px 0 #FFB000,
+        0 1px 3px rgba(155, 92, 0, 0.34);
     }
 
     .poi-layer-swatch.cross {
@@ -1103,7 +1135,7 @@
       }
 
       .metro-panel {
-        padding: calc(52px + env(safe-area-inset-top)) 10px calc(62px + env(safe-area-inset-bottom));
+        padding: calc(10px + env(safe-area-inset-top)) 10px calc(54px + env(safe-area-inset-bottom));
       }
 
       .metro-list {
@@ -1286,14 +1318,14 @@
   <span id="count" hidden>正在加载 OSM 数据</span>
   <nav id="viewModeDock" class="view-mode-dock" aria-label="视图切换">
     <button class="view-mode-button is-active" type="button" data-mode="map">地图</button>
-    <button class="view-mode-button" type="button" data-mode="metro">到站</button>
+    <button class="view-mode-button" type="button" data-mode="metro">线路图</button>
   </nav>
   <nav id="busRouteDock" class="bus-route-dock" aria-label="校巴线路"></nav>
   <section id="routeMessagePanel" class="route-message-panel" aria-label="线路消息" hidden>
     <strong id="routeMessageTitle">线路消息</strong>
     <div id="routeMessageBody" class="route-message-body"></div>
   </section>
-  <section id="metroPanel" class="metro-panel" aria-label="校巴到站" hidden>
+  <section id="metroPanel" class="metro-panel" aria-label="校巴线路图" hidden>
     <div id="metroList" class="metro-list"></div>
   </section>
   <main id="map" aria-label="香港中文大学地图"></main>
@@ -1362,7 +1394,7 @@
     }).addTo(map);
 
     const POI_CATEGORIES = [
-      { id: "restaurant", label: "餐厅/饭堂", color: "#b35a2a", marker: "square", glyph: "食" },
+      { id: "restaurant", label: "餐厅/饭堂", color: "#FFB000", marker: "glyph", glyph: "食" },
       { id: "fast_food", label: "快餐/小食", color: "#c58a1b", marker: "triangle", glyph: "快" },
       { id: "coffee", label: "咖啡", color: "#8c5a35", marker: "circle", glyph: "咖" },
       { id: "milk_tea", label: "奶茶茶饮", color: "#2c9aa0", marker: "diamond", glyph: "茶" },
@@ -1978,18 +2010,22 @@
           const vehicles = CUHK_BUS_UTILS.activeVehicles(route).length;
           const vehicleText = vehicles ? ` · 当前估算 ${vehicles.toLocaleString("zh-CN")} 辆` : "";
           const arrivalText = CUHK_BUS_UTILS.stopArrivalSummary(arrival);
+          const confidence = CUHK_BUS_UTILS.routeStopEtaConfidence(route, arrival.stopIndex);
           return `
             <div><strong>校巴 ${escapeHtml(route.id)}</strong> ${escapeHtml(route.name)}${escapeHtml(directionText)}${escapeHtml(vehicleText)}</div>
-            <div>${escapeHtml(arrivalText)}</div>
+            <div>${escapeHtml(arrivalText)} · ${escapeHtml(confidence.shortLabel)}</div>
             <div>${escapeHtml(route.service)} · ${escapeHtml(CUHK_BUS_UTILS.scheduleSummary(route))}</div>
           `;
         })
         .join("");
       const emptyLine = scheduledArrivals.length ? "" : "<div>当前没有预计会经过本站的班次</div>";
+      const periodHint = CUHK_BUS_UTILS.servicePeriodHint();
+      const periodLine = periodHint ? `<div>提示：${escapeHtml(periodHint)}</div>` : "";
       return `
         <strong>${escapeHtml(popupEntry.stop.name)}</strong>
         <div>校巴站点</div>
         ${stopDirectionLine}
+        ${periodLine}
         <div>预计经过：${scheduledArrivals.length.toLocaleString("zh-CN")} 条线路</div>
         ${emptyLine}
         ${routeRows}
@@ -2790,6 +2826,8 @@
         <strong>校巴 ${escapeHtml(route.id)} · ${escapeHtml(route.name)}</strong>
         <div>${escapeHtml(route.service)}</div>
         <div>方向：${escapeHtml(routeDirection)}</div>
+        <div>可信度：${escapeHtml(CUHK_BUS_UTILS.routeEtaConfidence(route).label)}</div>
+        ${CUHK_BUS_UTILS.servicePeriodHint() ? `<div>提示：${escapeHtml(CUHK_BUS_UTILS.servicePeriodHint())}</div>` : ""}
         <div>时刻：${escapeHtml(CUHK_BUS_UTILS.scheduleSummary(route))}</div>
         <div>估算运行：${escapeHtml(String(route.schedule && route.schedule.estimatedTripMinutes || "未知"))} 分钟</div>
         <div><a href="${escapeHtml(CUHK_BUS_UTILS.scheduleSourceUrl(route))}" target="_blank" rel="noopener">官方时刻表</a></div>
@@ -2823,6 +2861,11 @@
             ? `始发站 · ${originStop ? originStop.name : "始发站"}`
             : (nextStopInfo && nextStopInfo.stop ? nextStopInfo.stop.name : "接近终点");
           const etaText = busVehicleEtaText(vehicle);
+          const routeConfidence = CUHK_BUS_UTILS.routeEtaConfidence(route);
+          const nextEvidence = nextStopInfo && Number.isInteger(nextStopInfo.stopIndex)
+            ? CUHK_BUS_UTILS.routeStopEtaConfidence(route, nextStopInfo.stopIndex).label
+            : "";
+          const periodHint = CUHK_BUS_UTILS.servicePeriodHint();
           const marker = L.marker([vehicle.coord[1], vehicle.coord[0]], {
             icon: L.divIcon({
               className: "",
@@ -2837,6 +2880,9 @@
             <div>发车：${escapeHtml(CUHK_BUS_UTILS.formatTime(vehicle.departure))}</div>
             <div>${escapeHtml(originDeparture ? "状态" : "下一站")}：${escapeHtml(nextStopText)}</div>
             <div>预计：${escapeHtml(etaText)}</div>
+            <div>可信度：${escapeHtml(routeConfidence.label)}</div>
+            ${nextEvidence ? `<div>站段依据：${escapeHtml(nextEvidence)}</div>` : ""}
+            ${periodHint ? `<div>提示：${escapeHtml(periodHint)}</div>` : ""}
             <div>已行驶：${Math.floor(vehicle.elapsedMinutes).toLocaleString("zh-CN")} / ${vehicle.tripMinutes.toLocaleString("zh-CN")} 分钟</div>
             <div>${escapeHtml(route.name)} · ${escapeHtml(route.service)}</div>
             <div>站点：${routeStopNames(route).map(escapeHtml).join(" → ")}</div>
@@ -2925,7 +2971,7 @@
         <strong>${escapeHtml(readableName(tags))}</strong>
         <div>${escapeHtml(category.label)}</div>
         ${tags.opening_hours ? `<div>营业时间：${escapeHtml(tags.opening_hours)}</div>` : ""}
-      `);
+      `, { closeButton: false });
       marker.addTo(poiLayerGroups[poiLayerGroupForCategory(category).id]);
       return true;
     }
@@ -2996,6 +3042,7 @@
       const busOsmStops = busStops.filter((stop) => stop.osmId).length;
       const clock = CUHK_BUS_UTILS.hongKongClock();
       const activeCount = CUHK_BUS_DATA.routes.flatMap((route) => CUHK_BUS_UTILS.activeVehicles(route)).length;
+      const periodHint = CUHK_BUS_UTILS.servicePeriodHint();
       const categoryRows = POI_LAYER_GROUPS
         .filter((group) => poiLayerGroupCount(group, stats) > 0)
         .map((group) => `
@@ -3007,6 +3054,7 @@
         ${categoryRows}
         <div class="row"><span>校巴</span><span>${CUHK_BUS_DATA.routes.length} 条线路 · ${busStops.length} 个站点（${busOsmStops} 个 OSM 节点）</span></div>
         <div class="row"><span>小车估算</span><span>香港时间 ${clock.label} · 当前 ${activeCount.toLocaleString("zh-CN")} 辆</span></div>
+        ${periodHint ? `<div class="row"><span>时段提示</span><span>${escapeHtml(periodHint)}</span></div>` : ""}
         <div class="row"><span>数据源</span><span>OpenStreetMap / Overpass 实时读取</span></div>
       `;
     }

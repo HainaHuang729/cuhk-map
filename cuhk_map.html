@@ -24,7 +24,7 @@
       --bg: #edf0ec;
       --bg2: #dde7df;
       --cuhk-purple: #5b2c84;
-      --cuhk-gold: #f2c14e;
+      --cuhk-gold: #FFB000;
       font-family: Inter, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
     }
 
@@ -196,9 +196,9 @@
     }
 
     .legend {
+      display: none;
       left: 14px;
       bottom: 14px;
-      display: grid;
       gap: 8px;
       width: min(230px, calc(100vw - 28px));
       max-height: min(54vh, 420px);
@@ -314,6 +314,17 @@
       font-size: 13px;
       font-weight: 800;
       line-height: 1;
+    }
+
+    .poi-symbol.outline-symbol,
+    .mini-symbol.outline-symbol {
+      color: #fff !important;
+      text-shadow:
+        -1px -1px 0 var(--cuhk-gold),
+        1px -1px 0 var(--cuhk-gold),
+        -1px 1px 0 var(--cuhk-gold),
+        1px 1px 0 var(--cuhk-gold),
+        0 1px 3px rgba(91, 44, 132, 0.32);
     }
 
     .route-symbol,
@@ -606,7 +617,7 @@
     const STOP_ETA_DISPLAY_LIMIT_MINUTES = 20;
 
     const POI_CATEGORIES = [
-      { id: "restaurant", label: "餐厅/饭堂", color: "#b35a2a", marker: "square", glyph: "食" },
+      { id: "restaurant", label: "餐厅/饭堂", color: "#FFB000", marker: "glyph", glyph: "食", outlineOnly: true },
       { id: "fast_food", label: "快餐/小食", color: "#c58a1b", marker: "triangle", glyph: "快" },
       { id: "coffee", label: "咖啡", color: "#8c5a35", marker: "circle", glyph: "咖" },
       { id: "milk_tea", label: "奶茶茶饮", color: "#2c9aa0", marker: "diamond", glyph: "茶" },
@@ -874,7 +885,7 @@
       const symbols = group.categoryIds
         .map((id) => POI_CATEGORY_BY_ID[id])
         .filter((category) => category && poiCategoryCounts[category.id] > 0)
-        .map((category) => `<span class="${symbolClass}" style="color:${category.color}">${escapeHtml(category.glyph)}</span>`)
+        .map((category) => `<span class="${symbolClass}${category.outlineOnly ? " outline-symbol" : ""}" style="color:${category.color}">${escapeHtml(category.glyph)}</span>`)
         .join("");
       return `<span class="${className}">${symbols}</span>`;
     }
@@ -1320,7 +1331,7 @@
       ctx.globalAlpha = 1;
       ctx.shadowBlur = 0;
       ctx.lineWidth = Math.max(1.5, size * 0.18);
-      ctx.strokeStyle = "#f2c14e";
+      ctx.strokeStyle = "#FFB000";
       ctx.stroke();
       ctx.lineWidth = Math.max(0.7, size * 0.07);
       ctx.strokeStyle = "rgba(255, 255, 255, 0.92)";
@@ -1441,6 +1452,11 @@
       const size = highlighted ? 9.4 : 7.2;
       ctx.save();
       ctx.translate(x, y);
+      if (category.outlineOnly) {
+        drawOutlinedGlyph(category.glyph, size, highlighted);
+        ctx.restore();
+        return;
+      }
       ctx.fillStyle = category.color;
       ctx.strokeStyle = "#ffffff";
       ctx.lineWidth = highlighted ? 2 : 1.35;
@@ -1545,6 +1561,21 @@
         ctx.textBaseline = "middle";
         ctx.fillText(label, 0, markerSize * 0.03);
       }
+
+      function drawOutlinedGlyph(label, markerSize, active) {
+        if (!label) return;
+        ctx.shadowColor = "rgba(91, 44, 132, 0.34)";
+        ctx.shadowBlur = active ? 7 : 3;
+        ctx.lineJoin = "round";
+        ctx.lineWidth = active ? 4.2 : 3.4;
+        ctx.strokeStyle = "#FFB000";
+        ctx.fillStyle = "#ffffff";
+        ctx.font = `900 ${Math.max(16, markerSize * 2.45)}px Inter, "Microsoft YaHei", "Segoe UI", sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.strokeText(label, 0, markerSize * 0.04);
+        ctx.fillText(label, 0, markerSize * 0.04);
+      }
     }
 
     function draw() {
@@ -1620,8 +1651,10 @@
         const activeVehicles = visibleBusVehicles();
         const routeRows = visibleRoutes.map((route) => {
           const status = CUHK_BUS_UTILS.serviceStatus(route);
-          return [`校巴 ${route.id}`, `${status.label} · ${CUHK_BUS_UTILS.scheduleSummary(route)}`];
+          const confidence = CUHK_BUS_UTILS.routeEtaConfidence(route);
+          return [`校巴 ${route.id}`, `${status.label} · ${confidence.shortLabel} · ${CUHK_BUS_UTILS.scheduleSummary(route)}`];
         });
+        const periodHint = CUHK_BUS_UTILS.servicePeriodHint();
         const categoryRows = visiblePoiLayerGroups()
           .map((group) => [group.label, `${poiLayerGroupCount(group).toLocaleString("zh-CN")} 个`]);
         detailsList.innerHTML = [
@@ -1632,6 +1665,7 @@
           ["校巴线路", `${CUHK_BUS_DATA.routes.length.toLocaleString("zh-CN")} 条`],
           ["校巴站点", `${busStopCount.toLocaleString("zh-CN")} 个（${busOsmStopCount.toLocaleString("zh-CN")} 个 OSM 节点 / ${(busStopCount - busOsmStopCount).toLocaleString("zh-CN")} 个近似锚点）`],
           ["香港时间", clock.label],
+          ...(periodHint ? [["提示", periodHint]] : []),
           ["估算小车", `${activeVehicles.length.toLocaleString("zh-CN")} 辆（已开启线路）`],
           ...routeRows,
           ...categoryRows,
@@ -1658,6 +1692,7 @@
       const rows = [
         ["名称", name || "未命名"],
         ["分类", category.label],
+        ["营业时间", p.opening_hours || ""],
         ["OSM 类型", rawType],
         ["OSM", p["@id"] || ""],
       ].filter(([, value]) => value);
@@ -1690,13 +1725,16 @@
         const vehicles = CUHK_BUS_UTILS.activeVehicles(route).length;
         const vehicleText = vehicles ? ` · 估算 ${vehicles} 辆` : "";
         const arrivalText = CUHK_BUS_UTILS.stopArrivalSummary(arrival);
-        return [`校巴 ${route.id}`, `${route.name}${directionText}${vehicleText} · ${arrivalText}`];
+        const confidence = CUHK_BUS_UTILS.routeStopEtaConfidence(route, arrival.stopIndex);
+        return [`校巴 ${route.id}`, `${route.name}${directionText}${vehicleText} · ${arrivalText} · ${confidence.shortLabel}`];
       });
       const stopDirection = CUHK_BUS_UTILS.stopDirectionSummary(detailEntry.occurrences);
+      const periodHint = CUHK_BUS_UTILS.servicePeriodHint();
       const rows = [
         ["名称", detailEntry.stop.name],
         ["类型", "校巴站点"],
         ...(stopDirection === "按线路方向" ? [] : [["站点方向", stopDirection]]),
+        ...(periodHint ? [["提示", periodHint]] : []),
         ["预计经过", scheduledArrivals.length ? `${scheduledArrivals.length.toLocaleString("zh-CN")} 条线路` : "当前没有预计会经过本站的班次"],
         ...routeRows,
       ];
@@ -1708,9 +1746,16 @@
     function showBusVehicleDetails(vehicle) {
       const nextStop = vehicle.nextStop && vehicle.nextStop.stop;
       const eta = busVehicleNextStopEtaMinutes(vehicle);
+      const nextEvidence = vehicle.nextStop && Number.isInteger(vehicle.nextStop.stopIndex)
+        ? CUHK_BUS_UTILS.routeStopEtaConfidence(vehicle.route, vehicle.nextStop.stopIndex).label
+        : "";
+      const periodHint = CUHK_BUS_UTILS.servicePeriodHint();
       const rows = [
         ["线路", `${vehicle.route.id} · ${vehicle.route.name}`],
         ["下一站", nextStop ? nextStop.name : "接近终点"],
+        ["可信度", CUHK_BUS_UTILS.routeEtaConfidence(vehicle.route).label],
+        ...(nextEvidence ? [["站段依据", nextEvidence]] : []),
+        ...(periodHint ? [["提示", periodHint]] : []),
         ["预计到达", Number.isFinite(eta) ? CUHK_BUS_UTILS.stopArrivalSummary({
           status: "scheduled",
           route: vehicle.route,

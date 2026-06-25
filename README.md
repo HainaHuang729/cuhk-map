@@ -15,6 +15,21 @@
 
 数据来自 OpenStreetMap / Overpass，遵循 ODbL；地图瓦片由 OpenStreetMap contributors 提供。
 
+## Transport Data Authority
+
+校巴路线、站名、站序、服务时间、收费小巴安排、临时改站、暂停服务和特别运营规则，一律以 CUHK Transport Office 官方资料为准。OSM、腾讯地图、Google 地图、实测 GPS 和同学反馈只用于校准坐标、贴合道路和改进 ETA，不作为路线是否存在或站点是否停靠的最终依据。
+
+维护时优先检查这些入口：
+
+- CUHK Transport Office 首页：<https://transport.cuhk.edu.hk/>
+- 最新临时安排和改站公告：<https://transport.cuhk.edu.hk/whats-new/>
+- 常规穿梭校巴路线页：`https://transport.cuhk.edu.hk/route/1a/`、`1b/`、`2/`、`3/`、`4/`、`8/`、`n/`、`h/`
+- 转堂校巴路线页：`https://transport.cuhk.edu.hk/route/5/`、`6a/`、`6b/`、`7/`
+- 收费穿梭小巴：<https://transport.cuhk.edu.hk/route/up/>、<https://transport.cuhk.edu.hk/route/down/>
+- 首页 Download Area 的 PDF：Monday to Saturday、Night-time & Public Holidays、Meet-Class、Paid Shuttle Light Bus Service
+
+遇到路线和地图观感冲突时，先按交通处站序和公告修正数据，再用 GPS/地图道路中心线调整路径形状。极端天气触发条件参考香港天文台，校巴是否停驶和如何恢复仍以交通处/校方最新公布为准。
+
 当前本地数据使用 2026-06-11 的 Overpass 查询结果，可识别到 37 个 POI：22 个餐厅/饭堂、2 个快餐/小食、7 个咖啡点、2 个医疗点、3 个住宿点、1 个码头。餐饮、茶饮、医疗、住宿和码头统一合并为默认关闭的“常用信息”显示开关，但地图小标仍保留各自的食、快、咖、茶、医、宿、渡样式。
 
 离线页面已补充 196 个 OSM 建筑轮廓，当前绘制楼宇轮廓和楼宇名称；自有道路、绿地/水体覆盖层已移除，避免和线上 OSM 底图视觉冲突。
