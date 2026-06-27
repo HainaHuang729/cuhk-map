@@ -410,7 +410,7 @@
     <header class="topbar">
       <div class="title-block">
         <h1>CUHK 校巴少边形路线图 Demo</h1>
-        <p>基于现有校巴与收费小巴站序生成的示意线路图。站点合并为同一节点，线路沿预设少边形轨道行走，多条线路共用同一轨道时用平行彩色线表示。</p>
+        <p>基于 1A 本部线站序生成的示意线路图。站点合并为同一节点，线路沿预设少边形轨道行走。</p>
       </div>
       <div class="toolbar" id="routeToolbar" aria-label="线路显示开关"></div>
     </header>
@@ -448,9 +448,7 @@
       "5": "#C5922E",
       "6A": "#D5A62F",
       "6B": "#E4B955",
-      "7": "#5A558D",
-      "MINI-N": "#008C8C",
-      "MINI-S": "#D47C2A"
+      "7": "#5A558D"
     };
 
     const POSITIONS = {
@@ -702,8 +700,7 @@
       area_39: [-12, -16, "end"]
     };
 
-    const EXCLUDED_ROUTE_IDS = new Set([]);
-    const routes = DATA.routes.filter((route) => !EXCLUDED_ROUTE_IDS.has(route.id));
+    const routes = DATA.routes.filter((route) => route.id === "1A");
     const stops = DATA.stops;
     const activeRoutes = new Set(routes.map((route) => route.id));
     let selectedStopId = null;
@@ -781,46 +778,6 @@
         renderStats();
       });
       routeToolbar.append(showAllButton);
-
-      const shuttleOnlyButton = document.createElement("button");
-      shuttleOnlyButton.className = "control-button is-secondary";
-      shuttleOnlyButton.textContent = "只看校巴";
-      shuttleOnlyButton.addEventListener("click", () => {
-        activeRoutes.clear();
-        routes.filter((route) => !isMinibusRoute(route)).forEach((route) => activeRoutes.add(route.id));
-        selectedStopId = null;
-        focusedRouteId = null;
-        renderToolbar();
-        renderDiagram();
-        renderInfoPanel();
-        renderStats();
-      });
-      routeToolbar.append(shuttleOnlyButton);
-
-      const minibusRoutes = routes.filter(isMinibusRoute);
-      if (minibusRoutes.length) {
-        const allMinibusVisible = minibusRoutes.every((route) => activeRoutes.has(route.id));
-        const minibusButton = document.createElement("button");
-        minibusButton.className = `control-button is-secondary${allMinibusVisible ? " is-active" : ""}`;
-        minibusButton.textContent = allMinibusVisible ? "隐藏小巴" : "显示小巴";
-        minibusButton.addEventListener("click", () => {
-          const shouldShow = !minibusRoutes.every((route) => activeRoutes.has(route.id));
-          minibusRoutes.forEach((route) => {
-            if (shouldShow) {
-              activeRoutes.add(route.id);
-            } else {
-              activeRoutes.delete(route.id);
-              if (focusedRouteId === route.id) focusedRouteId = null;
-            }
-          });
-          selectedStopId = null;
-          renderToolbar();
-          renderDiagram();
-          renderInfoPanel();
-          renderStats();
-        });
-        routeToolbar.append(minibusButton);
-      }
 
       if (focusedRouteId) {
         const clearFocusButton = document.createElement("button");
@@ -1203,9 +1160,7 @@
         "H",
         "5",
         "6A",
-        "6B",
-        "MINI-N",
-        "MINI-S"
+        "6B"
       ];
       const preferredIndex = order.indexOf(routeId);
       if (preferredIndex >= 0) return preferredIndex;
