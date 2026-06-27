@@ -1,0 +1,1991 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CUHK 校巴少边形路线图 Demo</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --cuhk-purple: #4f2068;
+      --cuhk-purple-2: #6f3fa0;
+      --cuhk-gold: #d7a82f;
+      --ink: #241331;
+      --muted: #6f6475;
+      --paper: #fffaf0;
+      --panel: rgba(255, 255, 255, 0.92);
+      --line-bg: #f5ead4;
+      --border: rgba(79, 32, 104, 0.16);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 14% 0%, rgba(215, 168, 47, 0.2), transparent 34%),
+        linear-gradient(145deg, #fff8e9 0%, #f8f1df 42%, #efe2c4 100%);
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(240px, 1fr) auto;
+      gap: 18px;
+      align-items: start;
+      padding: 18px 22px 12px;
+      border-bottom: 1px solid rgba(79, 32, 104, 0.12);
+      background: rgba(255, 250, 240, 0.82);
+      backdrop-filter: blur(16px);
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-size: clamp(20px, 2.6vw, 34px);
+      line-height: 1.08;
+      letter-spacing: 0;
+      color: var(--cuhk-purple);
+    }
+
+    .title-block p {
+      margin: 8px 0 0;
+      max-width: 780px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+      max-width: 720px;
+    }
+
+    .toolbar-break {
+      flex-basis: 100%;
+      height: 0;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--cuhk-purple);
+      border-radius: 999px;
+      min-height: 34px;
+      padding: 7px 12px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 8px 22px rgba(79, 32, 104, 0.06);
+      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(79, 32, 104, 0.3);
+    }
+
+    button.is-active {
+      background: var(--route-color, var(--cuhk-purple));
+      border-color: var(--route-color, var(--cuhk-purple));
+      color: var(--route-text, #fff);
+    }
+
+    button.is-focused {
+      box-shadow:
+        0 0 0 3px rgba(215, 168, 47, 0.28),
+        0 10px 28px rgba(79, 32, 104, 0.12);
+    }
+
+    .control-button {
+      background: var(--cuhk-purple);
+      border-color: var(--cuhk-purple);
+      color: #fff;
+    }
+
+    .control-button.is-secondary {
+      background: #fff;
+      border-color: rgba(79, 32, 104, 0.18);
+      color: var(--cuhk-purple);
+    }
+
+    .control-button.is-secondary.is-active {
+      background: var(--cuhk-purple);
+      border-color: var(--cuhk-purple);
+      color: #fff;
+    }
+
+    .diagram-shell {
+      position: relative;
+      min-height: 0;
+      padding: 16px;
+    }
+
+    .diagram-card {
+      position: relative;
+      min-height: calc(100vh - 138px);
+      border: 1px solid rgba(79, 32, 104, 0.14);
+      border-radius: 18px;
+      overflow: hidden;
+      background:
+        linear-gradient(90deg, rgba(79, 32, 104, 0.04) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(79, 32, 104, 0.04) 1px, transparent 1px),
+        rgba(255, 253, 247, 0.82);
+      background-size: 48px 48px;
+      box-shadow: 0 28px 80px rgba(79, 32, 104, 0.12);
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: calc(100vh - 140px);
+      min-height: 680px;
+    }
+
+    .route-halo {
+      stroke: rgba(255, 250, 240, 0.86);
+      stroke-width: 7.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+
+    .route-line {
+      stroke-width: 4.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      cursor: pointer;
+      transition: opacity 0.16s ease, stroke-width 0.16s ease;
+    }
+
+    .route-line:hover,
+    .route-line.is-focused {
+      stroke-width: 7;
+    }
+
+    .route-hit {
+      fill: none;
+      stroke: transparent;
+      stroke-width: 18;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      cursor: pointer;
+      pointer-events: stroke;
+    }
+
+    .route-line.is-muted,
+    .route-halo.is-muted,
+    .route-hit.is-muted {
+      opacity: 0.16;
+    }
+
+    .station-hit {
+      fill: transparent;
+      stroke: transparent;
+      cursor: pointer;
+    }
+
+    .station-ring {
+      fill: #fffefa;
+      stroke: var(--cuhk-purple);
+      stroke-width: 3;
+      filter: drop-shadow(0 4px 10px rgba(79, 32, 104, 0.18));
+      transition: width 0.16s ease, height 0.16s ease, stroke 0.16s ease, fill 0.16s ease;
+    }
+
+    .station-node.is-hub .station-ring {
+      stroke-width: 4;
+    }
+
+    .station-node.is-selected .station-ring {
+      fill: #fff5c8;
+      stroke: var(--cuhk-gold);
+    }
+
+    .station-node.is-muted {
+      opacity: 0.2;
+    }
+
+    .station-label {
+      fill: var(--cuhk-purple);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0;
+      pointer-events: none;
+    }
+
+    .station-label.is-small {
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .station-label.is-vertical {
+      font-size: 10px;
+    }
+
+    .station-label.is-vertical.is-small {
+      font-size: 9px;
+    }
+
+    .panel {
+      position: absolute;
+      left: 20px;
+      bottom: 20px;
+      width: min(420px, calc(100% - 40px));
+      border: 1px solid rgba(79, 32, 104, 0.16);
+      border-radius: 16px;
+      background: var(--panel);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 18px 48px rgba(79, 32, 104, 0.16);
+      padding: 16px;
+    }
+
+    .panel-title {
+      margin: 0;
+      color: var(--cuhk-purple);
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .panel-body {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .route-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 12px;
+    }
+
+    .route-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 6px 9px;
+      background: #fff;
+      border: 1px solid rgba(79, 32, 104, 0.12);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .route-chip::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--route-color);
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+    }
+
+    .stats {
+      position: absolute;
+      right: 18px;
+      top: 18px;
+      display: none;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      max-width: min(420px, calc(100% - 40px));
+      pointer-events: none;
+    }
+
+    .stat-pill {
+      border: 1px solid rgba(79, 32, 104, 0.14);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--muted);
+      padding: 5px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      backdrop-filter: blur(12px);
+    }
+
+    @media (max-width: 840px) {
+      .app {
+        grid-template-rows: auto minmax(0, 1fr);
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 10px 10px 8px;
+      }
+
+      .title-block h1 {
+        font-size: 18px;
+      }
+
+      .title-block p {
+        display: none;
+      }
+
+      .toolbar {
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        max-width: 100%;
+        overflow-x: auto;
+        padding-bottom: 2px;
+        scrollbar-width: none;
+      }
+
+      .toolbar::-webkit-scrollbar {
+        display: none;
+      }
+
+      .toolbar-break {
+        display: none;
+      }
+
+      button {
+        flex: 0 0 auto;
+        min-height: 32px;
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+
+      .diagram-shell {
+        padding: 8px;
+      }
+
+      .diagram-card {
+        min-height: calc(100vh - 92px);
+        border-radius: 14px;
+      }
+
+      svg {
+        height: calc(100vh - 92px);
+        min-height: 560px;
+      }
+
+      .panel {
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        width: auto;
+        padding: 12px;
+      }
+
+      .panel-title {
+        font-size: 15px;
+      }
+
+      .panel-body {
+        font-size: 12px;
+        line-height: 1.38;
+      }
+
+      .route-chip-row {
+        max-height: 74px;
+        overflow-y: auto;
+      }
+
+      .stats {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="title-block">
+        <h1>CUHK 校巴少边形路线图 Demo</h1>
+        <p>基于现有校巴与收费小巴站序生成的示意线路图。站点合并为同一节点，线路沿预设少边形轨道行走，多条线路共用同一轨道时用平行彩色线表示。</p>
+      </div>
+      <div class="toolbar" id="routeToolbar" aria-label="线路显示开关"></div>
+    </header>
+
+    <main class="diagram-shell">
+      <section class="diagram-card">
+        <svg id="diagram" viewBox="0 0 1200 860" role="img" aria-label="CUHK 校巴少边形路线图"></svg>
+        <div class="stats" id="stats"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="data/cuhk_bus_routes.js"></script>
+  <script>
+    const DATA = window.CUHK_BUS_DATA;
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const ROUTE_SPACING = 8;
+    const ROUTE_STROKE = 5.25;
+    const ROUTE_LANE_SPACING = 5.8;
+    const LAYOUT_CENTER = [670, 440];
+    const LAYOUT_SCALE_X = 1.36;
+    const LAYOUT_SCALE_Y = 1.2;
+    const STATION_PILL_WIDTH = 88;
+    const STATION_PILL_HEIGHT = 30;
+    const STATION_APPROACH_STUB = STATION_PILL_HEIGHT / 2;
+    const ROUTE_COLOR_OVERRIDES = {
+      "1A": "#4F2068",
+      "1B": "#72469A",
+      "2": "#9364A5",
+      "3": "#B06A79",
+      "4": "#2F7F88",
+      "8": "#B56545",
+      "N": "#364D7D",
+      "H": "#6F7E35",
+      "5": "#C5922E",
+      "6A": "#D5A62F",
+      "6B": "#E4B955",
+      "7": "#5A558D",
+      "MINI-N": "#008C8C",
+      "MINI-S": "#D47C2A"
+    };
+
+    const POSITIONS = {
+      university_station: [1040, 500],
+      university_station_piazza: [900, 760],
+      yasumoto: [980, 700],
+      chung_chi_teaching: [800, 760],
+      wong_foo_yuan: [930, 700],
+      chung_chi_staff_quarters: [840, 700],
+      teaching_research_1: [720, 700],
+      ho_tim: [900, 700],
+      university_sports_centre: [900, 590],
+      postgraduate_hostel: [800, 120],
+      campus_circuit_east: [1040, 120],
+      sh_ho: [830, 590],
+      university_admin: [600, 590],
+      engineering: [760, 590],
+      university_health: [680, 590],
+      shaw_hall: [680, 500],
+      science_centre: [760, 500],
+      university_library: [620, 500],
+      fung_king_hey: [560, 500],
+      united_college: [500, 500],
+      new_asia: [500, 440],
+      residences_3_4: [460, 590],
+      lee_woo_sing: [820, 320],
+      chan_chun_ha_hostel: [420, 320],
+      shaw_college: [330, 200],
+      united_residence: [520, 320],
+      residence_15: [620, 320],
+      residence_10_11: [720, 320],
+      cw_chu: [520, 120],
+      area_39: [360, 120]
+    };
+
+    const WAYPOINTS = {
+      _station_south_spine: [1040, 620],
+      _east_lower_junction: [1040, 590],
+      _piazza_lower_junction: [900, 590],
+      _lower_central_junction: [680, 590],
+      _east_south_junction: [1040, 700],
+      _sports_shaw_corner: [680, 590],
+      _sports_science_corner: [900, 500],
+      _sports_pg_corner: [1040, 590],
+      _piazza_sports_corner: [900, 590],
+      _pg_shho_corner: [1040, 590],
+      _shho_station_corner: [1040, 590],
+      _shho_piazza_corner: [900, 590],
+      _cc_sports_corner: [800, 590],
+      _yasumoto_station_corner: [1040, 700],
+      _yasumoto_sports_corner: [980, 590],
+      _yasumoto_east_corner: [1040, 700],
+      _east_top_corner: [1040, 120],
+      _cw_res15_corner: [620, 120],
+      _res15_ur_corner: [520, 320],
+      _ur_chan_corner: [420, 320],
+      _chan_shaw_entry: [420, 200],
+      _chan_shaw_corner: [330, 220],
+      _shaw_area_corner: [330, 120],
+      _chan_res34_corner: [420, 590],
+      _shaw_res34_corner: [330, 590],
+      _res34_united_corner: [460, 500],
+      _res34_newasia_corner: [460, 440],
+      _res34_admin_corner: [460, 590],
+      _res34_lee_corner: [820, 590],
+      _united_admin_corner: [500, 590],
+      _newasia_admin_corner: [500, 590],
+      _newasia_shaw_corner: [680, 440],
+      _science_newasia_corner: [760, 440],
+      _central_track: [680, 500],
+      _admin_science_corner: [600, 500],
+      _shaw_admin_corner: [680, 590],
+      _health_shaw_corner: [680, 500],
+      _lee_ur_corner: [820, 320],
+      _teaching_health_corner: [720, 590],
+      _teaching_staff_corner: [840, 700],
+      _wong_station_corner: [1040, 700]
+    };
+
+    expandLayout(POSITIONS);
+    expandLayout(WAYPOINTS);
+
+    const POINTS = {
+      ...POSITIONS,
+      ...WAYPOINTS
+    };
+
+    const DIAGRAM_PATHS = new Map([
+      path("university_station", "university_sports_centre", ["university_station", "_east_lower_junction", "_yasumoto_sports_corner", "university_sports_centre"]),
+      path("university_sports_centre", "shaw_hall", ["university_sports_centre", "_cc_sports_corner", "_lower_central_junction", "shaw_hall"]),
+      path("university_sports_centre", "science_centre", ["university_sports_centre", "_sports_science_corner", "science_centre"]),
+      path("university_station_piazza", "university_sports_centre", ["university_station_piazza", "_piazza_lower_junction", "university_sports_centre"]),
+      path("postgraduate_hostel", "university_sports_centre", ["postgraduate_hostel", "_east_top_corner", "_east_lower_junction", "_yasumoto_sports_corner", "university_sports_centre"]),
+      path("postgraduate_hostel", "university_station", ["postgraduate_hostel", "_east_top_corner", "university_station"]),
+      path("sh_ho", "postgraduate_hostel", ["sh_ho", "_yasumoto_sports_corner", "_east_lower_junction", "_east_top_corner", "postgraduate_hostel"]),
+      path("sh_ho", "university_station", ["sh_ho", "_yasumoto_sports_corner", "_east_lower_junction", "university_station"]),
+      path("sh_ho", "university_station_piazza", ["sh_ho", "_piazza_lower_junction", "university_station_piazza"]),
+      path("university_station_piazza", "chung_chi_teaching", ["university_station_piazza", "chung_chi_teaching"]),
+      path("university_station", "yasumoto", ["university_station", "_east_south_junction", "yasumoto"]),
+      path("yasumoto", "university_sports_centre", ["yasumoto", "_yasumoto_sports_corner", "university_sports_centre"]),
+      path("chung_chi_teaching", "university_sports_centre", ["chung_chi_teaching", "_cc_sports_corner", "university_sports_centre"]),
+      path("yasumoto", "campus_circuit_east", ["yasumoto", "_east_south_junction", "campus_circuit_east"]),
+      path("campus_circuit_east", "university_station", ["campus_circuit_east", "university_station"]),
+      path("campus_circuit_east", "cw_chu", ["campus_circuit_east", "_east_top_corner", "_cw_res15_corner", "cw_chu"]),
+      path("area_39", "cw_chu", ["area_39", "cw_chu"]),
+      path("cw_chu", "residence_15", ["cw_chu", "_cw_res15_corner", "residence_15"]),
+      path("cw_chu", "united_residence", ["cw_chu", "united_residence"]),
+      path("residence_15", "united_residence", ["residence_15", "united_residence"]),
+      path("residence_15", "residence_10_11", ["residence_15", "residence_10_11"]),
+      path("cw_chu", "residence_10_11", ["cw_chu", "_cw_res15_corner", "residence_15", "residence_10_11"]),
+      path("united_residence", "chan_chun_ha_hostel", ["united_residence", "chan_chun_ha_hostel"]),
+      path("chan_chun_ha_hostel", "shaw_college", ["chan_chun_ha_hostel", "_chan_shaw_entry", "shaw_college"]),
+      path("chan_chun_ha_hostel", "residences_3_4", ["chan_chun_ha_hostel", "_chan_res34_corner", "residences_3_4"]),
+      path("shaw_college", "residences_3_4", ["shaw_college", "_chan_shaw_corner", "_shaw_res34_corner", "residences_3_4"]),
+      path("shaw_college", "area_39", ["shaw_college", "_shaw_area_corner", "area_39"]),
+      path("shaw_college", "cw_chu", ["shaw_college", "_shaw_area_corner", "area_39", "cw_chu"]),
+      path("residences_3_4", "new_asia", ["residences_3_4", "_res34_newasia_corner", "new_asia"]),
+      path("residences_3_4", "united_college", ["residences_3_4", "_res34_united_corner", "united_college"]),
+      path("residences_3_4", "university_admin", ["residences_3_4", "university_admin"]),
+      path("residences_3_4", "lee_woo_sing", ["residences_3_4", "_res34_lee_corner", "lee_woo_sing"]),
+      path("lee_woo_sing", "united_residence", ["lee_woo_sing", "united_residence"]),
+      path("new_asia", "united_college", ["new_asia", "united_college"]),
+      path("united_college", "university_admin", ["united_college", "_united_admin_corner", "university_admin"]),
+      path("new_asia", "university_admin", ["new_asia", "_newasia_admin_corner", "university_admin"]),
+      path("shaw_hall", "new_asia", ["shaw_hall", "_newasia_shaw_corner", "new_asia"]),
+      path("science_centre", "new_asia", ["science_centre", "_science_newasia_corner", "new_asia"]),
+      path("shaw_hall", "fung_king_hey", ["shaw_hall", "fung_king_hey"]),
+      path("shaw_hall", "university_admin", ["shaw_hall", "_lower_central_junction", "university_admin"]),
+      path("science_centre", "fung_king_hey", ["science_centre", "fung_king_hey"]),
+      path("fung_king_hey", "residences_3_4", ["fung_king_hey", "_res34_united_corner", "residences_3_4"]),
+      path("shaw_hall", "university_library", ["shaw_hall", "university_library"]),
+      path("university_library", "fung_king_hey", ["university_library", "fung_king_hey"]),
+      path("fung_king_hey", "united_college", ["fung_king_hey", "united_college"]),
+      path("university_admin", "science_centre", ["university_admin", "_admin_science_corner", "science_centre"]),
+      path("university_admin", "sh_ho", ["university_admin", "sh_ho"]),
+      path("university_admin", "university_health", ["university_admin", "university_health"]),
+      path("university_health", "shaw_hall", ["university_health", "_health_shaw_corner", "shaw_hall"]),
+      path("university_health", "engineering", ["university_health", "engineering"]),
+      path("teaching_research_1", "university_health", ["teaching_research_1", "_teaching_health_corner", "university_health"]),
+      path("engineering", "teaching_research_1", ["engineering", "_teaching_health_corner", "teaching_research_1"]),
+      path("teaching_research_1", "chung_chi_staff_quarters", ["teaching_research_1", "_teaching_staff_corner", "chung_chi_staff_quarters"]),
+      path("chung_chi_staff_quarters", "ho_tim", ["chung_chi_staff_quarters", "ho_tim"]),
+      path("ho_tim", "yasumoto", ["ho_tim", "yasumoto"]),
+      path("university_station", "wong_foo_yuan", ["university_station", "_east_south_junction", "wong_foo_yuan"]),
+      path("wong_foo_yuan", "chung_chi_staff_quarters", ["wong_foo_yuan", "chung_chi_staff_quarters"])
+    ]);
+
+    const LABELS = {
+      university_station: "大学站",
+      university_station_piazza: "大学站广场",
+      yasumoto: "康本园",
+      chung_chi_teaching: "崇基教学楼",
+      wong_foo_yuan: "王福元楼",
+      chung_chi_staff_quarters: "崇基C/D座",
+      teaching_research_1: "教研一座",
+      ho_tim: "何添楼",
+      university_sports_centre: "大学体育中心",
+      postgraduate_hostel: "研究生宿舍",
+      campus_circuit_east: "环迴东路",
+      sh_ho: "善衡书院",
+      university_admin: "大学行政楼",
+      engineering: "工程学大楼",
+      university_health: "保健处",
+      shaw_hall: "邵逸夫堂",
+      science_centre: "科学馆",
+      university_library: "图书馆/文物馆",
+      fung_king_hey: "冯景禧楼",
+      united_college: "联合书院",
+      new_asia: "新亚书院",
+      residences_3_4: "伍宜孙",
+      lee_woo_sing: "和声书院",
+      chan_chun_ha_hostel: "陈震夏宿舍",
+      shaw_college: "逸夫书院",
+      united_residence: "联合苑",
+      residence_15: "15苑",
+      residence_10_11: "10/11苑",
+      cw_chu: "敬文书院",
+      area_39: "39区"
+    };
+
+    const SHORT_LABELS = {
+      university_station: "大学站",
+      university_station_piazza: "站前广场",
+      yasumoto: "康本园",
+      chung_chi_teaching: "崇基教学",
+      wong_foo_yuan: "王福元",
+      chung_chi_staff_quarters: "崇基C/D",
+      teaching_research_1: "教研一",
+      ho_tim: "何添楼",
+      university_sports_centre: "体育中心",
+      postgraduate_hostel: "研宿",
+      campus_circuit_east: "环迴东",
+      sh_ho: "善衡",
+      university_admin: "行政楼",
+      engineering: "工程楼",
+      university_health: "保健处",
+      shaw_hall: "邵逸夫堂",
+      science_centre: "科学馆",
+      university_library: "图书馆",
+      fung_king_hey: "冯景禧",
+      united_college: "联合",
+      new_asia: "新亚",
+      residences_3_4: "伍宜孙",
+      lee_woo_sing: "和声",
+      chan_chun_ha_hostel: "陈震夏",
+      shaw_college: "逸夫",
+      united_residence: "联合苑",
+      residence_15: "15苑",
+      residence_10_11: "10/11苑",
+      cw_chu: "敬文",
+      area_39: "39区"
+    };
+
+    const STATION_ORIENTATION_OVERRIDES = {
+      university_station: "vertical",
+      lee_woo_sing: "vertical"
+    };
+
+    const LABEL_OFFSETS = {
+      university_station: [18, 18, "start"],
+      university_station_piazza: [0, 26, "middle"],
+      yasumoto: [18, -8, "start"],
+      chung_chi_teaching: [0, 26, "middle"],
+      wong_foo_yuan: [16, 0, "start"],
+      chung_chi_staff_quarters: [-16, 0, "end"],
+      teaching_research_1: [-14, 20, "end"],
+      ho_tim: [12, -16, "start"],
+      university_sports_centre: [18, 0, "start"],
+      postgraduate_hostel: [18, 0, "start"],
+      campus_circuit_east: [20, 0, "start"],
+      sh_ho: [16, 20, "start"],
+      university_admin: [-18, 20, "end"],
+      engineering: [0, 25, "middle"],
+      university_health: [0, 24, "middle"],
+      shaw_hall: [0, -20, "middle"],
+      science_centre: [0, -20, "middle"],
+      university_library: [-14, -18, "end"],
+      fung_king_hey: [-18, 0, "end"],
+      united_college: [-18, 6, "end"],
+      new_asia: [0, -22, "middle"],
+      residences_3_4: [-16, 18, "end"],
+      lee_woo_sing: [-16, 0, "end"],
+      chan_chun_ha_hostel: [-16, 0, "end"],
+      shaw_college: [-12, -18, "end"],
+      united_residence: [-16, -12, "end"],
+      residence_15: [0, -22, "middle"],
+      residence_10_11: [14, -14, "start"],
+      cw_chu: [0, -22, "middle"],
+      area_39: [-12, -16, "end"]
+    };
+
+    const EXCLUDED_ROUTE_IDS = new Set([]);
+    const routes = DATA.routes.filter((route) => !EXCLUDED_ROUTE_IDS.has(route.id));
+    const stops = DATA.stops;
+    const activeRoutes = new Set(routes.map((route) => route.id));
+    let selectedStopId = null;
+    let focusedRouteId = null;
+
+    const diagram = document.getElementById("diagram");
+    const routeToolbar = document.getElementById("routeToolbar");
+    const infoTitle = document.getElementById("infoTitle");
+    const infoBody = document.getElementById("infoBody");
+    const infoChips = document.getElementById("infoChips");
+    const stats = document.getElementById("stats");
+    const stationConnectorDirectionCache = new Map();
+
+    init();
+
+    function init() {
+      ensurePositions();
+      renderToolbar();
+      renderDiagram();
+      renderInfoPanel();
+      renderStats();
+    }
+
+    function expandLayout(pointMap) {
+      Object.keys(pointMap).forEach((id) => {
+        pointMap[id] = expandPoint(pointMap[id]);
+      });
+    }
+
+    function expandPoint(coord) {
+      return [
+        LAYOUT_CENTER[0] + (coord[0] - LAYOUT_CENTER[0]) * LAYOUT_SCALE_X,
+        LAYOUT_CENTER[1] + (coord[1] - LAYOUT_CENTER[1]) * LAYOUT_SCALE_Y
+      ];
+    }
+
+    function ensurePositions() {
+      const missing = new Set();
+      routes.forEach((route) => {
+        route.stops.forEach((stopId) => {
+          if (!POSITIONS[stopId]) missing.add(stopId);
+        });
+      });
+      if (!missing.size) return;
+
+      const coords = [...missing].map((id) => stops[id] && stops[id].coord).filter(Boolean);
+      const allCoords = Object.values(stops).map((stop) => stop.coord).filter(Boolean);
+      const lonValues = allCoords.map((coord) => coord[0]);
+      const latValues = allCoords.map((coord) => coord[1]);
+      const minLon = Math.min(...lonValues);
+      const maxLon = Math.max(...lonValues);
+      const minLat = Math.min(...latValues);
+      const maxLat = Math.max(...latValues);
+      coords.forEach((coord, index) => {
+        const id = [...missing][index];
+        const x = 180 + ((coord[0] - minLon) / (maxLon - minLon || 1)) * 840;
+        const y = 760 - ((coord[1] - minLat) / (maxLat - minLat || 1)) * 650;
+        POSITIONS[id] = expandPoint([Math.round(x / 24) * 24, Math.round(y / 24) * 24]);
+        POINTS[id] = POSITIONS[id];
+      });
+    }
+
+    function renderToolbar() {
+      routeToolbar.innerHTML = "";
+      const showAllButton = document.createElement("button");
+      showAllButton.className = "control-button";
+      showAllButton.textContent = "显示全部";
+      showAllButton.addEventListener("click", () => {
+        routes.forEach((route) => activeRoutes.add(route.id));
+        selectedStopId = null;
+        focusedRouteId = null;
+        renderToolbar();
+        renderDiagram();
+        renderInfoPanel();
+        renderStats();
+      });
+      routeToolbar.append(showAllButton);
+
+      const shuttleOnlyButton = document.createElement("button");
+      shuttleOnlyButton.className = "control-button is-secondary";
+      shuttleOnlyButton.textContent = "只看校巴";
+      shuttleOnlyButton.addEventListener("click", () => {
+        activeRoutes.clear();
+        routes.filter((route) => !isMinibusRoute(route)).forEach((route) => activeRoutes.add(route.id));
+        selectedStopId = null;
+        focusedRouteId = null;
+        renderToolbar();
+        renderDiagram();
+        renderInfoPanel();
+        renderStats();
+      });
+      routeToolbar.append(shuttleOnlyButton);
+
+      const minibusRoutes = routes.filter(isMinibusRoute);
+      if (minibusRoutes.length) {
+        const allMinibusVisible = minibusRoutes.every((route) => activeRoutes.has(route.id));
+        const minibusButton = document.createElement("button");
+        minibusButton.className = `control-button is-secondary${allMinibusVisible ? " is-active" : ""}`;
+        minibusButton.textContent = allMinibusVisible ? "隐藏小巴" : "显示小巴";
+        minibusButton.addEventListener("click", () => {
+          const shouldShow = !minibusRoutes.every((route) => activeRoutes.has(route.id));
+          minibusRoutes.forEach((route) => {
+            if (shouldShow) {
+              activeRoutes.add(route.id);
+            } else {
+              activeRoutes.delete(route.id);
+              if (focusedRouteId === route.id) focusedRouteId = null;
+            }
+          });
+          selectedStopId = null;
+          renderToolbar();
+          renderDiagram();
+          renderInfoPanel();
+          renderStats();
+        });
+        routeToolbar.append(minibusButton);
+      }
+
+      if (focusedRouteId) {
+        const clearFocusButton = document.createElement("button");
+        clearFocusButton.className = "control-button is-secondary";
+        clearFocusButton.textContent = "取消高亮";
+        clearFocusButton.addEventListener("click", () => {
+          focusedRouteId = null;
+          selectedStopId = null;
+          renderToolbar();
+          renderDiagram();
+          renderInfoPanel();
+        });
+        routeToolbar.append(clearFocusButton);
+      }
+
+      routeToolbar.append(Object.assign(document.createElement("span"), { className: "toolbar-break" }));
+
+      routes.forEach((route) => {
+        const button = document.createElement("button");
+        button.className = `${activeRoutes.has(route.id) ? "is-active" : ""}${focusedRouteId === route.id ? " is-focused" : ""}`;
+        button.style.setProperty("--route-color", routeColor(route));
+        button.style.setProperty("--route-text", readableRouteTextColor(routeColor(route)));
+        button.textContent = `${route.id} ${route.name}`;
+        button.addEventListener("click", () => {
+          if (!activeRoutes.has(route.id)) {
+            activeRoutes.add(route.id);
+            focusedRouteId = route.id;
+          } else if (focusedRouteId !== route.id) {
+            focusedRouteId = route.id;
+          } else {
+            activeRoutes.delete(route.id);
+            focusedRouteId = null;
+          }
+          selectedStopId = null;
+          renderToolbar();
+          renderDiagram();
+          renderInfoPanel();
+          renderStats();
+        });
+        routeToolbar.append(button);
+      });
+    }
+
+    function renderDiagram() {
+      diagram.innerHTML = "";
+      const visibleRoutes = routes.filter((route) => activeRoutes.has(route.id));
+      const bundleLayout = createBundleLayout(visibleRoutes);
+
+      const haloLayer = svgEl("g", { class: "route-halo-layer" });
+      const lineLayer = svgEl("g", { class: "route-line-layer" });
+      const hitLayer = svgEl("g", { class: "route-hit-layer" });
+      visibleRoutes.forEach((route) => {
+        const d = routePathData(route, bundleLayout);
+        if (!d) return;
+        const muted = focusedRouteId && route.id !== focusedRouteId ? " is-muted" : "";
+        haloLayer.append(svgEl("path", { d, class: `route-halo${muted}`, fill: "none" }));
+        lineLayer.append(svgEl("path", {
+          d,
+          class: `route-line${focusedRouteId === route.id ? " is-focused" : ""}${muted}`,
+          stroke: routeColor(route),
+          fill: "none",
+          "data-route-id": route.id
+        }));
+        const hit = svgEl("path", {
+          d,
+          class: `route-hit${muted}`,
+          "data-route-id": route.id
+        });
+        hit.addEventListener("click", (event) => {
+          event.stopPropagation();
+          focusedRouteId = route.id;
+          selectedStopId = null;
+          renderToolbar();
+          renderDiagram();
+          renderInfoPanel();
+        });
+        hitLayer.append(hit);
+      });
+
+      const stationLayer = svgEl("g", { class: "station-layer" });
+      visibleStationIds(visibleRoutes).forEach((stopId) => {
+        const station = buildStationNode(stopId, visibleRoutes);
+        stationLayer.append(station);
+      });
+
+      diagram.append(haloLayer, lineLayer, hitLayer, stationLayer);
+      diagram.addEventListener("click", () => {
+        selectedStopId = null;
+        focusedRouteId = null;
+        renderToolbar();
+        renderDiagram();
+        renderInfoPanel();
+      }, { once: true });
+    }
+
+    function buildSegmentEntries(visibleRoutes) {
+      const entries = [];
+      visibleRoutes.forEach((route) => {
+        route.stops.forEach((fromId, index) => {
+          const toId = route.stops[index + 1];
+          if (!toId || !POINTS[fromId] || !POINTS[toId]) return;
+          const diagramPoints = diagramPath(route, fromId, toId);
+          diagramPoints.forEach((pointId, pointIndex) => {
+            const nextPointId = diagramPoints[pointIndex + 1];
+            if (!nextPointId || !POINTS[pointId] || !POINTS[nextPointId]) return;
+            if (pointId === nextPointId) return;
+            entries.push({
+              route,
+              fromId: pointId,
+              toId: nextPointId,
+              fromStopId: fromId,
+              toStopId: toId,
+              occurrence: index,
+              segmentIndex: pointIndex,
+              key: segmentKey(pointId, nextPointId)
+            });
+          });
+        });
+      });
+      return entries;
+    }
+
+    function routePathData(route, bundleLayout = createBundleLayout(routes)) {
+      const shiftedVertices = routeShiftedPathVertices(route, bundleLayout);
+      if (shiftedVertices.length < 2) return "";
+      return shiftedVertices.map((vertex, index) => {
+        const command = index === 0 ? "M" : "L";
+        return `${command}${rounded(vertex.coord[0])},${rounded(vertex.coord[1])}`;
+      }).join(" ");
+    }
+
+    function routeShiftedVertices(route, bundleLayout = createBundleLayout(routes)) {
+      return routeShiftedPathVertices(route, bundleLayout);
+    }
+
+    function routeShiftedPathVertices(route, bundleLayout = createBundleLayout(routes)) {
+      return routeBundlePathVertices(route, bundleLayout);
+    }
+
+    function routeDiagramVertices(route) {
+      return routeBaseVertices(route);
+    }
+
+    function routeBaseVertices(route) {
+      const vertices = [];
+      routeDiagramPointIds(route).forEach((pointId) => {
+        const coord = POINTS[pointId];
+        if (!coord) return;
+        const previous = vertices[vertices.length - 1];
+        if (previous && previous.id === pointId) return;
+        vertices.push({ id: pointId, coord });
+      });
+      return vertices;
+    }
+
+    function routeBundlePathVertices(route, bundleLayout) {
+      const vertices = routeBaseVertices(route);
+      if (vertices.length < 2) return vertices;
+      const segments = [];
+      for (let index = 0; index < vertices.length - 1; index += 1) {
+        const from = vertices[index];
+        const to = vertices[index + 1];
+        if (Math.abs(from.coord[0] - to.coord[0]) < 0.01 && Math.abs(from.coord[1] - to.coord[1]) < 0.01) continue;
+        const offset = bundleSegmentOffset(route, from.id, to.id, bundleLayout);
+        const line = shiftedSegmentLine(from.coord, to.coord, offset);
+        segments.push({ from, to, offset, ...line });
+      }
+      if (!segments.length) return vertices;
+
+      const result = [{ id: segments[0].from.id, coord: segments[0].fromShifted }];
+      for (let index = 1; index < vertices.length - 1; index += 1) {
+        const previousSegment = segments[index - 1];
+        const nextSegment = segments[index];
+        const vertex = vertices[index];
+        if (!previousSegment || !nextSegment) continue;
+        appendBundleJoin(result, vertex, previousSegment, nextSegment);
+      }
+      result.push({ id: segments[segments.length - 1].to.id, coord: segments[segments.length - 1].toShifted });
+      return collapseRepeatedWaypointRuns(dedupeVertices(result));
+    }
+
+    function collapseRepeatedWaypointRuns(vertices) {
+      const result = [];
+      let index = 0;
+      while (index < vertices.length) {
+        const vertex = vertices[index];
+        if (!String(vertex.id).startsWith("_")) {
+          result.push(vertex);
+          index += 1;
+          continue;
+        }
+
+        let end = index + 1;
+        while (end < vertices.length && vertices[end].id === vertex.id) end += 1;
+        const run = vertices.slice(index, end);
+        const previous = result[result.length - 1];
+        const next = vertices[end];
+        if (run.length > 1 && previous && next) {
+          result.push({
+            id: vertex.id,
+            coord: bestOrthogonalCorner(previous.coord, next.coord, run.map((item) => item.coord))
+          });
+        } else {
+          run.forEach((item) => result.push(item));
+        }
+        index = end;
+      }
+      return dedupeVertices(result);
+    }
+
+    function bestOrthogonalCorner(previousCoord, nextCoord, runCoords) {
+      if (Math.abs(previousCoord[0] - nextCoord[0]) < 0.01 || Math.abs(previousCoord[1] - nextCoord[1]) < 0.01) {
+        return runCoords[Math.floor(runCoords.length / 2)];
+      }
+
+      const candidates = [
+        [nextCoord[0], previousCoord[1]],
+        [previousCoord[0], nextCoord[1]]
+      ];
+      const center = averagePoint(runCoords);
+      return candidates.sort((a, b) => {
+        const distanceDelta = distance(a, center) - distance(b, center);
+        if (Math.abs(distanceDelta) > 0.01) return distanceDelta;
+        return distance(a, runCoords[Math.floor(runCoords.length / 2)]) - distance(b, runCoords[Math.floor(runCoords.length / 2)]);
+      })[0];
+    }
+
+    function appendBundleJoin(result, vertex, previousSegment, nextSegment) {
+      const turnDot = dot(previousSegment.dir, nextSegment.dir);
+      if (turnDot < -0.98) {
+        result.push(
+          { id: vertex.id, coord: previousSegment.toShifted },
+          { id: vertex.id, coord: nextSegment.fromShifted }
+        );
+        return;
+      }
+
+      if (turnDot > 0.98) {
+        result.push({ id: vertex.id, coord: previousSegment.toShifted });
+        if (distance(previousSegment.toShifted, nextSegment.fromShifted) > 0.01) {
+          result.push({ id: vertex.id, coord: nextSegment.fromShifted });
+        }
+        return;
+      }
+
+      const intersection = lineIntersection(previousSegment.toShifted, previousSegment.dir, nextSegment.fromShifted, nextSegment.dir);
+      if (intersection && distance(intersection, vertex.coord) <= Math.max(42, Math.abs(previousSegment.offset - nextSegment.offset) * 4)) {
+        result.push({ id: vertex.id, coord: intersection });
+        return;
+      }
+
+      orthogonalJoinPoints(previousSegment.toShifted, nextSegment.fromShifted).forEach((coord) => {
+        result.push({ id: vertex.id, coord });
+      });
+    }
+
+    function orthogonalJoinPoints(from, to) {
+      if (Math.abs(from[0] - to[0]) < 0.01 || Math.abs(from[1] - to[1]) < 0.01) return [from, to];
+      return [
+        from,
+        [to[0], from[1]],
+        to
+      ];
+    }
+
+    function shiftedSegmentLine(fromCoord, toCoord, offset) {
+      const dx = toCoord[0] - fromCoord[0];
+      const dy = toCoord[1] - fromCoord[1];
+      const length = Math.hypot(dx, dy) || 1;
+      const dir = [dx / length, dy / length];
+      const normal = [-dir[1], dir[0]];
+      return {
+        dir,
+        normal,
+        fromShifted: add(fromCoord, scale(normal, offset)),
+        toShifted: add(toCoord, scale(normal, offset))
+      };
+    }
+
+    function createBundleLayout(visibleRoutes) {
+      const groups = new Map();
+      visibleRoutes.forEach((route) => {
+        const vertices = routeBaseVertices(route);
+        vertices.forEach((from, index) => {
+          const to = vertices[index + 1];
+          if (!to) return;
+          const key = segmentKey(from.id, to.id);
+          if (!groups.has(key)) {
+            groups.set(key, {
+              key,
+              routeIds: new Set(),
+              occurrences: new Map()
+            });
+          }
+          const group = groups.get(key);
+          group.routeIds.add(route.id);
+          if (!group.occurrences.has(route.id)) group.occurrences.set(route.id, []);
+          group.occurrences.get(route.id).push({
+            route,
+            vertices,
+            index
+          });
+        });
+      });
+
+      let orders = new Map();
+      groups.forEach((group, key) => {
+        orders.set(key, initialBundleRouteOrder(group));
+      });
+
+      for (let iteration = 0; iteration < 4; iteration += 1) {
+        const nextOrders = new Map();
+        groups.forEach((group, key) => {
+          nextOrders.set(key, refinedBundleRouteOrder(group, orders));
+        });
+        orders = nextOrders;
+      }
+
+      const offsets = new Map();
+      groups.forEach((group, key) => {
+        const orderedRouteIds = orders.get(key) || initialBundleRouteOrder(group);
+        orderedRouteIds.forEach((routeId, index) => {
+          offsets.set(`${key}|${routeId}`, (index - (orderedRouteIds.length - 1) / 2) * ROUTE_LANE_SPACING);
+        });
+      });
+      applyCollinearSplitOffsetContinuity(visibleRoutes, offsets);
+      return { groups, offsets, orders };
+    }
+
+    function applyCollinearSplitOffsetContinuity(visibleRoutes, offsets) {
+      for (let pass = 0; pass < 3; pass += 1) {
+        const nextOffsets = new Map(offsets);
+        visibleRoutes.forEach((route) => {
+          const vertices = routeBaseVertices(route);
+          for (let index = 1; index < vertices.length - 1; index += 1) {
+            const previous = vertices[index - 1];
+            const current = vertices[index];
+            const next = vertices[index + 1];
+            if (!String(current.id).startsWith("_")) continue;
+            const previousDirection = unitDirection(previous.coord, current.coord);
+            const nextDirection = unitDirection(current.coord, next.coord);
+            if (!previousDirection || !nextDirection || dot(previousDirection, nextDirection) < 0.98) continue;
+            const previousKey = `${segmentKey(previous.id, current.id)}|${route.id}`;
+            const nextKey = `${segmentKey(current.id, next.id)}|${route.id}`;
+            const previousOffset = offsets.get(previousKey);
+            const nextOffset = offsets.get(nextKey);
+            if (!Number.isFinite(previousOffset) || !Number.isFinite(nextOffset)) continue;
+            const average = (previousOffset + nextOffset) / 2;
+            nextOffsets.set(previousKey, average);
+            nextOffsets.set(nextKey, average);
+          }
+        });
+        offsets.clear();
+        nextOffsets.forEach((value, key) => offsets.set(key, value));
+      }
+    }
+
+    function unitDirection(fromCoord, toCoord) {
+      const vector = [toCoord[0] - fromCoord[0], toCoord[1] - fromCoord[1]];
+      return normalize(vector);
+    }
+
+
+    function bundleSegmentOffset(route, fromId, toId, bundleLayout) {
+      const key = segmentKey(fromId, toId);
+      const value = bundleLayout.offsets.get(`${key}|${route.id}`);
+      return Number.isFinite(value) ? value : 0;
+    }
+
+    function routeOrderIndex(routeId) {
+      const order = [
+        "1A",
+        "1B",
+        "2",
+        "3",
+        "7",
+        "4",
+        "8",
+        "N",
+        "H",
+        "5",
+        "6A",
+        "6B",
+        "MINI-N",
+        "MINI-S"
+      ];
+      const preferredIndex = order.indexOf(routeId);
+      if (preferredIndex >= 0) return preferredIndex;
+      const index = routes.findIndex((route) => route.id === routeId);
+      return index >= 0 ? index : routes.length;
+    }
+
+    function initialBundleRouteOrder(group) {
+      return [...group.routeIds].sort((a, b) => routeOrderIndex(a) - routeOrderIndex(b));
+    }
+
+    function refinedBundleRouteOrder(group, previousOrders) {
+      return [...group.routeIds].sort((a, b) => {
+        const scoreDelta = bundleRouteContinuityScore(group, a, previousOrders) - bundleRouteContinuityScore(group, b, previousOrders);
+        if (Math.abs(scoreDelta) > 0.01) return scoreDelta;
+        return routeOrderIndex(a) - routeOrderIndex(b);
+      });
+    }
+
+    function bundleRouteContinuityScore(group, routeId, previousOrders) {
+      const continuity = neighborLaneScore(group, routeId, previousOrders);
+      const baseline = routeOrderIndex(routeId) / Math.max(1, routes.length - 1);
+      if (Number.isFinite(continuity)) return continuity * 0.9 + baseline * 0.1;
+      return baseline;
+    }
+
+    function neighborLaneScore(group, routeId, previousOrders) {
+      const occurrences = group.occurrences.get(routeId) || [];
+      const scores = [];
+      occurrences.forEach((occurrence) => {
+        neighborSegmentKeys(group.key, occurrence).forEach((key) => {
+          const order = previousOrders.get(key);
+          if (!order) return;
+          const index = order.indexOf(routeId);
+          if (index < 0) return;
+          scores.push(index - (order.length - 1) / 2);
+        });
+      });
+      if (!scores.length) return NaN;
+      return scores.reduce((sum, value) => sum + value, 0) / scores.length;
+    }
+
+    function neighborSegmentKeys(currentKey, occurrence) {
+      const keys = [];
+      const previous = occurrence.vertices[occurrence.index - 1];
+      const from = occurrence.vertices[occurrence.index];
+      const to = occurrence.vertices[occurrence.index + 1];
+      const next = occurrence.vertices[occurrence.index + 2];
+      if (previous && from) keys.push(segmentKey(previous.id, from.id));
+      if (to && next) keys.push(segmentKey(to.id, next.id));
+      return keys.filter((key) => key !== currentKey);
+    }
+
+    function bundleRouteSideScoreForGroup(group, routeId) {
+      const endpoints = group.key.split("|");
+      const fromCoord = POINTS[endpoints[0]];
+      const toCoord = POINTS[endpoints[1]];
+      if (!fromCoord || !toCoord) return 0;
+      const dx = toCoord[0] - fromCoord[0];
+      const dy = toCoord[1] - fromCoord[1];
+      const length = Math.hypot(dx, dy) || 1;
+      const normal = [-dy / length, dx / length];
+      const midpoint = [(fromCoord[0] + toCoord[0]) / 2, (fromCoord[1] + toCoord[1]) / 2];
+      return clamp(bundleRouteSideScore(group, routeId, midpoint, normal) / 90, -2.5, 2.5);
+    }
+
+    function bundleRouteSideScore(group, routeId, midpoint, normal) {
+      const occurrences = group.occurrences.get(routeId) || [];
+      const scores = [];
+      occurrences.forEach((occurrence) => {
+        [occurrence.vertices[occurrence.index - 1], occurrence.vertices[occurrence.index + 2]].forEach((vertex) => {
+          if (!vertex) return;
+          const projection = dot(subtract(vertex.coord, midpoint), normal);
+          if (Math.abs(projection) > 0.01) scores.push(projection);
+        });
+      });
+      if (!scores.length) return 0;
+      return scores.reduce((sum, value) => sum + value, 0) / scores.length;
+    }
+
+    function normalizeStationApproaches(vertices) {
+      if (vertices.length < 2) return vertices;
+      const result = [vertices[0]];
+      for (let index = 1; index < vertices.length; index += 1) {
+        const to = vertices[index];
+        let from = result[result.length - 1];
+        let segment = [to];
+
+        if (isStationId(from.id)) {
+          const desired = stationConnectorDirection(from.id);
+          if (segmentDirection(from.coord, to.coord) !== desired) {
+            segment = departurePath(from, to, desired);
+          }
+        }
+
+        if (isStationId(to.id)) {
+          const desired = stationConnectorDirection(to.id);
+          const previous = segment.length > 1 ? segment[segment.length - 2] : from;
+          if (segmentDirection(previous.coord, to.coord) !== desired) {
+            const prefix = segment.slice(0, -1);
+            segment = prefix.concat(approachPath(previous, to, desired));
+          }
+        }
+
+        appendVertices(result, segment);
+      }
+      return result;
+    }
+
+    function approachPath(from, station, desiredDirection) {
+      const stationCoord = station.coord;
+      const fromCoord = from.coord;
+      const sign = stationSideSign(stationCoord, fromCoord, desiredDirection);
+      if (desiredDirection === "vertical") {
+        if (Math.abs(fromCoord[0] - stationCoord[0]) < 0.01 && Math.abs(fromCoord[1] - stationCoord[1]) > 0.01) {
+          return [station];
+        }
+        if (Math.abs(fromCoord[1] - stationCoord[1]) > 0.01) {
+          return [
+            virtualVertex(station.id, [stationCoord[0], fromCoord[1]]),
+            station
+          ];
+        }
+        const y = stationCoord[1] + sign * STATION_APPROACH_STUB;
+        return [
+          virtualVertex(station.id, [fromCoord[0], y]),
+          virtualVertex(station.id, [stationCoord[0], y]),
+          station
+        ];
+      }
+
+      if (Math.abs(fromCoord[1] - stationCoord[1]) < 0.01 && Math.abs(fromCoord[0] - stationCoord[0]) > 0.01) {
+        return [station];
+      }
+      if (Math.abs(fromCoord[0] - stationCoord[0]) > 0.01) {
+        return [
+          virtualVertex(station.id, [fromCoord[0], stationCoord[1]]),
+          station
+        ];
+      }
+      const x = stationCoord[0] + sign * STATION_APPROACH_STUB;
+      return [
+        virtualVertex(station.id, [x, fromCoord[1]]),
+        virtualVertex(station.id, [x, stationCoord[1]]),
+        station
+      ];
+    }
+
+    function departurePath(station, to, desiredDirection) {
+      const stationCoord = station.coord;
+      const toCoord = to.coord;
+      const sign = stationSideSign(stationCoord, toCoord, desiredDirection);
+      if (desiredDirection === "vertical") {
+        if (Math.abs(toCoord[0] - stationCoord[0]) < 0.01 && Math.abs(toCoord[1] - stationCoord[1]) > 0.01) {
+          return [to];
+        }
+        if (Math.abs(toCoord[1] - stationCoord[1]) > 0.01) {
+          return [
+            virtualVertex(station.id, [stationCoord[0], toCoord[1]]),
+            to
+          ];
+        }
+        const y = stationCoord[1] + sign * STATION_APPROACH_STUB;
+        return [
+          virtualVertex(station.id, [stationCoord[0], y]),
+          virtualVertex(station.id, [toCoord[0], y]),
+          to
+        ];
+      }
+
+      if (Math.abs(toCoord[1] - stationCoord[1]) < 0.01 && Math.abs(toCoord[0] - stationCoord[0]) > 0.01) {
+        return [to];
+      }
+      if (Math.abs(toCoord[0] - stationCoord[0]) > 0.01) {
+        return [
+          virtualVertex(station.id, [toCoord[0], stationCoord[1]]),
+          to
+        ];
+      }
+      const x = stationCoord[0] + sign * STATION_APPROACH_STUB;
+      return [
+        virtualVertex(station.id, [x, stationCoord[1]]),
+        virtualVertex(station.id, [x, toCoord[1]]),
+        to
+      ];
+    }
+
+    function appendVertices(target, vertices) {
+      vertices.forEach((vertex) => {
+        const previous = target[target.length - 1];
+        if (
+          previous &&
+          Math.abs(previous.coord[0] - vertex.coord[0]) < 0.01 &&
+          Math.abs(previous.coord[1] - vertex.coord[1]) < 0.01
+        ) {
+          return;
+        }
+        target.push(vertex);
+      });
+    }
+
+    function virtualVertex(stationId, coord) {
+      return {
+        id: `${stationId}__approach`,
+        coord
+      };
+    }
+
+    function isStationId(pointId) {
+      return Object.prototype.hasOwnProperty.call(POSITIONS, pointId);
+    }
+
+    function segmentDirection(from, to) {
+      const dx = Math.abs(to[0] - from[0]);
+      const dy = Math.abs(to[1] - from[1]);
+      if (dy > dx) return "vertical";
+      if (dx > dy) return "horizontal";
+      return "none";
+    }
+
+    function stationConnectorDirection(stopId) {
+      if (stationConnectorDirectionCache.has(stopId)) return stationConnectorDirectionCache.get(stopId);
+      const capsuleOrientation = stationOrientation(stopId, routesAtStop(stopId));
+      const direction = capsuleOrientation === "vertical" ? "horizontal" : "vertical";
+      stationConnectorDirectionCache.set(stopId, direction);
+      return direction;
+    }
+
+    function stationSideSign(stationCoord, neighborCoord, desiredDirection) {
+      const delta = desiredDirection === "vertical"
+        ? neighborCoord[1] - stationCoord[1]
+        : neighborCoord[0] - stationCoord[0];
+      if (Math.abs(delta) > 0.01) return Math.sign(delta);
+      return desiredDirection === "vertical"
+        ? (stationCoord[1] < LAYOUT_CENTER[1] ? 1 : -1)
+        : (stationCoord[0] < LAYOUT_CENTER[0] ? 1 : -1);
+    }
+
+    function routeDiagramPointIds(route) {
+      const pointIds = [];
+      route.stops.forEach((fromId, index) => {
+        const toId = route.stops[index + 1];
+        if (!toId || !POINTS[fromId] || !POINTS[toId]) return;
+        const segmentPoints = diagramPath(route, fromId, toId);
+        if (!pointIds.length) {
+          pointIds.push(...segmentPoints);
+          return;
+        }
+        if (pointIds[pointIds.length - 1] === segmentPoints[0]) {
+          pointIds.push(...segmentPoints.slice(1));
+        } else {
+          pointIds.push(...segmentPoints);
+        }
+      });
+      return pointIds;
+    }
+
+    function routeLaneOffset(route) {
+      const index = routes.findIndex((item) => item.id === route.id);
+      return (index - (routes.length - 1) / 2) * ROUTE_LANE_SPACING;
+    }
+
+    function dedupeCoords(coords) {
+      const result = [];
+      coords.forEach((coord) => {
+        const previous = result[result.length - 1];
+        if (previous && Math.abs(previous[0] - coord[0]) < 0.01 && Math.abs(previous[1] - coord[1]) < 0.01) return;
+        result.push(coord);
+      });
+      return result;
+    }
+
+    function offsetPolyline(coords, offset) {
+      if (coords.length < 2 || Math.abs(offset) < 0.01) return coords;
+      const dirs = [];
+      const normals = [];
+      for (let index = 0; index < coords.length - 1; index += 1) {
+        const from = coords[index];
+        const to = coords[index + 1];
+        const dx = to[0] - from[0];
+        const dy = to[1] - from[1];
+        const length = Math.hypot(dx, dy) || 1;
+        const dir = [dx / length, dy / length];
+        dirs.push(dir);
+        normals.push([-dir[1], dir[0]]);
+      }
+
+      return coords.map((coord, index) => {
+        if (index === 0) return add(coord, scale(normals[0], offset));
+        if (index === coords.length - 1) return add(coord, scale(normals[normals.length - 1], offset));
+
+        const previousNormal = normals[index - 1];
+        const nextNormal = normals[index];
+        const previousDir = dirs[index - 1];
+        const nextDir = dirs[index];
+        const previousPoint = add(coord, scale(previousNormal, offset));
+        const nextPoint = add(coord, scale(nextNormal, offset));
+        const intersection = lineIntersection(previousPoint, previousDir, nextPoint, nextDir);
+        if (intersection && distance(intersection, coord) <= Math.max(28, Math.abs(offset) * 3.2)) {
+          return intersection;
+        }
+
+        const averageNormal = normalize([previousNormal[0] + nextNormal[0], previousNormal[1] + nextNormal[1]]);
+        const normal = averageNormal || nextNormal || previousNormal;
+        return add(coord, scale(normal, offset));
+      });
+    }
+
+    function offsetPolylinePath(coords, offset) {
+      if (coords.length < 2 || Math.abs(offset) < 0.01) return coords;
+      const dirs = [];
+      const normals = [];
+      for (let index = 0; index < coords.length - 1; index += 1) {
+        const from = coords[index];
+        const to = coords[index + 1];
+        const dx = to[0] - from[0];
+        const dy = to[1] - from[1];
+        const length = Math.hypot(dx, dy) || 1;
+        const dir = [dx / length, dy / length];
+        dirs.push(dir);
+        normals.push([-dir[1], dir[0]]);
+      }
+
+      const result = [];
+      coords.forEach((coord, index) => {
+        if (index === 0) {
+          result.push(add(coord, scale(normals[0], offset)));
+          return;
+        }
+        if (index === coords.length - 1) {
+          result.push(add(coord, scale(normals[normals.length - 1], offset)));
+          return;
+        }
+
+        const previousDir = dirs[index - 1];
+        const nextDir = dirs[index];
+        const previousNormal = normals[index - 1];
+        const nextNormal = normals[index];
+        const turnDot = previousDir[0] * nextDir[0] + previousDir[1] * nextDir[1];
+        const previousPoint = add(coord, scale(previousNormal, offset));
+        const nextPoint = add(coord, scale(nextNormal, offset));
+
+        if (turnDot < -0.98) {
+          result.push(previousPoint, nextPoint);
+          return;
+        }
+        if (turnDot > 0.98) {
+          result.push(previousPoint);
+          return;
+        }
+
+        const intersection = lineIntersection(previousPoint, previousDir, nextPoint, nextDir);
+        result.push(intersection || previousPoint);
+      });
+      return dedupeCoords(result);
+    }
+
+    function offsetPolylinePathVertices(vertices, offset) {
+      if (vertices.length < 2 || Math.abs(offset) < 0.01) return vertices;
+      const coords = vertices.map((vertex) => vertex.coord);
+      const dirs = [];
+      const normals = [];
+      for (let index = 0; index < coords.length - 1; index += 1) {
+        const from = coords[index];
+        const to = coords[index + 1];
+        const dx = to[0] - from[0];
+        const dy = to[1] - from[1];
+        const length = Math.hypot(dx, dy) || 1;
+        const dir = [dx / length, dy / length];
+        dirs.push(dir);
+        normals.push([-dir[1], dir[0]]);
+      }
+
+      const result = [];
+      vertices.forEach((vertex, index) => {
+        const coord = vertex.coord;
+        if (index === 0) {
+          result.push({ id: vertex.id, coord: add(coord, scale(normals[0], offset)) });
+          return;
+        }
+        if (index === vertices.length - 1) {
+          result.push({ id: vertex.id, coord: add(coord, scale(normals[normals.length - 1], offset)) });
+          return;
+        }
+
+        const previousDir = dirs[index - 1];
+        const nextDir = dirs[index];
+        const previousNormal = normals[index - 1];
+        const nextNormal = normals[index];
+        const turnDot = previousDir[0] * nextDir[0] + previousDir[1] * nextDir[1];
+        const previousPoint = add(coord, scale(previousNormal, offset));
+        const nextPoint = add(coord, scale(nextNormal, offset));
+
+        if (turnDot < -0.98) {
+          result.push(
+            { id: vertex.id, coord: previousPoint },
+            { id: vertex.id, coord: nextPoint }
+          );
+          return;
+        }
+        if (turnDot > 0.98) {
+          result.push({ id: vertex.id, coord: previousPoint });
+          return;
+        }
+
+        const intersection = lineIntersection(previousPoint, previousDir, nextPoint, nextDir);
+        result.push({ id: vertex.id, coord: intersection || previousPoint });
+      });
+      return dedupeVertices(result);
+    }
+
+    function dedupeVertices(vertices) {
+      const result = [];
+      vertices.forEach((vertex) => {
+        const previous = result[result.length - 1];
+        if (
+          previous &&
+          previous.id === vertex.id &&
+          Math.abs(previous.coord[0] - vertex.coord[0]) < 0.01 &&
+          Math.abs(previous.coord[1] - vertex.coord[1]) < 0.01
+        ) {
+          return;
+        }
+        result.push(vertex);
+      });
+      return result;
+    }
+
+    function lineIntersection(pointA, dirA, pointB, dirB) {
+      const cross = dirA[0] * dirB[1] - dirA[1] * dirB[0];
+      if (Math.abs(cross) < 0.0001) return null;
+      const dx = pointB[0] - pointA[0];
+      const dy = pointB[1] - pointA[1];
+      const t = (dx * dirB[1] - dy * dirB[0]) / cross;
+      return [pointA[0] + dirA[0] * t, pointA[1] + dirA[1] * t];
+    }
+
+    function add(a, b) {
+      return [a[0] + b[0], a[1] + b[1]];
+    }
+
+    function scale(vector, amount) {
+      return [vector[0] * amount, vector[1] * amount];
+    }
+
+    function normalize(vector) {
+      const length = Math.hypot(vector[0], vector[1]);
+      if (length < 0.0001) return null;
+      return [vector[0] / length, vector[1] / length];
+    }
+
+    function distance(a, b) {
+      return Math.hypot(a[0] - b[0], a[1] - b[1]);
+    }
+
+    function diagramPath(route, fromId, toId) {
+      const directedKey = pathKey(fromId, toId);
+      const reverseKey = pathKey(toId, fromId);
+      if (DIAGRAM_PATHS.has(directedKey)) return DIAGRAM_PATHS.get(directedKey);
+      if (DIAGRAM_PATHS.has(reverseKey)) return [...DIAGRAM_PATHS.get(reverseKey)].reverse();
+      return [fromId, toId];
+    }
+
+    function assignSegmentOffsets(entries) {
+      const groups = new Map();
+      entries.forEach((entry) => {
+        if (!groups.has(entry.key)) groups.set(entry.key, []);
+        groups.get(entry.key).push(entry);
+      });
+
+      const ordered = [];
+      groups.forEach((group) => {
+        group.sort((a, b) => {
+          const routeDelta = routes.findIndex((route) => route.id === a.route.id) - routes.findIndex((route) => route.id === b.route.id);
+          return routeDelta || a.occurrence - b.occurrence;
+        });
+        group.forEach((entry, index) => {
+          const offset = (index - (group.length - 1) / 2) * ROUTE_SPACING;
+          ordered.push({ ...entry, offset });
+        });
+      });
+      return ordered.sort((a, b) => routes.indexOf(a.route) - routes.indexOf(b.route));
+    }
+
+    function lineAttrs(segment) {
+      const from = POINTS[segment.fromId];
+      const to = POINTS[segment.toId];
+      const shifted = offsetLine(from, to, segment.offset);
+      return {
+        x1: rounded(shifted[0][0]),
+        y1: rounded(shifted[0][1]),
+        x2: rounded(shifted[1][0]),
+        y2: rounded(shifted[1][1])
+      };
+    }
+
+    function offsetLine(from, to, offset) {
+      const dx = to[0] - from[0];
+      const dy = to[1] - from[1];
+      const length = Math.hypot(dx, dy) || 1;
+      const nx = -dy / length * offset;
+      const ny = dx / length * offset;
+      return [
+        [from[0] + nx, from[1] + ny],
+        [to[0] + nx, to[1] + ny]
+      ];
+    }
+
+    function buildStationNode(stopId, visibleRoutes) {
+      const [x, y] = POSITIONS[stopId];
+      const routeList = routesAtStop(stopId, visibleRoutes);
+      const isHub = routeList.length >= 4;
+      const marker = stationMarkerGeometry(stopId, routeList);
+      const isMuted = focusedRouteId && !routeList.some((route) => route.id === focusedRouteId);
+      const group = svgEl("g", {
+        class: `station-node${isHub ? " is-hub" : ""}${selectedStopId === stopId ? " is-selected" : ""}${isMuted ? " is-muted" : ""}`,
+        "data-stop-id": stopId
+      });
+      const transform = marker.vertical ? `rotate(90, ${rounded(marker.cx)}, ${rounded(marker.cy)})` : "";
+      group.append(svgEl("rect", {
+        class: "station-ring",
+        x: rounded(marker.cx - marker.width / 2),
+        y: rounded(marker.cy - marker.height / 2),
+        width: rounded(marker.width),
+        height: rounded(marker.height),
+        rx: rounded(marker.height / 2),
+        ry: rounded(marker.height / 2),
+        transform
+      }));
+      group.append(svgEl("rect", {
+        class: "station-hit",
+        x: rounded(marker.cx - marker.width / 2 - 10),
+        y: rounded(marker.cy - marker.height / 2 - 10),
+        width: rounded(marker.width + 20),
+        height: rounded(marker.height + 20),
+        rx: rounded(marker.height / 2 + 10),
+        ry: rounded(marker.height / 2 + 10),
+        transform
+      }));
+
+      const labelText = SHORT_LABELS[stopId] || LABELS[stopId] || firstName(stops[stopId] && stops[stopId].name) || stopId;
+      appendStationLabel(group, marker, labelText);
+
+      group.addEventListener("click", (event) => {
+        event.stopPropagation();
+        selectedStopId = stopId;
+        focusedRouteId = null;
+        renderToolbar();
+        renderDiagram();
+        renderInfoPanel();
+      });
+      return group;
+    }
+
+    function appendStationLabel(group, marker, labelText) {
+      const chars = Array.from(labelText);
+      const className = `station-label${chars.length > 5 ? " is-small" : ""}${marker.vertical ? " is-vertical" : ""}`;
+      if (!marker.vertical) {
+        const label = svgEl("text", {
+          class: className,
+          x: rounded(marker.cx),
+          y: rounded(marker.cy),
+          "text-anchor": "middle",
+          "dominant-baseline": "middle"
+        });
+        if (chars.length > 6) {
+          label.setAttribute("textLength", rounded(marker.width - 12));
+          label.setAttribute("lengthAdjust", "spacingAndGlyphs");
+        }
+        label.textContent = labelText;
+        group.append(label);
+        return;
+      }
+
+      const lineHeight = chars.length > 6 ? 9.4 : 10.4;
+      const startY = marker.cy - ((chars.length - 1) * lineHeight) / 2;
+      const label = svgEl("text", {
+        class: className,
+        x: rounded(marker.cx),
+        y: rounded(startY),
+        "text-anchor": "middle",
+        "dominant-baseline": "middle"
+      });
+      chars.forEach((char, index) => {
+        const span = svgEl("tspan", {
+          x: rounded(marker.cx),
+          y: rounded(startY + index * lineHeight)
+        });
+        span.textContent = char;
+        label.append(span);
+      });
+      group.append(label);
+    }
+
+    function stationMarkerGeometry(stopId, routeList) {
+      const base = POSITIONS[stopId];
+      const vertical = stationOrientation(stopId, routeList) === "vertical";
+      return {
+        cx: base[0],
+        cy: base[1],
+        width: STATION_PILL_WIDTH,
+        height: STATION_PILL_HEIGHT,
+        vertical
+      };
+    }
+
+    function stationOrientation(stopId, routeList) {
+      if (STATION_ORIENTATION_OVERRIDES[stopId]) return STATION_ORIENTATION_OVERRIDES[stopId];
+      let verticalScore = 0;
+      let horizontalScore = 0;
+      routeList.forEach((route) => {
+        const pointIds = routeDiagramPointIds(route);
+        pointIds.forEach((pointId, index) => {
+          if (pointId !== stopId) return;
+          [pointIds[index - 1], pointIds[index + 1]].forEach((neighborId) => {
+            if (!neighborId || !POINTS[neighborId] || !POINTS[stopId]) return;
+            const dx = Math.abs(POINTS[neighborId][0] - POINTS[stopId][0]);
+            const dy = Math.abs(POINTS[neighborId][1] - POINTS[stopId][1]);
+            if (dy > dx) verticalScore += 1;
+            if (dx > dy) horizontalScore += 1;
+          });
+        });
+      });
+      if (horizontalScore > verticalScore) return "vertical";
+      if (verticalScore > horizontalScore) return "horizontal";
+      return "horizontal";
+    }
+
+    function averagePoint(points) {
+      const total = points.reduce((sum, point) => [sum[0] + point[0], sum[1] + point[1]], [0, 0]);
+      return [total[0] / points.length, total[1] / points.length];
+    }
+
+    function principalAxis(points, center) {
+      let xx = 0;
+      let xy = 0;
+      let yy = 0;
+      points.forEach((point) => {
+        const dx = point[0] - center[0];
+        const dy = point[1] - center[1];
+        xx += dx * dx;
+        xy += dx * dy;
+        yy += dy * dy;
+      });
+      if (xx + yy < 0.0001) return [1, 0];
+      const angle = 0.5 * Math.atan2(2 * xy, xx - yy);
+      return [Math.cos(angle), Math.sin(angle)];
+    }
+
+    function subtract(a, b) {
+      return [a[0] - b[0], a[1] - b[1]];
+    }
+
+    function dot(a, b) {
+      return a[0] * b[0] + a[1] * b[1];
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function visibleStationIds(visibleRoutes) {
+      const ids = [];
+      const seen = new Set();
+      visibleRoutes.forEach((route) => {
+        route.stops.forEach((stopId) => {
+          if (seen.has(stopId)) return;
+          seen.add(stopId);
+          ids.push(stopId);
+        });
+      });
+      return ids.sort((a, b) => POSITIONS[a][1] - POSITIONS[b][1] || POSITIONS[a][0] - POSITIONS[b][0]);
+    }
+
+    function routesAtStop(stopId, routePool = routes) {
+      return routePool.filter((route) => route.stops.includes(stopId));
+    }
+
+    function isMinibusRoute(route) {
+      return String(route.id || "").startsWith("MINI") || /小巴/.test(`${route.name || ""}${route.service || ""}`);
+    }
+
+    function renderInfoPanel() {
+      if (!infoTitle || !infoBody || !infoChips) return;
+      infoChips.innerHTML = "";
+      const visibleRoutes = routes.filter((route) => activeRoutes.has(route.id));
+      if (selectedStopId) {
+        const stop = stops[selectedStopId];
+        const stopRoutes = routesAtStop(selectedStopId, visibleRoutes);
+        infoTitle.textContent = firstName(stop && stop.name) || selectedStopId;
+        infoBody.textContent = `当前显示线路中有 ${stopRoutes.length} 条经过此站。站点在图上只保留一个节点，线路用不同颜色从同一节点穿过。`;
+        stopRoutes.forEach(addChip);
+        return;
+      }
+
+      if (focusedRouteId) {
+        const route = routes.find((item) => item.id === focusedRouteId);
+        if (route) {
+          infoTitle.textContent = `${route.id} ${route.name}`;
+          infoBody.textContent = `${route.service || "校巴线路"}，共 ${route.stops.length} 个站序节点。此处只展示少边形线路走向，实际行车路径仍以地图页道路几何为准。`;
+          addChip(route);
+          return;
+        }
+      }
+
+      infoTitle.textContent = "完整线路图";
+      infoBody.textContent = `当前显示 ${visibleRoutes.length} 条线路。点击站点查看共站线路，点击线段查看单条线路。`;
+      visibleRoutes.forEach(addChip);
+    }
+
+    function addChip(route) {
+      if (!infoChips) return;
+      const chip = document.createElement("span");
+      chip.className = "route-chip";
+      chip.style.setProperty("--route-color", routeColor(route));
+      chip.textContent = `${route.id} ${route.name}`;
+      infoChips.append(chip);
+    }
+
+    function renderStats() {
+      const visibleRoutes = routes.filter((route) => activeRoutes.has(route.id));
+      const stationCount = visibleStationIds(visibleRoutes).length;
+      const segmentCount = buildSegmentEntries(visibleRoutes).length;
+      stats.innerHTML = "";
+      [
+        `${visibleRoutes.length} 条线路`,
+        `${stationCount} 个站点`,
+        `${segmentCount} 段少边形连线`,
+        "颜色沿用线路图配色"
+      ].forEach((text) => {
+        const item = document.createElement("span");
+        item.className = "stat-pill";
+        item.textContent = text;
+        stats.append(item);
+      });
+    }
+
+    function segmentKey(a, b) {
+      return [a, b].sort().join("|");
+    }
+
+    function path(fromId, toId, pointIds) {
+      return [pathKey(fromId, toId), pointIds];
+    }
+
+    function pathKey(fromId, toId) {
+      return `${fromId}->${toId}`;
+    }
+
+    function firstName(value) {
+      return String(value || "").split("/")[0].trim();
+    }
+
+    function rounded(value) {
+      return Math.round(value * 10) / 10;
+    }
+
+    function svgEl(tagName, attrs = {}) {
+      const element = document.createElementNS(SVG_NS, tagName);
+      Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
+      return element;
+    }
+
+    function readableRouteTextColor(color) {
+      const match = String(color || "").match(/^#?([0-9a-f]{6})$/i);
+      if (!match) return "#fff";
+      const hex = match[1];
+      const r = parseInt(hex.slice(0, 2), 16) / 255;
+      const g = parseInt(hex.slice(2, 4), 16) / 255;
+      const b = parseInt(hex.slice(4, 6), 16) / 255;
+      const luminance = [r, g, b].map((value) => {
+        return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+      });
+      const score = 0.2126 * luminance[0] + 0.7152 * luminance[1] + 0.0722 * luminance[2];
+      return score > 0.48 ? "#241331" : "#fff";
+    }
+
+    function routeColor(route) {
+      return ROUTE_COLOR_OVERRIDES[route.id] || route.color;
+    }
+  </script>
+</body>
+</html>
