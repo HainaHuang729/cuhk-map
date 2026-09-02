@@ -3,12 +3,21 @@ import fs from "node:fs";
 const args = process.argv.slice(2);
 const outIndex = args.indexOf("--out");
 const outFile = outIndex >= 0 ? args[outIndex + 1] : "";
+const routesIndex = args.indexOf("--routes");
+const allowedRoutes = routesIndex >= 0
+  ? new Set(String(args[routesIndex + 1] || "").split(",").map((value) => value.trim()).filter(Boolean))
+  : null;
+const sinceIndex = args.indexOf("--since");
+const since = sinceIndex >= 0 ? String(args[sinceIndex + 1] || "") : "";
 const inputFiles = args.filter((arg, index) => (
-  arg !== "--out" && (outIndex < 0 || index !== outIndex + 1)
+  arg !== "--out" && arg !== "--routes" && arg !== "--since" &&
+  (outIndex < 0 || index !== outIndex + 1) &&
+  (routesIndex < 0 || index !== routesIndex + 1) &&
+  (sinceIndex < 0 || index !== sinceIndex + 1)
 ));
 
 if (!inputFiles.length) {
-  console.error("Usage: node scripts/build_segment_travel_times.mjs <database_export.json...> [--out data/segment_travel_times.generated.json]");
+  console.error("Usage: node scripts/build_segment_travel_times.mjs <database_export.json...> [--routes 2,3,4,8,N,H] [--since 2026-07-24] [--out data/segment_travel_times.generated.json]");
   process.exit(1);
 }
 
@@ -22,6 +31,8 @@ const summary = {
   segmentObservations: 0,
   dwellObservations: 0,
   skippedSegments: 0,
+  filteredSessions: 0,
+  filteredByDate: 0,
 };
 
 for (const file of inputFiles) {
@@ -30,6 +41,15 @@ for (const file of inputFiles) {
   summary.records += records.length;
   for (const record of records) {
     if (!isRideSession(record)) continue;
+    const recordRouteId = String(record.routeId || record.etaCalibration?.routeId || record.board?.routeId || "");
+    if (allowedRoutes && !allowedRoutes.has(recordRouteId)) {
+      summary.filteredSessions += 1;
+      continue;
+    }
+    if (since && String(record.createdAt || record.etaCalibration?.observedAt || "") < since) {
+      summary.filteredByDate += 1;
+      continue;
+    }
     summary.rideSessions += 1;
     const segments = record.etaCalibration && record.etaCalibration.segmentTravelMinutes || {};
     for (const [key, segment] of Object.entries(segments)) {

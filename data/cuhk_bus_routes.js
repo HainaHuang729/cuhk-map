@@ -5436,40 +5436,40 @@ const ROUTE_STOP_DIRECTIONS = {
   "7": { 0: "下行", 1: "下行", 3: "下行" },
 };
 const DEFAULT_SEGMENT_TRAVEL_MINUTES = {
-  "science_centre->new_asia": { minutes: 1.51, samples: 5, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "new_asia->united_college": { minutes: 1.41, samples: 6, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "united_college->residences_3_4": { minutes: 1.2, samples: 5, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "residences_3_4->shaw_college": { minutes: 1.4, samples: 7, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "shaw_college->area_39": { minutes: 2.83, samples: 6, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "area_39->cw_chu": { minutes: 1.13, samples: 7, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "cw_chu->campus_circuit_east": { minutes: 1.58, samples: 7, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "campus_circuit_east->university_station": { minutes: 1.66, samples: 11, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "yasumoto->university_sports_centre": { minutes: 1.13, samples: 2, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "university_sports_centre->science_centre": { minutes: 2.16, samples: 2, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "science_centre->fung_king_hey": { minutes: 0.79, samples: 5, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "fung_king_hey->residences_3_4": { minutes: 0.7, samples: 5, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "cw_chu->residence_15": { minutes: 1.7, samples: 5, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "residence_15->united_residence": { minutes: 0.71, samples: 4, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
+  "science_centre->new_asia": { minutes: 1.54, samples: 6, source: "merged_gps_2026_06_12_07_02_cloud_CHw" },
+  "new_asia->united_college": { minutes: 1.31, samples: 20, source: "merged_current_routes_gps_through_2026_08_31" },
+  "united_college->residences_3_4": { minutes: 0.98, samples: 14, source: "merged_current_routes_gps_through_2026_08_31" },
+  "residences_3_4->shaw_college": { minutes: 1.41, samples: 18, source: "merged_current_routes_gps_through_2026_08_31" },
+  "shaw_college->area_39": { minutes: 3.22, samples: 13, source: "merged_current_routes_gps_through_2026_08_31" },
+  "area_39->cw_chu": { minutes: 1.34, samples: 19, source: "merged_current_routes_gps_through_2026_08_31" },
+  "cw_chu->campus_circuit_east": { minutes: 1.71, samples: 16, source: "merged_current_routes_gps_through_2026_08_31" },
+  "campus_circuit_east->university_station": { minutes: 1.65, samples: 23, source: "merged_current_routes_gps_through_2026_08_31" },
+  "yasumoto->university_sports_centre": { minutes: 1.46, samples: 3, source: "merged_gps_2026_06_12_07_13_cloud_BnR_5lw" },
+  "university_sports_centre->science_centre": { minutes: 2.13, samples: 3, source: "merged_gps_2026_06_12_07_13_cloud_BnR_5lw" },
+  "science_centre->fung_king_hey": { minutes: 0.92, samples: 8, source: "merged_gps_2026_06_12_07_13_cloud_BnR_5lw" },
+  "fung_king_hey->residences_3_4": { minutes: 0.69, samples: 8, source: "merged_gps_2026_06_12_07_13_cloud_BnR_5lw" },
+  "cw_chu->residence_15": { minutes: 1.42, samples: 11, source: "merged_gps_2026_06_12_07_23_cloud_UVN_LHh" },
+  "residence_15->united_residence": { minutes: 0.72, samples: 10, source: "merged_gps_2026_06_12_07_23_cloud_UVN_LHh" },
   "united_residence->lee_woo_sing": { minutes: 1.2, samples: 1, source: "local_gps_2026_06_12_route_3" },
   "lee_woo_sing->shaw_college": { minutes: 1.7, samples: 1, source: "local_gps_2026_06_12_route_3" },
-  "shaw_college->cw_chu": { minutes: 2.39, samples: 5, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "shaw_college->residences_3_4": { minutes: 1.8, samples: 7, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "residences_3_4->new_asia": { minutes: 1.54, samples: 2, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "residences_3_4->university_admin": { minutes: 1.71, samples: 8, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "residence_10_11->residence_15": { minutes: 0.72, samples: 2, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "shaw_hall->university_admin": { minutes: 1.31, samples: 6, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "university_admin->sh_ho": { minutes: 1.99, samples: 11, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
+  "shaw_college->cw_chu": { minutes: 2.61, samples: 8, source: "merged_gps_2026_06_12_07_13_cloud_BnR_5lw" },
+  "shaw_college->residences_3_4": { minutes: 1.93, samples: 13, source: "merged_current_routes_gps_through_2026_08_31" },
+  "residences_3_4->new_asia": { minutes: 1.55, samples: 8, source: "merged_current_routes_gps_through_2026_08_31" },
+  "residences_3_4->university_admin": { minutes: 1.65, samples: 11, source: "merged_current_routes_gps_through_2026_08_31" },
+  "residence_10_11->residence_15": { minutes: 1.11, samples: 3, source: "merged_gps_2026_06_12_29_cloud_uwig" },
+  "shaw_hall->university_admin": { minutes: 1.3, samples: 7, source: "merged_gps_2026_06_12_07_23_cloud_UVN_LHh" },
+  "university_admin->sh_ho": { minutes: 1.95, samples: 12, source: "merged_gps_2026_06_12_07_13_cloud_BnR_5lw" },
   "sh_ho->postgraduate_hostel": { minutes: 1.8, samples: 9, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
   "sh_ho->university_station": { minutes: 1.23, samples: 1, source: "cloud_gps_2026_06_18_route_2" },
   "postgraduate_hostel->university_station": { minutes: 2.77, samples: 3, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "campus_circuit_east->cw_chu": { minutes: 3.64, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "campus_circuit_east->cw_chu": { minutes: 1.71, samples: 2, source: "cloud_gps_2026_07_03_09_route_4" },
   "chan_chun_ha_hostel->residences_3_4": { minutes: 0.54, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
-  "chan_chun_ha_hostel->shaw_college": { minutes: 2.07, samples: 5, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
+  "chan_chun_ha_hostel->shaw_college": { minutes: 1.82, samples: 15, source: "merged_current_routes_gps_through_2026_08_31" },
   "chung_chi_staff_quarters->ho_tim": { minutes: 1.36, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
   "chung_chi_staff_quarters->teaching_research_1": { minutes: 1.5, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
   "chung_chi_teaching->university_sports_centre": { minutes: 2.55, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
-  "cw_chu->area_39": { minutes: 1.31, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
-  "cw_chu->residence_10_11": { minutes: 0.99, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "cw_chu->area_39": { minutes: 1.41, samples: 2, source: "cloud_gps_2026_07_03_07_route_4" },
+  "cw_chu->residence_10_11": { minutes: 0.48, samples: 2, source: "cloud_gps_2026_07_01_route_H" },
   "cw_chu->united_residence": { minutes: 1.21, samples: 2, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
   "engineering->teaching_research_1": { minutes: 0.78, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
   "fung_king_hey->united_college": { minutes: 1.07, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
@@ -5482,69 +5482,81 @@ const DEFAULT_SEGMENT_TRAVEL_MINUTES = {
   "residences_3_4->lee_woo_sing": { minutes: 0.35, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
   "sh_ho->university_station_piazza": { minutes: 2.68, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
   "shaw_hall->fung_king_hey": { minutes: 1.36, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
-  "shaw_hall->new_asia": { minutes: 0.8, samples: 2, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
+  "shaw_hall->new_asia": { minutes: 1.04, samples: 8, source: "merged_current_routes_gps_through_2026_08_31" },
   "shaw_hall->university_library": { minutes: 0.48, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
   "teaching_research_1->chung_chi_staff_quarters": { minutes: 1.54, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
   "teaching_research_1->university_health": { minutes: 1.48, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
   "united_college->new_asia": { minutes: 0.86, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
-  "united_college->university_admin": { minutes: 2.1, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
-  "united_residence->chan_chun_ha_hostel": { minutes: 0.61, samples: 7, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
+  "united_college->university_admin": { minutes: 1.41, samples: 3, source: "merged_gps_2026_06_29_07_05_cloud_BnR_5lw" },
+  "united_residence->chan_chun_ha_hostel": { minutes: 0.78, samples: 15, source: "merged_gps_2026_06_12_07_23_cloud_UVN_LHh" },
   "united_residence->residence_15": { minutes: 0.64, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
   "university_admin->science_centre": { minutes: 2.48, samples: 1, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
   "university_admin->university_health": { minutes: 1.49, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
   "university_health->engineering": { minutes: 0.77, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
   "university_health->shaw_hall": { minutes: 1.36, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
   "university_library->fung_king_hey": { minutes: 0.87, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
-  "university_sports_centre->shaw_hall": { minutes: 2.3, samples: 3, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
+  "university_sports_centre->shaw_hall": { minutes: 2.13, samples: 9, source: "merged_current_routes_gps_through_2026_08_31" },
   "university_station_piazza->chung_chi_teaching": { minutes: 1.06, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
   "university_station_piazza->university_sports_centre": { minutes: 2.45, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
   "university_station->postgraduate_hostel": { minutes: 2.99, samples: 1, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
-  "university_station->university_sports_centre": { minutes: 1.61, samples: 2, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
+  "university_station->university_sports_centre": { minutes: 1.83, samples: 5, source: "merged_current_routes_gps_through_2026_08_31" },
   "university_station->wong_foo_yuan": { minutes: 0.35, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
   "wong_foo_yuan->chung_chi_staff_quarters": { minutes: 1.07, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
-  "yasumoto->campus_circuit_east": { minutes: 1.66, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "yasumoto->campus_circuit_east": { minutes: 1.44, samples: 2, source: "current_routes_gps_2026_08_28" },
   "yasumoto->university_station": { minutes: 0.59, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
 };
 const DEFAULT_ROUTE_SEGMENT_TRAVEL_MINUTES = {
-  "8:shaw_college->area_39": { minutes: 2.04, samples: 1, source: "cloud_gps_2026_06_23_route_8" },
+  "2S:university_station_piazza->postgraduate_hostel": { minutes: 5, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "2S:postgraduate_hostel->university_sports_centre": { minutes: 3, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "2S:university_sports_centre->shaw_hall": { minutes: 2, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "2S:shaw_hall->fung_king_hey": { minutes: 2, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "2S:fung_king_hey->united_college": { minutes: 1, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "2S:united_college->new_asia": { minutes: 1, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "2S:new_asia->united_college": { minutes: 2, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "2S:united_college->university_admin": { minutes: 2, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "2S:university_admin->sh_ho": { minutes: 2, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "2S:sh_ho->postgraduate_hostel": { minutes: 2, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "2S:postgraduate_hostel->university_station": { minutes: 3, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "8:shaw_college->area_39": { minutes: 2.95, samples: 2, source: "merged_gps_2026_06_23_30_route_8" },
   "8:residences_3_4->university_admin": { minutes: 0.92, samples: 1, source: "cloud_gps_2026_06_24_route_8_corrected" },
-  "8:cw_chu->campus_circuit_east": { minutes: 1.76, samples: 1, source: "cloud_gps_2026_06_24_route_8" },
-  "8:campus_circuit_east->university_station": { minutes: 1.68, samples: 2, source: "merged_gps_2026_06_23_24_route_8" },
-  "N:area_39->cw_chu": { minutes: 0.62, samples: 1, source: "cloud_gps_2026_06_22_route_N" },
-  "N:shaw_hall->new_asia": { minutes: 0.85, samples: 1, source: "cloud_gps_2026_06_22_route_N" },
+  "8:cw_chu->campus_circuit_east": { minutes: 1.56, samples: 6, source: "merged_gps_2026_06_24_07_10_route_8" },
+  "8:campus_circuit_east->university_station": { minutes: 1.64, samples: 9, source: "merged_gps_2026_06_23_07_10_route_8" },
+  "N:area_39->cw_chu": { minutes: 1.12, samples: 3, source: "merged_gps_2026_06_22_07_08_route_N" },
+  "N:shaw_hall->new_asia": { minutes: 1.03, samples: 4, source: "merged_gps_2026_06_22_07_04_route_N" },
   "N:shaw_college->residences_3_4": { minutes: 1.94, samples: 1, source: "cloud_gps_2026_06_13_route_N_passage" },
   "N:residences_3_4->new_asia": { minutes: 0.63, samples: 1, source: "cloud_gps_2026_06_13_route_N_passage" },
-  "N:new_asia->united_college": { minutes: 1.38, samples: 2, source: "merged_gps_2026_06_13_22_route_N" },
-  "N:united_college->residences_3_4": { minutes: 1.17, samples: 1, source: "cloud_gps_2026_06_22_route_N" },
+  "N:new_asia->united_college": { minutes: 1.31, samples: 6, source: "merged_gps_2026_06_13_07_20_route_N_UVN_LHh" },
+  "N:united_college->residences_3_4": { minutes: 1, samples: 4, source: "merged_gps_2026_06_22_07_20_route_N_UVN_LHh" },
   "N:united_college->university_admin": { minutes: 2.88, samples: 1, source: "cloud_gps_2026_06_13_route_N_interpolated" },
   "N:university_admin->sh_ho": { minutes: 1.24, samples: 1, source: "cloud_gps_2026_06_13_route_N_passage" },
   "N:sh_ho->postgraduate_hostel": { minutes: 1.49, samples: 2, source: "merged_gps_2026_06_13_23_route_N" },
   "1A:university_station->university_sports_centre": { minutes: 1.61, samples: 1, source: "cloud_gps_2026_06_24_route_1a" },
-  "1A:university_sports_centre->shaw_hall": { minutes: 2.15, samples: 1, source: "cloud_gps_2026_06_24_route_1a" },
+  "1A:university_sports_centre->shaw_hall": { minutes: 1.72, samples: 2, source: "merged_gps_2026_06_24_07_15_route_1a_UVN_LHh" },
   "1B:university_station->postgraduate_hostel": { minutes: 2.99, samples: 1, source: "cloud_gps_2026_06_20_route_1b_passage" },
   "1B:postgraduate_hostel->university_sports_centre": { minutes: 1.8, samples: 2, source: "merged_gps_2026_06_17_20_route_1b" },
   "1B:university_sports_centre->shaw_hall": { minutes: 2.19, samples: 2, source: "merged_gps_2026_06_17_20_route_1b" },
 };
 const DEFAULT_STOP_DWELL_SECONDS = {
-  university_station: 38,
+  university_station: 37,
   university_station_piazza: 24,
   postgraduate_hostel: 71,
   shaw_hall: 10,
   science_centre: 25,
-  university_admin: 36,
-  sh_ho: 63,
-  new_asia: 68,
+  university_admin: 34,
+  sh_ho: 53,
+  new_asia: 74,
   united_college: 46,
-  residences_3_4: 65,
-  shaw_college: 78,
-  area_39: 44,
-  cw_chu: 49,
-  campus_circuit_east: 45,
-  university_sports_centre: 47,
-  chan_chun_ha_hostel: 15,
+  residences_3_4: 57,
+  shaw_college: 72,
+  area_39: 54,
+  cw_chu: 35,
+  campus_circuit_east: 43,
+  university_sports_centre: 57,
+  chan_chun_ha_hostel: 69,
   fung_king_hey: 54,
-  residence_15: 42,
-  united_residence: 56,
+  residence_15: 48,
+  united_residence: 59,
+  residence_10_11: 75,
 };
 const DEFAULT_STOP_DWELL_SECONDS_FALLBACK = 14;
 const STOP_DWELL_MAX_SECONDS = 95;
@@ -5552,6 +5564,9 @@ const STOP_DWELL_SEGMENT_MAX_RATIO = 0.45;
 const ROUTE_STOP_DISTANCE_CACHE = new Map();
 const clockFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: HK_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
   weekday: "short",
   hour: "2-digit",
   minute: "2-digit",
@@ -5571,12 +5586,14 @@ function hongKongClock(at = new Date()) {
   const hour = Number(parts.hour) % 24;
   const minute = Number(parts.minute);
   const second = Number(parts.second);
+  const dateString = `${parts.year}-${parts.month}-${parts.day}`;
   return {
     weekday: WEEKDAY_IDS[parts.weekday],
     hour,
     minute,
     second,
     minutes: hour * 60 + minute + second / 60,
+    dateString,
     label: `${pad(hour)}:${pad(minute)}`,
   };
 }
@@ -5613,6 +5630,7 @@ function routeDirectionGlyph(route) {
 }
 
 function routeStopDirectionLabel(route, stopIndex) {
+  if (route.stopDirections && route.stopDirections[stopIndex]) return route.stopDirections[stopIndex];
   const routeDirections = ROUTE_STOP_DIRECTIONS[route.id];
   return routeDirections && routeDirections[stopIndex] || "";
 }
@@ -5673,7 +5691,31 @@ function departuresForRule(rule) {
 
 function todayRules(route, clock = hongKongClock()) {
   if (!route.schedule) return [];
-  return route.schedule.rules.filter((rule) => rule.days.includes(clock.weekday));
+  return route.schedule.rules.filter((rule) => {
+    if (!rule.days.includes(clock.weekday)) return false;
+    if (rule.teachingDaysOnly && !isAcademicTeachingBusDateString(clock.dateString)) return false;
+    return true;
+  });
+}
+
+function isAcademicTeachingBusDateString(dateString) {
+  const teachingRanges = [
+    ["2026-09-07", "2026-12-05"],
+    ["2026-12-07", "2026-12-08"],
+    ["2027-01-11", "2027-04-24"],
+    ["2027-04-26", "2027-04-27"],
+  ];
+  const noClassRanges = [
+    ["2026-09-26", "2026-09-26"],
+    ["2026-10-01", "2026-10-01"],
+    ["2026-10-19", "2026-10-19"],
+    ["2027-02-05", "2027-02-11"],
+    ["2027-03-08", "2027-03-13"],
+    ["2027-03-26", "2027-03-29"],
+    ["2027-04-05", "2027-04-05"],
+  ];
+  const inRange = ([start, end]) => dateString >= start && dateString <= end;
+  return teachingRanges.some(inRange) && !noClassRanges.some(inRange);
 }
 
 function activeVehicles(route, at = new Date()) {
@@ -5740,6 +5782,7 @@ function nextStopArrival(route, stopIndex, at = new Date()) {
 
   rules.forEach((rule) => {
     departuresForRule(rule).forEach((departure) => {
+      if (!routeStopServedAtDeparture(route, stopIndex, departure, at)) return;
       const arrival = departure + offsetMinutes;
       const graceMinutes = stopIndex === 0 ? 0.75 : 0.25;
       if (arrival + graceMinutes < clock.minutes) return;
@@ -5767,6 +5810,22 @@ function nextStopArrival(route, stopIndex, at = new Date()) {
   next.arrivalLabel = formatTime(next.arrival);
   next.label = stopArrivalSummary(next);
   return next;
+}
+
+function routeStopServedAtDeparture(route, stopIndex, departure, at = new Date()) {
+  const stopId = route && route.stops && route.stops[stopIndex];
+  const rule = route && route.conditionalStops && route.conditionalStops[stopId];
+  if (!rule) return true;
+  if (Array.isArray(rule.departMinutes) && Number.isFinite(departure)) {
+    const minute = ((Math.floor(departure) % 60) + 60) % 60;
+    if (!rule.departMinutes.includes(minute)) return false;
+  }
+  if (rule.teachingDaysOnly || rule.nonTeachingDaysOnly) {
+    const teachingDay = isAcademicTeachingBusDateString(hongKongClock(at).dateString);
+    if (rule.teachingDaysOnly && !teachingDay) return false;
+    if (rule.nonTeachingDaysOnly && teachingDay) return false;
+  }
+  return true;
 }
 
 function nextStopArrivals(items, at = new Date()) {
@@ -5892,7 +5951,9 @@ function routeSegmentEvidence(route, upToStopIndex = Infinity) {
     total += 1;
     const key = segmentKey(fromStopId, toStopId);
     const routeKey = `${route.id}:${key}`;
-    const item = DEFAULT_ROUTE_SEGMENT_TRAVEL_MINUTES[routeKey] || DEFAULT_SEGMENT_TRAVEL_MINUTES[key];
+    const routeItem = DEFAULT_ROUTE_SEGMENT_TRAVEL_MINUTES[routeKey];
+    const sharedItem = DEFAULT_SEGMENT_TRAVEL_MINUTES[key];
+    const item = !isSoftSegmentReference(routeItem) ? routeItem : sharedItem || routeItem;
     if (!item || item.estimated) continue;
     covered += 1;
     samples += Math.max(1, Number(item.samples) || 1);
@@ -5980,7 +6041,7 @@ function routeSegmentTravelMinutes(route, toStopIndex, tripMinutes = route.sched
   if (!route || !Array.isArray(route.stops) || toStopIndex <= 0 || toStopIndex >= route.stops.length) return 0;
   const fromStopId = route.stops[toStopIndex - 1];
   const toStopId = route.stops[toStopIndex];
-  const calibrated = defaultSegmentTravelMinutes(route.id, fromStopId, toStopId);
+  const calibrated = defaultSegmentTravelMinutes(route.etaRouteId || route.id, fromStopId, toStopId);
   if (Number.isFinite(calibrated)) return Math.max(0, calibrated);
   const basePrevious = baseRouteStopOffsetMinutes(route, toStopIndex - 1, tripMinutes);
   const baseCurrent = baseRouteStopOffsetMinutes(route, toStopIndex, tripMinutes);
@@ -5990,8 +6051,14 @@ function routeSegmentTravelMinutes(route, toStopIndex, tripMinutes = route.sched
 function defaultSegmentTravelMinutes(routeId, fromStopId, toStopId) {
   const key = segmentKey(fromStopId, toStopId);
   const routeKey = `${routeId}:${key}`;
-  const item = DEFAULT_ROUTE_SEGMENT_TRAVEL_MINUTES[routeKey] || DEFAULT_SEGMENT_TRAVEL_MINUTES[key];
+  const routeItem = DEFAULT_ROUTE_SEGMENT_TRAVEL_MINUTES[routeKey];
+  const sharedItem = DEFAULT_SEGMENT_TRAVEL_MINUTES[key];
+  const item = !isSoftSegmentReference(routeItem) ? routeItem : sharedItem || routeItem;
   return item && Number.isFinite(item.minutes) ? item.minutes : NaN;
+}
+
+function isSoftSegmentReference(item) {
+  return Boolean(item && String(item.source || "").startsWith("manual_reference_"));
 }
 
 function segmentKey(fromStopId, toStopId) {
