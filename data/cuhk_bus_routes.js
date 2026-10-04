@@ -5724,7 +5724,7 @@ function activeVehicles(route, at = new Date()) {
   if (!schedule || coords.length < 2) return [];
 
   const clock = hongKongClock(at);
-  const tripMinutes = effectiveRouteTripMinutes(route);
+  const tripMinutes = effectiveRouteTripMinutes(route, undefined, at);
   const vehicles = [];
   todayRules(route, clock).forEach((rule) => {
     departuresForRule(rule).forEach((departure) => {
@@ -5775,9 +5775,9 @@ function nextStopArrival(route, stopIndex, at = new Date()) {
     return { route, stopIndex, status: "no_service_today", label: "今日无常规班次", clock };
   }
 
-  const tripMinutes = effectiveRouteTripMinutes(route);
+  const tripMinutes = effectiveRouteTripMinutes(route, undefined, at);
   const stopProgress = routeStopProgress(route, stopIndex);
-  const offsetMinutes = routeStopOffsetMinutes(route, stopIndex, tripMinutes);
+  const offsetMinutes = routeStopOffsetMinutes(route, stopIndex, tripMinutes, at);
   let next = null;
 
   rules.forEach((rule) => {
@@ -6015,7 +6015,9 @@ function routeStopOffsetsMinutes(route) {
   return offsets.map((value) => Number(value));
 }
 
-function routeStopOffsetMinutes(route, stopIndex, tripMinutes = route.schedule && route.schedule.estimatedTripMinutes || 15) {
+function routeStopOffsetMinutes(route, stopIndex, tripMinutes = route.schedule && route.schedule.estimatedTripMinutes || 15, at = new Date()) {
+  const predicted = root.CUHK_ETA_PREDICTION && root.CUHK_ETA_PREDICTION.offset(route, stopIndex, at);
+  if (Number.isFinite(predicted)) return predicted;
   const segmentOffset = segmentBasedRouteStopOffsetMinutes(route, stopIndex, tripMinutes);
   if (Number.isFinite(segmentOffset)) return Math.max(0, Math.min(tripMinutes + 8, segmentOffset));
   return baseRouteStopOffsetMinutes(route, stopIndex, tripMinutes);
@@ -6037,8 +6039,10 @@ function segmentBasedRouteStopOffsetMinutes(route, stopIndex, tripMinutes = rout
   return offset;
 }
 
-function routeSegmentTravelMinutes(route, toStopIndex, tripMinutes = route.schedule && route.schedule.estimatedTripMinutes || 15) {
+function routeSegmentTravelMinutes(route, toStopIndex, tripMinutes = route.schedule && route.schedule.estimatedTripMinutes || 15, at = new Date()) {
   if (!route || !Array.isArray(route.stops) || toStopIndex <= 0 || toStopIndex >= route.stops.length) return 0;
+  const predicted = root.CUHK_ETA_PREDICTION && root.CUHK_ETA_PREDICTION.segment(route, toStopIndex, at);
+  if (Number.isFinite(predicted)) return predicted;
   const fromStopId = route.stops[toStopIndex - 1];
   const toStopId = route.stops[toStopIndex];
   const calibrated = defaultSegmentTravelMinutes(route.etaRouteId || route.id, fromStopId, toStopId);
@@ -6065,8 +6069,10 @@ function segmentKey(fromStopId, toStopId) {
   return `${fromStopId}->${toStopId}`;
 }
 
-function effectiveRouteTripMinutes(route, scheduledTripMinutes = route && route.schedule && route.schedule.estimatedTripMinutes || 15) {
+function effectiveRouteTripMinutes(route, scheduledTripMinutes = route && route.schedule && route.schedule.estimatedTripMinutes || 15, at = new Date()) {
   if (!route || !Array.isArray(route.stops) || !route.stops.length) return scheduledTripMinutes;
+  const predicted = root.CUHK_ETA_PREDICTION && root.CUHK_ETA_PREDICTION.offset(route, route.stops.length - 1, at);
+  if (Number.isFinite(predicted)) return predicted;
   const finalOffset = segmentBasedRouteStopOffsetMinutes(route, route.stops.length - 1, scheduledTripMinutes);
   return Number.isFinite(finalOffset) && finalOffset > 0
     ? Math.max(1, finalOffset)
@@ -6079,7 +6085,7 @@ function routeProgressAtElapsed(route, elapsedMinutes, tripMinutes = route.sched
   const checkpoints = (route.stops || [])
     .map((_, stopIndex) => ({
       stopIndex,
-      minutes: routeStopOffsetMinutes(route, stopIndex, tripMinutes),
+      minutes: routeStopOffsetMinutes(route, stopIndex, tripMinutes, at),
       progress: routeStopProgress(route, stopIndex),
     }))
     .filter((item) => Number.isFinite(item.minutes) && Number.isFinite(item.progress))
@@ -6109,6 +6115,8 @@ function routeProgressAtElapsed(route, elapsedMinutes, tripMinutes = route.sched
 
 function routeStopDwellMinutes(route, stopIndex, segmentMinutes = 1, at = new Date()) {
   if (!route || !Array.isArray(route.stops) || stopIndex < 0 || stopIndex >= route.stops.length - 1) return 0;
+  const predicted = root.CUHK_ETA_PREDICTION && root.CUHK_ETA_PREDICTION.dwell(route, stopIndex, at);
+  if (Number.isFinite(predicted)) return Math.max(0, Math.min(150, predicted, segmentMinutes * 60 - 3)) / 60;
   const stopId = route.stops[stopIndex];
   const seconds = defaultStopDwellSeconds(stopId, at);
   return Math.max(
@@ -6255,4 +6263,5 @@ root.CUHK_BUS_UTILS = {
   stopDirectionGlyph,
   stopDirectionSummary,
 };
+if (root.CUHK_ETA_PREDICTION && root.CUHK_ETA_MODEL) root.CUHK_ETA_PREDICTION.setModel(root.CUHK_ETA_MODEL);
 })(typeof window !== "undefined" ? window : globalThis);
