@@ -3090,6 +3090,7 @@ root.CUHK_BUS_DATA = {
       },
       "stops": [
         "university_station",
+        "postgraduate_hostel",
         "university_sports_centre",
         "shaw_hall",
         "new_asia",
@@ -3108,6 +3109,7 @@ root.CUHK_BUS_DATA = {
         "united_college",
         "university_admin",
         "sh_ho",
+        "postgraduate_hostel",
         "university_station"
       ],
       "path": [

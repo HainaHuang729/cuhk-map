@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CUHK 校巴少边形路线图 Demo</title>
+  <title>CUHK 校巴少边形路线图</title>
   <style>
     :root {
       color-scheme: light;
@@ -99,6 +99,12 @@
       border-color: rgba(79, 32, 104, 0.3);
     }
 
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.46;
+      transform: none;
+    }
+
     button.is-active {
       background: var(--route-color, var(--cuhk-purple));
       border-color: var(--route-color, var(--cuhk-purple));
@@ -137,7 +143,7 @@
 
     .diagram-card {
       position: relative;
-      min-height: calc(100vh - 138px);
+      min-height: 0;
       border: 1px solid rgba(79, 32, 104, 0.14);
       border-radius: 18px;
       overflow: hidden;
@@ -152,8 +158,9 @@
     svg {
       display: block;
       width: 100%;
-      height: calc(100vh - 140px);
-      min-height: 680px;
+      height: auto;
+      min-height: 0;
+      aspect-ratio: 1020 / 680;
     }
 
     .route-halo {
@@ -169,6 +176,7 @@
       stroke-linecap: round;
       stroke-linejoin: round;
       cursor: pointer;
+      pointer-events: none;
       transition: opacity 0.16s ease, stroke-width 0.16s ease;
     }
 
@@ -189,14 +197,69 @@
 
     .route-line.is-muted,
     .route-halo.is-muted,
-    .route-hit.is-muted {
+    .route-hit.is-muted,
+    .route-strip-label.is-muted,
+    .route-strip-service.is-muted,
+    .route-stop-dot.is-muted,
+    .route-stop-label.is-muted {
       opacity: 0.16;
+    }
+
+    .route-strip-label,
+    .route-strip-service {
+      display: none;
+    }
+
+    .route-strip-label {
+      fill: var(--ink);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0;
+      pointer-events: none;
+    }
+
+    .route-strip-service {
+      fill: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      pointer-events: none;
+    }
+
+    .route-stop-dot {
+      stroke: #fffefa;
+      stroke-width: 2;
+      cursor: pointer;
+      filter: drop-shadow(0 2px 4px rgba(36, 19, 49, 0.14));
+    }
+
+    .route-stop-dot--bundle {
+      stroke: rgba(36, 19, 49, 0.34);
+      stroke-width: 2.2;
+    }
+
+    .route-stop-dot.is-selected {
+      stroke: var(--cuhk-purple);
+      stroke-width: 3;
+    }
+
+    .route-stop-label {
+      fill: var(--ink);
+      font-size: 7px;
+      font-weight: 900;
+      letter-spacing: 0;
+      pointer-events: none;
     }
 
     .station-hit {
       fill: transparent;
       stroke: transparent;
       cursor: pointer;
+    }
+
+    .station-shield {
+      fill: #fffdf7;
+      stroke: none;
+      pointer-events: none;
     }
 
     .station-ring {
@@ -207,6 +270,13 @@
       transition: width 0.16s ease, height 0.16s ease, stroke 0.16s ease, fill 0.16s ease;
     }
 
+    .station-route-anchor {
+      stroke: #fffefa;
+      stroke-width: 1.8;
+      filter: drop-shadow(0 2px 4px rgba(36, 19, 49, 0.18));
+      pointer-events: none;
+    }
+
     .station-node.is-hub .station-ring {
       stroke-width: 4;
     }
@@ -214,6 +284,11 @@
     .station-node.is-selected .station-ring {
       fill: #fff5c8;
       stroke: var(--cuhk-gold);
+    }
+
+    .station-node.is-route-end .station-ring {
+      fill: #eaf8f7;
+      stroke: #2f7f88;
     }
 
     .station-node.is-muted {
@@ -409,33 +484,55 @@
   <div class="app">
     <header class="topbar">
       <div class="title-block">
-        <h1>CUHK 校巴少边形路线图 Demo</h1>
-        <p>基于 1A 本部线站序生成的示意线路图。站点合并为同一节点，线路沿预设少边形轨道行走。</p>
+        <h1>CUHK 校巴少边形路线图</h1>
+        <p>当前绘制全部校巴线路。优先表达拓扑和共线线束，站点位置只服务于线路关系。</p>
       </div>
       <div class="toolbar" id="routeToolbar" aria-label="线路显示开关"></div>
     </header>
 
     <main class="diagram-shell">
       <section class="diagram-card">
-        <svg id="diagram" viewBox="0 0 1200 860" role="img" aria-label="CUHK 校巴少边形路线图"></svg>
+        <svg id="diagram" viewBox="145 90 1065 680" preserveAspectRatio="xMidYMin meet" role="img" aria-label="CUHK 校巴少边形路线图"></svg>
         <div class="stats" id="stats"></div>
       </section>
     </main>
   </div>
 
-  <script src="data/cuhk_bus_routes.js"></script>
+  <script src="data/cuhk_bus_routes.js?v=20260628-outer-station-plaza-fixed"></script>
   <script>
     const DATA = window.CUHK_BUS_DATA;
     const SVG_NS = "http://www.w3.org/2000/svg";
+    const ROUTE_STRIP_MODE = true;
+    const ROUTE_STRIP_BASE_X_START = 360;
+    const ROUTE_STRIP_BASE_X_END = 1080;
+    const ROUTE_STRIP_X_START = 330;
+    const ROUTE_STRIP_X_END = 1110;
+    const ROUTE_STRIP_OUTER_X_START = 288;
+    const ROUTE_STRIP_OUTER_X_END = 1195;
+    const ROUTE_STRIP_Y_START = 130;
+    const ROUTE_STRIP_Y_CENTER = 390;
+    const ROUTE_STRIP_LANE_GAP = 43;
+    const ROUTE_STRIP_BUNDLE_LANE_GAP = 22;
+    const ROUTE_STRIP_MIN_STOP_GAP = 22;
+    const ROUTE_STRIP_SNAP_DISTANCE = 14;
+    const ROUTE_STRIP_LINE_STOP_CLEARANCE = 9;
     const ROUTE_SPACING = 8;
-    const ROUTE_STROKE = 5.25;
-    const ROUTE_LANE_SPACING = 5.8;
+    const ROUTE_STROKE = 4.4;
+    const ROUTE_LANE_SPACING = 8.5;
+    const ROUTE_GLOBAL_LANE_SPACING = 0.8;
+    const ROUTE_STATION_SPLIT_SPACING = 7.2;
     const LAYOUT_CENTER = [670, 440];
-    const LAYOUT_SCALE_X = 1.36;
-    const LAYOUT_SCALE_Y = 1.2;
+    const LAYOUT_SCALE_X = 1;
+    const LAYOUT_SCALE_Y = 1;
     const STATION_PILL_WIDTH = 88;
     const STATION_PILL_HEIGHT = 30;
-    const STATION_APPROACH_STUB = STATION_PILL_HEIGHT / 2;
+    const ROUTE_STATION_ANCHOR_OFFSET = STATION_PILL_HEIGHT / 2 + 7;
+    const STATION_APPROACH_STUB = STATION_PILL_HEIGHT / 2 + ROUTE_LANE_SPACING * 5;
+    const STATION_SHORT_SIDE_MASK = ROUTE_LANE_SPACING * 2;
+    const STRAIGHT_ROUTE_SEGMENTS = true;
+    const TOPOLOGY_DIRECT_SEGMENTS = false;
+    const ROUTE_DIAGRAM_EDITOR_STORAGE_KEY = "cuhk-route-diagram-editor-v3-table-layout";
+    const storedEditorState = loadStoredEditorState();
     const ROUTE_COLOR_OVERRIDES = {
       "1A": "#4F2068",
       "1B": "#72469A",
@@ -448,40 +545,605 @@
       "5": "#C5922E",
       "6A": "#D5A62F",
       "6B": "#E4B955",
-      "7": "#5A558D"
+      "7": "#5A558D",
+      "MINI-N": "#C07A2E",
+      "MINI-S": "#8B6B35"
     };
 
+    const ROUTE_STRIP_TABLE_COLUMN_COUNT = 35;
+    const ROUTE_STRIP_TABLE_ROWS = {
+      "1A": [
+            "university_station",
+            null,
+            null,
+            null,
+            "university_sports_centre",
+            null,
+            "shaw_hall",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "university_admin",
+            "sh_ho",
+            null,
+            null,
+            null,
+            null,
+            null,
+            "university_station"
+      ],
+      "1B": [
+            "university_station",
+            null,
+            "postgraduate_hostel",
+            null,
+            "university_sports_centre",
+            null,
+            "shaw_hall",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "university_admin",
+            "sh_ho",
+            null,
+            null,
+            "postgraduate_hostel",
+            null,
+            null,
+            "university_station"
+      ],
+      "2": [
+            "university_station_piazza",
+            null,
+            null,
+            null,
+            "university_sports_centre",
+            null,
+            null,
+            null,
+            "fung_king_hey",
+            "united_college",
+            "new_asia",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "university_admin",
+            "sh_ho",
+            null,
+            null,
+            null,
+            null,
+            null,
+            "university_station"
+      ],
+      "N": [
+            "university_station",
+            null,
+            "postgraduate_hostel",
+            null,
+            "university_sports_centre",
+            null,
+            "shaw_hall",
+            null,
+            null,
+            "new_asia",
+            "united_college",
+            "residences_3_4",
+            "shaw_college",
+            "area_39",
+            "cw_chu",
+            null,
+            "residence_15",
+            "united_residence",
+            "chan_chun_ha_hostel",
+            "shaw_college",
+            "residences_3_4",
+            null,
+            null,
+            "new_asia",
+            "united_college",
+            null,
+            null,
+            "university_admin",
+            "sh_ho",
+            null,
+            null,
+            "postgraduate_hostel",
+            null,
+            null,
+            "university_station"
+      ],
+      "H": [
+            "university_station",
+            null,
+            "postgraduate_hostel",
+            null,
+            "university_sports_centre",
+            null,
+            "shaw_hall",
+            null,
+            null,
+            "new_asia",
+            "united_college",
+            "residences_3_4",
+            "shaw_college",
+            "area_39",
+            "cw_chu",
+            "residence_10_11",
+            "residence_15",
+            "united_residence",
+            "chan_chun_ha_hostel",
+            "shaw_college",
+            "residences_3_4",
+            null,
+            null,
+            "new_asia",
+            "united_college",
+            null,
+            null,
+            "university_admin",
+            "sh_ho",
+            null,
+            null,
+            "postgraduate_hostel",
+            null,
+            null,
+            "university_station"
+      ],
+      "3": [
+            "yasumoto",
+            null,
+            null,
+            null,
+            "university_sports_centre",
+            "science_centre",
+            "shaw_hall",
+            null,
+            "fung_king_hey",
+            null,
+            null,
+            "residences_3_4",
+            "shaw_college",
+            null,
+            "cw_chu",
+            null,
+            "residence_15",
+            "united_residence",
+            "chan_chun_ha_hostel",
+            "shaw_college",
+            "residences_3_4",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "university_admin",
+            "sh_ho",
+            null,
+            null,
+            null,
+            null,
+            null,
+            "university_station"
+      ],
+      "4": [
+            "yasumoto",
+            null,
+            "campus_circuit_east",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "area_39",
+            "cw_chu",
+            null,
+            "residence_15",
+            "united_residence",
+            "chan_chun_ha_hostel",
+            "shaw_college",
+            "residences_3_4",
+            null,
+            null,
+            "new_asia",
+            "united_college",
+            null,
+            null,
+            "university_admin",
+            "sh_ho",
+            null,
+            null,
+            null,
+            null,
+            null,
+            "university_station"
+      ],
+      "8": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "area_39",
+            "cw_chu",
+            null,
+            null,
+            "united_residence",
+            "chan_chun_ha_hostel",
+            "shaw_college",
+            "residences_3_4",
+            "university_admin",
+            "science_centre",
+            "new_asia",
+            "united_college",
+            "residences_3_4",
+            "shaw_college",
+            null,
+            "area_39",
+            null,
+            "cw_chu",
+            null,
+            "campus_circuit_east",
+            null,
+            "university_station"
+      ],
+      "MINI-S": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "residence_10_11",
+            "residence_15",
+            "united_residence",
+            "chan_chun_ha_hostel",
+            null,
+            "residences_3_4",
+            null,
+            null,
+            "new_asia",
+            "united_college",
+            null,
+            null,
+            "university_admin",
+            "university_health",
+            "engineering",
+            "teaching_research_1",
+            "chung_chi_staff_quarters",
+            "ho_tim",
+            "yasumoto",
+            "university_station"
+      ],
+      "6A": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "cw_chu",
+            null,
+            null,
+            "united_residence",
+            "chan_chun_ha_hostel",
+            "shaw_college",
+            "residences_3_4",
+            null,
+            null,
+            "new_asia",
+            "united_college",
+            null,
+            null,
+            "university_admin",
+            "sh_ho",
+            null,
+            null,
+            "university_station_piazza",
+            null,
+            null,
+            "chung_chi_teaching"
+      ],
+      "7": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "shaw_college",
+            "residences_3_4",
+            null,
+            null,
+            "new_asia",
+            "united_college",
+            null,
+            null,
+            "university_admin",
+            "sh_ho",
+            null,
+            null,
+            "university_station_piazza",
+            null,
+            null,
+            "chung_chi_teaching"
+      ],
+      "6B": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "new_asia",
+            "united_college",
+            null,
+            null,
+            "university_admin",
+            "sh_ho",
+            null,
+            null,
+            "university_station_piazza",
+            null,
+            null,
+            "chung_chi_teaching"
+      ],
+      "5": [
+            "chung_chi_teaching",
+            null,
+            null,
+            null,
+            "university_sports_centre",
+            null,
+            "shaw_hall",
+            null,
+            "fung_king_hey",
+            "united_college",
+            "new_asia",
+            "residences_3_4",
+            "shaw_college",
+            null,
+            "cw_chu",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+      ],
+      "MINI-N": [
+            "university_station",
+            "wong_foo_yuan",
+            "wong_foo_yuan",
+            "chung_chi_staff_quarters",
+            "teaching_research_1",
+            "university_health",
+            "shaw_hall",
+            "university_library",
+            "fung_king_hey",
+            "united_college",
+            "new_asia",
+            "residences_3_4",
+            "lee_woo_sing",
+            null,
+            null,
+            null,
+            null,
+            "united_residence",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+      ],
+      "MINI-N#2": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "residence_10_11",
+            "residence_15",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+      ]
+};
+
+    const ROUTE_STRIP_TABLE_ROUTE_IDS = {
+      "MINI-N#2": "MINI-N"
+};
+
     const POSITIONS = {
-      university_station: [1040, 500],
-      university_station_piazza: [900, 760],
-      yasumoto: [980, 700],
-      chung_chi_teaching: [800, 760],
-      wong_foo_yuan: [930, 700],
-      chung_chi_staff_quarters: [840, 700],
-      teaching_research_1: [720, 700],
-      ho_tim: [900, 700],
-      university_sports_centre: [900, 590],
-      postgraduate_hostel: [800, 120],
-      campus_circuit_east: [1040, 120],
-      sh_ho: [830, 590],
-      university_admin: [600, 590],
-      engineering: [760, 590],
-      university_health: [680, 590],
-      shaw_hall: [680, 500],
-      science_centre: [760, 500],
-      university_library: [620, 500],
-      fung_king_hey: [560, 500],
-      united_college: [500, 500],
-      new_asia: [500, 440],
-      residences_3_4: [460, 590],
-      lee_woo_sing: [820, 320],
-      chan_chun_ha_hostel: [420, 320],
-      shaw_college: [330, 200],
-      united_residence: [520, 320],
-      residence_15: [620, 320],
-      residence_10_11: [720, 320],
-      cw_chu: [520, 120],
-      area_39: [360, 120]
+      university_station: [1040, 640],
+      university_station_piazza: [1040, 760],
+      yasumoto: [1120, 140],
+      chung_chi_teaching: [820, 760],
+      wong_foo_yuan: [940, 760],
+      chung_chi_staff_quarters: [760, 760],
+      teaching_research_1: [680, 760],
+      ho_tim: [840, 760],
+      university_sports_centre: [900, 540],
+      postgraduate_hostel: [900, 700],
+      campus_circuit_east: [1040, 140],
+      sh_ho: [620, 640],
+      university_admin: [620, 540],
+      engineering: [760, 700],
+      university_health: [700, 620],
+      shaw_hall: [760, 540],
+      science_centre: [500, 440],
+      university_library: [620, 440],
+      fung_king_hey: [520, 620],
+      united_college: [500, 540],
+      new_asia: [380, 540],
+      residences_3_4: [240, 540],
+      lee_woo_sing: [820, 360],
+      chan_chun_ha_hostel: [320, 300],
+      shaw_college: [240, 300],
+      united_residence: [440, 300],
+      residence_15: [560, 300],
+      residence_10_11: [680, 300],
+      cw_chu: [560, 140],
+      area_39: [320, 140]
     };
 
     const WAYPOINTS = {
@@ -530,6 +1192,7 @@
 
     expandLayout(POSITIONS);
     expandLayout(WAYPOINTS);
+    applyStoredPositions(storedEditorState.positions);
 
     const POINTS = {
       ...POSITIONS,
@@ -667,6 +1330,273 @@
       lee_woo_sing: "vertical"
     };
 
+    const ROUTE_STRIP_ALIGNED_STOP_IDS = new Set([
+      "university_station",
+      "university_admin",
+      "united_college",
+      "new_asia",
+      "sh_ho",
+      "residences_3_4"
+    ]);
+
+    const ROUTE_STRIP_EDGE_ALIGNED_STOPS = new Set([
+      "university_station",
+      "residence_10_11",
+      "chung_chi_teaching"
+    ]);
+
+    const ROUTE_STRIP_SECONDARY_LABEL_STOPS = new Set([
+      "university_station_piazza"
+    ]);
+
+    const ROUTE_STRIP_PRIORITY_LABEL_STOPS = new Set([
+      "postgraduate_hostel"
+    ]);
+
+    const ROUTE_STRIP_SHARED_LANE_KEYS = {};
+    const ROUTE_STRIP_EXTENDED_MERGE_KEYS = new Set();
+    const ROUTE_STRIP_BRIDGED_MERGE_ROUTE_IDS = {
+      "university_station#1": new Set(["1A", "1B", "N", "H", "MINI-N"]),
+      "shaw_hall#1": new Set(["5", "2", "1A", "1B", "N", "H", "MINI-N"]),
+      "united_college#1": new Set(["N", "H", "MINI-N"]),
+      "residences_3_4#1": new Set(["N", "H", "MINI-N"]),
+      "university_station#2": new Set(["4", "3", "2", "1A", "1B", "N", "H", "8", "MINI-S"])
+    };
+    const ROUTE_STRIP_BUNDLE_ROUTE_IDS = new Set(["1A", "1B", "N", "H", "4", "3", "MINI-S", "MINI-N", "6A", "2", "5", "7", "6B", "8"]);
+    const ROUTE_STRIP_BUNDLE_BASE_ROUTE_ID = "N";
+    const ROUTE_STRIP_BUNDLE_EXTRA_STOP_IDS = new Set(["residence_10_11"]);
+    const ROUTE_STRIP_BUNDLE_EXTRA_STOP_KEYS = new Set([
+      "4|yasumoto#1",
+      "4|campus_circuit_east#1",
+      "4|4_cw_chu_loop#1",
+      "3|yasumoto#1",
+      "3|university_sports_centre#1",
+      "3|science_centre#1",
+      "3|fung_king_hey#1",
+      "MINI-S|mini_s_university_health#1",
+      "MINI-S|mini_s_engineering#1",
+      "MINI-S|mini_s_teaching_research_1#1",
+      "MINI-S|mini_s_staff_quarters#1",
+      "MINI-S|mini_s_ho_tim#1",
+      "MINI-S|mini_s_yasumoto#1",
+      "MINI-N|mini_n_wong_foo_yuan#1",
+      "MINI-N|mini_n_staff_quarters#1",
+      "MINI-N|mini_n_teaching_research_1#1",
+      "MINI-N|mini_n_university_health#1",
+      "MINI-N|mini_n_university_library#1",
+      "MINI-N|mini_n_fung_king_hey#1",
+      "MINI-N|mini_n_new_asia#1",
+      "MINI-N|mini_n_lee_woo_sing#1",
+      "MINI-N|mini_n_residence_15#1",
+      "MINI-N|mini_n_residence_10_11#1",
+      "MINI-S|mini_s_university_admin#1",
+      "6A|6a_university_station_piazza#1",
+      "6A|6a_chung_chi_teaching#1",
+      "2|2_university_station_piazza#1",
+      "2|2_fung_king_hey#1",
+      "2|2_united_college#1",
+      "2|2_new_asia#1",
+      "5|5_chung_chi_teaching#1",
+      "5|5_fung_king_hey#1",
+      "5|5_united_college#1",
+      "5|5_new_asia#1",
+      "7|7_university_station_piazza#1",
+      "7|7_chung_chi_teaching#1",
+      "6B|6b_university_station_piazza#1",
+      "6B|6b_chung_chi_teaching#1",
+      "8|8_university_admin_sequence#1",
+      "8|science_centre#1",
+      "8|8_new_asia_sequence#1",
+      "8|8_united_college_sequence#1",
+      "8|campus_circuit_east#1",
+      "8|8_residences_3_4_return#1",
+      "8|8_shaw_college_return#1",
+      "8|8_area_39_return#1",
+      "8|8_cw_chu_return#1"
+    ]);
+    const ROUTE_STRIP_ROUTE8_ADMIN_STATION_KEYS = new Set([
+      "science_centre#1",
+      "8_new_asia_sequence#1",
+      "8_united_college_sequence#1",
+      "8_residences_3_4_return#1",
+      "8_shaw_college_return#1",
+      "8_area_39_return#1",
+      "8_cw_chu_return#1",
+      "campus_circuit_east#1"
+    ]);
+    const ROUTE_STRIP_FIXED_EXTRA_STOP_KEYS = new Set([
+      "3|yasumoto#1",
+      "3|university_sports_centre#1",
+      "4|yasumoto#1",
+      "4|campus_circuit_east#1",
+      "4|4_cw_chu_loop#1",
+      "2|2_university_station_piazza#1",
+      "5|5_chung_chi_teaching#1",
+      "6A|6a_university_station_piazza#1",
+      "6A|6a_chung_chi_teaching#1",
+      "7|7_university_station_piazza#1",
+      "7|7_chung_chi_teaching#1",
+      "6B|6b_university_station_piazza#1",
+      "6B|6b_chung_chi_teaching#1",
+      "8|8_university_admin_sequence#1",
+      "8|science_centre#1",
+      "8|8_new_asia_sequence#1",
+      "8|8_united_college_sequence#1"
+    ]);
+    const ROUTE_STRIP_STATIC_MERGE_ALIASES = {
+      "4|yasumoto#1": "yasumoto#1",
+      "3|fung_king_hey#1": "2_fung_king_hey#1",
+      "5|5_fung_king_hey#1": "2_fung_king_hey#1",
+      "5|5_united_college#1": "2_united_college#1",
+      "5|5_new_asia#1": "2_new_asia#1",
+      "MINI-N|mini_n_fung_king_hey#1": "2_fung_king_hey#1",
+      "MINI-N|mini_n_new_asia#1": "2_new_asia#1",
+      "MINI-N|mini_n_residence_15#1": "residence_15#1",
+      "MINI-N|mini_n_residence_10_11#1": "residence_10_11#1",
+      "7|7_university_station_piazza#1": "6a_university_station_piazza#1",
+      "7|7_chung_chi_teaching#1": "6a_chung_chi_teaching#1",
+      "6B|6b_university_station_piazza#1": "6a_university_station_piazza#1",
+      "6B|6b_chung_chi_teaching#1": "6a_chung_chi_teaching#1",
+      "8|8_university_admin_sequence#1": "university_admin#1",
+      "8|8_new_asia_sequence#1": "new_asia#2",
+      "8|8_united_college_sequence#1": "united_college#2"
+    };
+    const ROUTE_STRIP_BUNDLE_EXTRA_STOP_ALIGNMENTS = {
+      "4|yasumoto#1": "university_station#1",
+      "4|campus_circuit_east#1": 516,
+      "4|4_cw_chu_loop#1": 552,
+      "3|yasumoto#1": "postgraduate_hostel#1",
+      "3|university_sports_centre#1": "university_sports_centre#1",
+      "3|science_centre#1": "shaw_hall#1",
+      "3|fung_king_hey#1": "united_college#1",
+      "MINI-N|mini_n_wong_foo_yuan#1": 378,
+      "MINI-N|mini_n_staff_quarters#1": 396,
+      "MINI-N|mini_n_teaching_research_1#1": 414,
+      "MINI-N|mini_n_university_health#1": 432,
+      "MINI-N|mini_n_university_library#1": 486,
+      "MINI-N|mini_n_fung_king_hey#1": 522,
+      "MINI-N|mini_n_new_asia#1": 558,
+      "MINI-N|mini_n_lee_woo_sing#1": 594,
+      "MINI-N|mini_n_residence_15#1": "residence_15#1",
+      "MINI-N|mini_n_residence_10_11#1": 700,
+      "MINI-S|mini_s_university_admin#1": 954,
+      "MINI-S|mini_s_university_health#1": 983,
+      "MINI-S|mini_s_engineering#1": 995,
+      "MINI-S|mini_s_teaching_research_1#1": 1020,
+      "MINI-S|mini_s_staff_quarters#1": 1038,
+      "MINI-S|mini_s_ho_tim#1": 1056,
+      "MINI-S|mini_s_yasumoto#1": 1068,
+      "6A|6a_university_station_piazza#1": "postgraduate_hostel#2",
+      "6A|6a_chung_chi_teaching#1": "university_station#2",
+      "2|2_university_station_piazza#1": "university_station#1",
+      "2|2_fung_king_hey#1": 504,
+      "2|2_united_college#1": 540,
+      "2|2_new_asia#1": 558,
+      "5|5_chung_chi_teaching#1": "university_station#1",
+      "5|5_fung_king_hey#1": 504,
+      "5|5_united_college#1": 540,
+      "5|5_new_asia#1": 558,
+      "7|7_university_station_piazza#1": "postgraduate_hostel#2",
+      "7|7_chung_chi_teaching#1": "university_station#2",
+      "6B|6b_university_station_piazza#1": "postgraduate_hostel#2",
+      "6B|6b_chung_chi_teaching#1": "university_station#2",
+      "8|8_university_admin_sequence#1": "university_admin#1",
+      "8|science_centre#1": 924,
+      "8|8_new_asia_sequence#1": "new_asia#2",
+      "8|8_united_college_sequence#1": "united_college#2",
+      "8|8_residences_3_4_return#1": 990,
+      "8|8_shaw_college_return#1": 1008,
+      "8|8_area_39_return#1": 1026,
+      "8|8_cw_chu_return#1": 1044,
+      "8|campus_circuit_east#1": 1062
+    };
+    const ROUTE_STRIP_OCCURRENCE_KEY_OVERRIDES = {
+      "3": {
+        "university_station@14": "university_station#2"
+      },
+      "MINI-S": {
+        "residences_3_4@4": "residences_3_4#2",
+        "new_asia@5": "new_asia#2",
+        "united_college@6": "united_college#2",
+        "university_admin@7": "mini_s_university_admin#1",
+        "university_health@8": "mini_s_university_health#1",
+        "engineering@9": "mini_s_engineering#1",
+        "teaching_research_1@10": "mini_s_teaching_research_1#1",
+        "chung_chi_staff_quarters@11": "mini_s_staff_quarters#1",
+        "ho_tim@12": "mini_s_ho_tim#1",
+        "yasumoto@13": "mini_s_yasumoto#1",
+        "university_station@14": "university_station#2"
+      },
+      "MINI-N": {
+        "wong_foo_yuan@1": "mini_n_wong_foo_yuan#1",
+        "chung_chi_staff_quarters@2": "mini_n_staff_quarters#1",
+        "teaching_research_1@3": "mini_n_teaching_research_1#1",
+        "university_health@4": "mini_n_university_health#1",
+        "university_library@6": "mini_n_university_library#1",
+        "fung_king_hey@7": "mini_n_fung_king_hey#1",
+        "new_asia@9": "mini_n_new_asia#1",
+        "lee_woo_sing@11": "mini_n_lee_woo_sing#1",
+        "residence_15@13": "mini_n_residence_15#1",
+        "residence_10_11@14": "mini_n_residence_10_11#1"
+      },
+      "6A": {
+        "shaw_college@3": "shaw_college#2",
+        "residences_3_4@4": "residences_3_4#2",
+        "new_asia@5": "new_asia#2",
+        "united_college@6": "united_college#2",
+        "university_station_piazza@9": "6a_university_station_piazza#1",
+        "chung_chi_teaching@10": "6a_chung_chi_teaching#1"
+      },
+      "2": {
+        "university_station_piazza@0": "2_university_station_piazza#1",
+        "fung_king_hey@3": "2_fung_king_hey#1",
+        "united_college@4": "2_united_college#1",
+        "new_asia@5": "2_new_asia#1",
+        "university_station@8": "university_station#2"
+      },
+      "5": {
+        "chung_chi_teaching@0": "5_chung_chi_teaching#1",
+        "fung_king_hey@3": "5_fung_king_hey#1",
+        "united_college@4": "5_united_college#1",
+        "new_asia@5": "5_new_asia#1"
+      },
+      "7": {
+        "shaw_college@0": "shaw_college#2",
+        "residences_3_4@1": "residences_3_4#2",
+        "new_asia@2": "new_asia#2",
+        "united_college@3": "united_college#2",
+        "university_station_piazza@6": "7_university_station_piazza#1",
+        "chung_chi_teaching@7": "7_chung_chi_teaching#1"
+      },
+      "6B": {
+        "new_asia@0": "new_asia#2",
+        "united_college@1": "united_college#2",
+        "university_station_piazza@4": "6b_university_station_piazza#1",
+        "chung_chi_teaching@5": "6b_chung_chi_teaching#1"
+      },
+      "4": {
+        "cw_chu@2": "4_cw_chu_loop#1",
+        "cw_chu@4": "cw_chu#1",
+        "shaw_college@8": "shaw_college#2",
+        "residences_3_4@9": "residences_3_4#2",
+        "new_asia@10": "new_asia#2",
+        "united_college@11": "united_college#2",
+        "university_station@14": "university_station#2"
+      },
+      "8": {
+        "shaw_college@4": "shaw_college#2",
+        "residences_3_4@5": "residences_3_4#2",
+        "university_admin@6": "8_university_admin_sequence#1",
+        "new_asia@8": "8_new_asia_sequence#1",
+        "united_college@9": "8_united_college_sequence#1",
+        "residences_3_4@10": "8_residences_3_4_return#1",
+        "shaw_college@11": "8_shaw_college_return#1",
+        "area_39@12": "8_area_39_return#1",
+        "cw_chu@13": "8_cw_chu_return#1",
+        "university_station@15": "university_station#2"
+      }
+    };
+
     const LABEL_OFFSETS = {
       university_station: [18, 18, "start"],
       university_station_piazza: [0, 26, "middle"],
@@ -700,11 +1630,23 @@
       area_39: [-12, -16, "end"]
     };
 
-    const routes = DATA.routes.filter((route) => route.id === "1A");
+    const DIAGRAM_ROUTE_IDS = ["1A", "1B", "2", "N", "H", "3", "4", "8", "MINI-S", "6A", "7", "6B", "5", "MINI-N", "MINI-N#2"];
+    const routes = routeOrderIds(storedEditorState.routeOrder)
+      .map(routeForDiagramId)
+      .filter(Boolean);
     const stops = DATA.stops;
-    const activeRoutes = new Set(routes.map((route) => route.id));
+    const activeRoutes = new Set(routes.map(routeBaseId));
+    let manualRouteStops = normalizeManualRouteStops(storedEditorState.routes);
+    let routeStripPositionOverrides = normalizeRouteStripPositionOverrides(storedEditorState.stripPositions);
+    let routeStripMergeAliases = normalizeRouteStripMergeAliases(storedEditorState.stripMerges);
+    let editorMode = true;
+    let activeEditorRouteId = routes[0] ? routes[0].id : null;
     let selectedStopId = null;
     let focusedRouteId = null;
+    let dragState = null;
+    let routeStripDragState = null;
+    let suppressNextStationClick = false;
+    let suppressNextRouteStripClick = false;
 
     const diagram = document.getElementById("diagram");
     const routeToolbar = document.getElementById("routeToolbar");
@@ -722,6 +1664,101 @@
       renderDiagram();
       renderInfoPanel();
       renderStats();
+    }
+
+    function loadStoredEditorState() {
+      try {
+        const raw = localStorage.getItem(ROUTE_DIAGRAM_EDITOR_STORAGE_KEY);
+        if (!raw) return { positions: {}, routes: null, routeOrder: null, stripPositions: {}, stripMerges: {} };
+        const parsed = JSON.parse(raw);
+        return {
+          positions: parsed && typeof parsed.positions === "object" && parsed.positions ? parsed.positions : {},
+          routes: parsed && typeof parsed.routes === "object" && parsed.routes ? parsed.routes : null,
+          routeOrder: Array.isArray(parsed?.routeOrder) ? parsed.routeOrder : null,
+          stripPositions: parsed && typeof parsed.stripPositions === "object" && parsed.stripPositions ? parsed.stripPositions : {},
+          stripMerges: parsed && typeof parsed.stripMerges === "object" && parsed.stripMerges ? parsed.stripMerges : {}
+        };
+      } catch {
+        return { positions: {}, routes: null, routeOrder: null, stripPositions: {}, stripMerges: {} };
+      }
+    }
+
+    function routeOrderIds(storedIds) {
+      const ids = Array.isArray(storedIds)
+        ? storedIds.filter((id) => DIAGRAM_ROUTE_IDS.includes(id))
+        : [];
+      DIAGRAM_ROUTE_IDS.forEach((id) => {
+        if (!ids.includes(id)) ids.push(id);
+      });
+      return ids;
+    }
+
+    function routeForDiagramId(routeId) {
+      const baseId = routeBaseId(routeId);
+      const route = DATA.routes.find((candidate) => candidate.id === baseId);
+      return route ? { ...route, id: routeId, baseId } : null;
+    }
+
+    function routeBaseId(routeOrId) {
+      const routeId = typeof routeOrId === "string" ? routeOrId : routeOrId && routeOrId.id;
+      return ROUTE_STRIP_TABLE_ROUTE_IDS[routeId] || routeId || "";
+    }
+
+    function routeIsSecondaryTableRow(route) {
+      return Boolean(route && route.id !== routeBaseId(route));
+    }
+
+    function routeIsActive(route) {
+      return activeRoutes.has(routeBaseId(route));
+    }
+
+    function applyStoredPositions(positions) {
+      Object.entries(positions || {}).forEach(([stopId, coord]) => {
+        if (!POSITIONS[stopId] || !Array.isArray(coord) || coord.length < 2) return;
+        const x = Number(coord[0]);
+        const y = Number(coord[1]);
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+        POSITIONS[stopId] = [x, y];
+      });
+    }
+
+    function normalizeManualRouteStops(routeMap) {
+      if (!routeMap) {
+        return {};
+      }
+      const normalized = {};
+      routes.forEach((route) => {
+        if (!Object.prototype.hasOwnProperty.call(routeMap, route.id)) return;
+        normalized[route.id] = Array.isArray(routeMap[route.id])
+          ? routeMap[route.id].filter((stopId) => stops[stopId])
+          : [];
+      });
+      return normalized;
+    }
+
+    function normalizeRouteStripPositionOverrides(positionMap) {
+      return Object.fromEntries(Object.entries(positionMap || {})
+        .map(([key, value]) => [key, Number(value)])
+        .filter(([, value]) => Number.isFinite(value)));
+    }
+
+    function normalizeRouteStripMergeAliases(mergeMap) {
+      return Object.fromEntries(Object.entries(mergeMap || {})
+        .filter(([, value]) => typeof value === "string" && value));
+    }
+
+    function persistEditorState() {
+      try {
+        localStorage.setItem(ROUTE_DIAGRAM_EDITOR_STORAGE_KEY, JSON.stringify({
+          positions: Object.fromEntries(Object.entries(POSITIONS).map(([stopId, coord]) => [stopId, [rounded(coord[0]), rounded(coord[1])]])),
+          routes: manualRouteStops,
+          routeOrder: routes.map((route) => route.id),
+          stripPositions: routeStripPositionOverrides,
+          stripMerges: routeStripMergeAliases
+        }));
+      } catch {
+        // Local storage can be unavailable in private browsing; the editor still works for the current page.
+      }
     }
 
     function expandLayout(pointMap) {
@@ -769,26 +1806,97 @@
       showAllButton.className = "control-button";
       showAllButton.textContent = "显示全部";
       showAllButton.addEventListener("click", () => {
-        routes.forEach((route) => activeRoutes.add(route.id));
+        routes.forEach((route) => activeRoutes.add(routeBaseId(route)));
         selectedStopId = null;
         focusedRouteId = null;
-        renderToolbar();
-        renderDiagram();
-        renderInfoPanel();
-        renderStats();
+        rerenderEditor();
       });
       routeToolbar.append(showAllButton);
 
+      const editButton = document.createElement("button");
+      editButton.className = `control-button is-secondary${editorMode ? " is-active" : ""}`;
+      editButton.textContent = editorMode ? "连线中" : "查看";
+      editButton.addEventListener("click", () => {
+        editorMode = !editorMode;
+        focusedRouteId = editorMode ? activeEditorRouteId : focusedRouteId;
+        selectedStopId = null;
+        rerenderEditor();
+      });
+      routeToolbar.append(editButton);
+
+      const undoButton = document.createElement("button");
+      undoButton.className = "control-button is-secondary";
+      undoButton.textContent = "撤销一段";
+      undoButton.disabled = !activeEditorRouteStops().length;
+      undoButton.addEventListener("click", () => {
+        undoActiveEditorRouteStop();
+      });
+      routeToolbar.append(undoButton);
+
+      const clearRouteButton = document.createElement("button");
+      clearRouteButton.className = "control-button is-secondary";
+      clearRouteButton.textContent = "清空当前";
+      clearRouteButton.disabled = !activeEditorRouteStops().length;
+      clearRouteButton.addEventListener("click", () => {
+        clearActiveEditorRoute();
+      });
+      routeToolbar.append(clearRouteButton);
+
+      const clearAllButton = document.createElement("button");
+      clearAllButton.className = "control-button is-secondary";
+      clearAllButton.textContent = "清空全部";
+      clearAllButton.addEventListener("click", () => {
+        clearAllManualRoutes();
+      });
+      routeToolbar.append(clearAllButton);
+
+      const restoreButton = document.createElement("button");
+      restoreButton.className = "control-button is-secondary";
+      restoreButton.textContent = "恢复默认";
+      restoreButton.addEventListener("click", () => {
+        restoreDefaultRoutes();
+      });
+      routeToolbar.append(restoreButton);
+
       if (focusedRouteId) {
+        const moveUpButton = document.createElement("button");
+        moveUpButton.className = "control-button is-secondary";
+        moveUpButton.dataset.action = "move-route-up";
+        moveUpButton.textContent = "上移当前";
+        moveUpButton.disabled = routes.findIndex((route) => route.id === focusedRouteId) <= 0;
+        moveUpButton.addEventListener("click", () => {
+          moveRoute(focusedRouteId, -1);
+        });
+        routeToolbar.append(moveUpButton);
+
+        const moveDownButton = document.createElement("button");
+        moveDownButton.className = "control-button is-secondary";
+        moveDownButton.dataset.action = "move-route-down";
+        moveDownButton.textContent = "下移当前";
+        moveDownButton.disabled = routes.findIndex((route) => route.id === focusedRouteId) >= routes.length - 1;
+        moveDownButton.addEventListener("click", () => {
+          moveRoute(focusedRouteId, 1);
+        });
+        routeToolbar.append(moveDownButton);
+
+        const hideRouteButton = document.createElement("button");
+        hideRouteButton.className = "control-button is-secondary";
+        hideRouteButton.dataset.action = "hide-current-route";
+        hideRouteButton.textContent = "隐藏当前";
+        hideRouteButton.addEventListener("click", () => {
+          hideRoute(focusedRouteId);
+          selectedStopId = null;
+          rerenderEditor();
+        });
+        routeToolbar.append(hideRouteButton);
+
         const clearFocusButton = document.createElement("button");
         clearFocusButton.className = "control-button is-secondary";
         clearFocusButton.textContent = "取消高亮";
         clearFocusButton.addEventListener("click", () => {
           focusedRouteId = null;
           selectedStopId = null;
-          renderToolbar();
-          renderDiagram();
-          renderInfoPanel();
+          rerenderEditor();
         });
         routeToolbar.append(clearFocusButton);
       }
@@ -796,34 +1904,184 @@
       routeToolbar.append(Object.assign(document.createElement("span"), { className: "toolbar-break" }));
 
       routes.forEach((route) => {
+        if (routeIsSecondaryTableRow(route)) return;
+        const baseId = routeBaseId(route);
         const button = document.createElement("button");
-        button.className = `${activeRoutes.has(route.id) ? "is-active" : ""}${focusedRouteId === route.id ? " is-focused" : ""}`;
+        const isActive = activeRoutes.has(baseId);
+        const isFocused = isActive && (focusedRouteId === route.id || (editorMode && activeEditorRouteId === route.id));
+        button.className = `${isActive ? "is-active" : ""}${isFocused ? " is-focused" : ""}`;
         button.style.setProperty("--route-color", routeColor(route));
         button.style.setProperty("--route-text", readableRouteTextColor(routeColor(route)));
-        button.textContent = `${route.id} ${route.name}`;
+        button.dataset.routeId = baseId;
+        button.textContent = `${baseId} ${route.name}`;
+        button.title = editorMode
+          ? (isActive ? "点击选择该路线，可用隐藏当前关闭" : "点击显示并选择该路线")
+          : (isActive ? "点击隐藏该路线" : "点击显示该路线");
         button.addEventListener("click", () => {
-          if (!activeRoutes.has(route.id)) {
-            activeRoutes.add(route.id);
-            focusedRouteId = route.id;
-          } else if (focusedRouteId !== route.id) {
+          activeEditorRouteId = route.id;
+          if (editorMode) {
+            activeRoutes.add(baseId);
             focusedRouteId = route.id;
           } else {
-            activeRoutes.delete(route.id);
-            focusedRouteId = null;
+            if (activeRoutes.has(baseId)) {
+              hideRoute(baseId);
+            } else {
+              activeRoutes.add(baseId);
+              focusedRouteId = route.id;
+            }
           }
           selectedStopId = null;
-          renderToolbar();
-          renderDiagram();
-          renderInfoPanel();
-          renderStats();
+          rerenderEditor();
         });
         routeToolbar.append(button);
       });
     }
 
+    function hideRoute(routeId) {
+      const baseId = routeBaseId(routeId);
+      activeRoutes.delete(baseId);
+      if (routeBaseId(focusedRouteId) === baseId) focusedRouteId = null;
+      if (routeBaseId(activeEditorRouteId) === baseId) {
+        activeEditorRouteId = routes.find(routeIsActive)?.id || routes[0]?.id || null;
+      }
+    }
+
+    function moveRoute(routeId, offset) {
+      const index = routes.findIndex((route) => route.id === routeId);
+      const targetIndex = index + offset;
+      if (index < 0 || targetIndex < 0 || targetIndex >= routes.length) return;
+      const [route] = routes.splice(index, 1);
+      routes.splice(targetIndex, 0, route);
+      persistEditorState();
+      rerenderEditor();
+    }
+
+    function activeEditorRoute() {
+      return routes.find((route) => route.id === activeEditorRouteId) || routes[0] || null;
+    }
+
+    function activeEditorRouteStops() {
+      const route = activeEditorRoute();
+      if (!route) return [];
+      return routeStopsForDiagram(route);
+    }
+
+    function routeStopsForDiagram(route) {
+      if (ROUTE_STRIP_MODE) {
+        const tableStops = routeStripTableStops(route && route.id);
+        if (tableStops) return tableStops;
+        return route.stops || [];
+      }
+      if (Object.prototype.hasOwnProperty.call(manualRouteStops, route.id)) {
+        return manualRouteStops[route.id];
+      }
+      return route.stops || [];
+    }
+
+    function routeStripTableCells(routeId) {
+      const row = ROUTE_STRIP_TABLE_ROWS[routeId];
+      if (!Array.isArray(row)) return null;
+      return row
+        .map((stopId, column) => stopId && stops[stopId] ? { stopId, column } : null)
+        .filter(Boolean);
+    }
+
+    function routeStripTableStops(routeId) {
+      const cells = routeStripTableCells(routeId);
+      return cells ? cells.map((cell) => cell.stopId) : null;
+    }
+
+    function routeStripTableStopPositions(route, stopIds) {
+      const cells = routeStripTableCells(route && route.id);
+      if (!cells || cells.length !== stopIds.length) return null;
+      const sameStops = cells.every((cell, index) => cell.stopId === stopIds[index]);
+      if (!sameStops) return null;
+      return cells.map((cell) => routeStripTableColumnX(cell.column));
+    }
+
+    function routeStripTableColumnX(column) {
+      const steps = Math.max(1, ROUTE_STRIP_TABLE_COLUMN_COUNT - 1);
+      return ROUTE_STRIP_X_START + (ROUTE_STRIP_X_END - ROUTE_STRIP_X_START) * (column / steps);
+    }
+
+    function appendStopToActiveRoute(stopId) {
+      const route = activeEditorRoute();
+      if (!route || !stops[stopId]) return;
+      if (!Array.isArray(manualRouteStops[route.id])) manualRouteStops[route.id] = [...(route.stops || [])];
+      const routeStops = manualRouteStops[route.id];
+      if (routeStops[routeStops.length - 1] === stopId) return;
+      routeStops.push(stopId);
+      activeRoutes.add(routeBaseId(route));
+      activeEditorRouteId = route.id;
+      focusedRouteId = route.id;
+      selectedStopId = stopId;
+      persistEditorState();
+      rerenderEditor();
+    }
+
+    function undoActiveEditorRouteStop() {
+      const route = activeEditorRoute();
+      if (!route) return;
+      if (!Array.isArray(manualRouteStops[route.id])) manualRouteStops[route.id] = [...(route.stops || [])];
+      if (!manualRouteStops[route.id].length) return;
+      manualRouteStops[route.id].pop();
+      selectedStopId = manualRouteStops[route.id][manualRouteStops[route.id].length - 1] || null;
+      focusedRouteId = route.id;
+      persistEditorState();
+      rerenderEditor();
+    }
+
+    function clearActiveEditorRoute() {
+      const route = activeEditorRoute();
+      if (!route) return;
+      manualRouteStops[route.id] = [];
+      selectedStopId = null;
+      focusedRouteId = route.id;
+      persistEditorState();
+      rerenderEditor();
+    }
+
+    function clearAllManualRoutes() {
+      routes.forEach((route) => {
+        manualRouteStops[route.id] = [];
+      });
+      selectedStopId = null;
+      focusedRouteId = null;
+      persistEditorState();
+      rerenderEditor();
+    }
+
+    function restoreDefaultRoutes() {
+      manualRouteStops = {};
+      routeStripPositionOverrides = {};
+      routeStripMergeAliases = {};
+      routes.splice(0, routes.length, ...routeOrderIds(null)
+        .map(routeForDiagramId)
+        .filter(Boolean));
+      activeRoutes.clear();
+      routes.forEach((route) => activeRoutes.add(routeBaseId(route)));
+      activeEditorRouteId = routes[0] ? routes[0].id : null;
+      selectedStopId = null;
+      focusedRouteId = null;
+      persistEditorState();
+      rerenderEditor();
+    }
+
+    function rerenderEditor() {
+      stationConnectorDirectionCache.clear();
+      renderToolbar();
+      renderDiagram();
+      renderInfoPanel();
+      renderStats();
+    }
+
     function renderDiagram() {
       diagram.innerHTML = "";
-      const visibleRoutes = routes.filter((route) => activeRoutes.has(route.id));
+      const visibleRoutes = routes.filter(routeIsActive);
+      if (ROUTE_STRIP_MODE) {
+        renderRouteStripDiagram(visibleRoutes);
+        return;
+      }
       const bundleLayout = createBundleLayout(visibleRoutes);
 
       const haloLayer = svgEl("g", { class: "route-halo-layer" });
@@ -873,11 +2131,902 @@
       }, { once: true });
     }
 
+    function renderRouteStripDiagram(visibleRoutes) {
+      const labelLayer = svgEl("g", { class: "route-strip-label-layer" });
+      const haloLayer = svgEl("g", { class: "route-halo-layer" });
+      const lineUnderLayer = svgEl("g", { class: "route-line-layer route-line-layer--under" });
+      const lineLayer = svgEl("g", { class: "route-line-layer" });
+      const hitLayer = svgEl("g", { class: "route-hit-layer" });
+      const stopLayer = svgEl("g", { class: "route-strip-stop-layer" });
+      const alignedStopColumns = routeStripAlignedStopColumns(visibleRoutes);
+
+      visibleRoutes.forEach((route, routeIndex) => {
+        const y = routeStripY(routeIndex, visibleRoutes.length, visibleRoutes);
+        const stopIds = routeStopsForDiagram(route).filter((stopId) => stops[stopId]);
+        const stopPositions = routeStripStopPositions(route, stopIds, alignedStopColumns, visibleRoutes);
+        const routeExtent = routeStripExtent(stopPositions);
+        const d = routeStripLinePath(y, stopPositions, 0) ||
+          `M${rounded(routeExtent.start)},${rounded(y)} L${rounded(routeExtent.end)},${rounded(y)}`;
+        const muted = focusedRouteId && route.id !== focusedRouteId ? " is-muted" : "";
+        const color = routeColor(route);
+
+        haloLayer.append(svgEl("path", { d, class: `route-halo${muted}`, fill: "none" }));
+        const lineAttrs = {
+          d,
+          class: `route-line${focusedRouteId === route.id ? " is-focused" : ""}${muted}`,
+          stroke: color,
+          fill: "none",
+          "data-route-id": route.id
+        };
+        lineUnderLayer.append(svgEl("path", lineAttrs));
+        const topLinePath = routeStripLinePath(y, stopPositions, ROUTE_STRIP_LINE_STOP_CLEARANCE);
+        if (topLinePath) lineLayer.append(svgEl("path", { ...lineAttrs, d: topLinePath }));
+
+        const continuationPath = routeStripContinuationPath(route, routeIndex, y, stopPositions, alignedStopColumns, visibleRoutes);
+        if (continuationPath) {
+          haloLayer.append(svgEl("path", { d: continuationPath, class: `route-halo${muted}`, fill: "none" }));
+          lineUnderLayer.append(svgEl("path", { ...lineAttrs, d: continuationPath }));
+          lineLayer.append(svgEl("path", { ...lineAttrs, d: continuationPath }));
+        }
+
+        const hit = svgEl("path", {
+          d,
+          class: `route-hit${muted}`,
+          "data-route-id": route.id
+        });
+        hit.addEventListener("click", (event) => {
+          event.stopPropagation();
+          focusedRouteId = route.id;
+          selectedStopId = null;
+          renderToolbar();
+          renderDiagram();
+          renderInfoPanel();
+        });
+        hitLayer.append(hit);
+
+        appendRouteStripLabel(labelLayer, route, y, muted, visibleRoutes);
+        appendRouteStripStops(stopLayer, labelLayer, route, y, muted, alignedStopColumns, stopIds, stopPositions, visibleRoutes);
+      });
+
+      diagram.append(haloLayer, lineUnderLayer, hitLayer, stopLayer, lineLayer, labelLayer);
+      diagram.addEventListener("click", () => {
+        selectedStopId = null;
+        focusedRouteId = null;
+        renderToolbar();
+        renderDiagram();
+        renderInfoPanel();
+      }, { once: true });
+    }
+
+    function routeStripLinePath(y, stopPositions, clearance) {
+      const parts = [];
+      for (let index = 0; index < stopPositions.length - 1; index += 1) {
+        const fromX = stopPositions[index];
+        const toX = stopPositions[index + 1];
+        if (!Number.isFinite(fromX) || !Number.isFinite(toX) || Math.abs(toX - fromX) < 0.1) continue;
+        const direction = toX >= fromX ? 1 : -1;
+        const gap = Math.min(clearance, Math.abs(toX - fromX) / 3);
+        const startX = fromX + direction * gap;
+        const endX = toX - direction * gap;
+        if ((endX - startX) * direction <= 0) continue;
+        parts.push(`M${rounded(startX)},${rounded(y)} L${rounded(endX)},${rounded(y)}`);
+      }
+      return parts.join(" ");
+    }
+
+    function routeStripContinuationPath(route, routeIndex, y, stopPositions, alignedStopColumns, visibleRoutes) {
+      if (!routeIsSecondaryTableRow(route) || !stopPositions.length) return "";
+      const baseId = routeBaseId(route);
+      const previousIndex = visibleRoutes
+        .slice(0, routeIndex)
+        .map((candidate, index) => routeBaseId(candidate) === baseId ? index : -1)
+        .filter((index) => index >= 0)
+        .pop();
+      if (!Number.isFinite(previousIndex)) return "";
+
+      const previousRoute = visibleRoutes[previousIndex];
+      const previousY = routeStripY(previousIndex, visibleRoutes.length, visibleRoutes);
+      const previousStopIds = routeStopsForDiagram(previousRoute).filter((stopId) => stops[stopId]);
+      const previousPositions = routeStripStopPositions(previousRoute, previousStopIds, alignedStopColumns, visibleRoutes);
+      const fromX = previousPositions[previousPositions.length - 1];
+      if (!Number.isFinite(fromX)) return "";
+
+      const endpoints = [stopPositions[0], stopPositions[stopPositions.length - 1]].filter(Number.isFinite);
+      if (!endpoints.length) return "";
+      const toX = endpoints.reduce((best, x) => Math.abs(x - fromX) < Math.abs(best - fromX) ? x : best, endpoints[0]);
+      return `M${rounded(fromX)},${rounded(previousY)} L${rounded(fromX)},${rounded(y)} L${rounded(toX)},${rounded(y)}`;
+    }
+
+    function appendRouteStripLabel(layer, route, y, muted, visibleRoutes) {
+      if (routeIsSecondaryTableRow(route)) return;
+      const laneRoutes = routeStripLaneRoutes(route, visibleRoutes);
+      if (laneRoutes[0] && laneRoutes[0].id !== route.id) return;
+      const label = svgEl("text", {
+        class: `route-strip-label${muted}`,
+        x: ROUTE_STRIP_X_START - 22,
+        y: rounded(y - 3),
+        "text-anchor": "end"
+      });
+      label.textContent = laneRoutes.length > 1 ? laneRoutes.map((laneRoute) => laneRoute.id).join(" / ") : `${route.id} ${route.name}`;
+      layer.append(label);
+
+      if (routeStripUsesBundledRows(visibleRoutes)) return;
+
+      const service = svgEl("text", {
+        class: `route-strip-service${muted}`,
+        x: ROUTE_STRIP_X_START - 22,
+        y: rounded(y + 12),
+        "text-anchor": "end"
+      });
+      service.textContent = route.service || "";
+      layer.append(service);
+    }
+
+    function appendRouteStripStops(layer, labelLayer, route, y, muted, alignedStopColumns, stopIds, stopPositions, visibleRoutes) {
+      const occurrenceKeys = routeStripOccurrenceKeysForRoute(route, stopIds);
+      stopIds.forEach((stopId, index) => {
+        const x = stopPositions[index];
+        const occurrenceKey = occurrenceKeys[index];
+        const markerPlan = routeStripStopMarkerPlan(route, y, muted, stopIds, stopPositions, occurrenceKeys, index, visibleRoutes);
+        if (markerPlan) {
+          const marker = markerPlan.geometry;
+          const selectedClass = selectedStopId === stopId ? " is-selected" : "";
+        const dot = svgEl("rect", {
+          class: `route-stop-dot${markerPlan.extraClass || ""}${selectedClass}${markerPlan.muted || ""}`,
+          x: rounded(marker.x),
+          y: rounded(marker.y),
+          width: rounded(marker.width),
+          height: rounded(marker.height),
+          rx: rounded(marker.width / 2),
+          ry: rounded(marker.width / 2),
+          fill: markerPlan.fill,
+          "data-route-id": markerPlan.routeId,
+          "data-stop-id": stopId,
+          "data-occurrence-key": occurrenceKey
+        });
+        dot.append(svgEl("title"));
+        dot.querySelector("title").textContent = markerPlan.title;
+        if (markerPlan.draggable) {
+          dot.addEventListener("pointerdown", (event) => {
+            beginRouteStripStopDrag(event, route.id, occurrenceKey, stopId, x);
+          });
+        }
+        dot.addEventListener("click", (event) => {
+          event.stopPropagation();
+          if (suppressNextRouteStripClick) {
+            suppressNextRouteStripClick = false;
+            return;
+          }
+          selectedStopId = stopId;
+          focusedRouteId = markerPlan.focusRouteId;
+          renderToolbar();
+          renderDiagram();
+          renderInfoPanel();
+        });
+        layer.append(dot);
+        appendRouteStripCapsuleLabel(labelLayer, markerPlan, stopId, selectedClass || markerPlan.muted || "");
+        }
+      });
+    }
+
+    function appendRouteStripCapsuleLabel(layer, markerPlan, stopId, extraClass) {
+      if (!markerPlan || markerPlan.skip) return;
+      const marker = markerPlan.geometry;
+      const lines = routeStripCapsuleLabelLines(routeStopDisplayLabel(stopId));
+      const centerX = marker.x + marker.width / 2;
+      const centerY = marker.y + marker.height / 2;
+      const text = svgEl("text", {
+        class: `route-stop-label${extraClass || ""}`,
+        x: rounded(centerX),
+        y: rounded(centerY - (lines.length > 1 ? 3.5 : -2.5)),
+        "text-anchor": "middle",
+        "dominant-baseline": "middle",
+        "data-route-id": markerPlan.routeId,
+        "data-stop-id": stopId
+      });
+      lines.forEach((line, index) => {
+        const tspan = svgEl("tspan", {
+          x: rounded(centerX),
+          dy: index === 0 ? 0 : 8
+        });
+        tspan.textContent = line;
+        text.append(tspan);
+      });
+      layer.append(text);
+    }
+
+    function routeStripCapsuleLabelLines(label) {
+      const chars = Array.from(label || "");
+      if (chars.length <= 1) return [label || ""];
+      const splitAt = Math.ceil(chars.length / 2);
+      return [chars.slice(0, splitAt).join(""), chars.slice(splitAt).join("")];
+    }
+
+    function routeStripStopMarkerPlan(route, y, muted, stopIds, stopPositions, occurrenceKeys, index, visibleRoutes) {
+      const stopId = stopIds[index];
+      const x = stopPositions[index];
+      const occurrenceKey = occurrenceKeys[index];
+      const selected = selectedStopId === stopId;
+      const combinedMarker = routeStripCombinedStopMarker(route, occurrenceKey, stopId, x, visibleRoutes, selected);
+      if (combinedMarker && combinedMarker.skip) return null;
+      if (combinedMarker) return combinedMarker;
+
+      const draggable = routeStripIsBundleExtraStop(route, occurrenceKey, stopId) &&
+        !ROUTE_STRIP_FIXED_EXTRA_STOP_KEYS.has(routeStripEditKey(route.id, occurrenceKey));
+
+      return {
+        geometry: routeStripStopMarkerGeometry(route, x, y, selected),
+        fill: routeColor(route),
+        routeId: route.id,
+        focusRouteId: route.id,
+        muted,
+        draggable,
+        title: `${route.id} · ${routeStopDisplayLabel(stopId)}`
+      };
+    }
+
+    function routeStripCombinedStopMarker(route, occurrenceKey, stopId, x, visibleRoutes, selected) {
+      if (!routeStripUsesBundledRows(visibleRoutes) || !routeStripIsBundledRoute(route)) return null;
+      const mergeTargetKey = routeStripMergeTargetKey(route, occurrenceKey);
+      if (mergeTargetKey && mergeTargetKey !== occurrenceKey) {
+        const targetParticipants = routeStripBundledMarkerParticipants(mergeTargetKey, visibleRoutes);
+        const targetRun = routeStripParticipantRun(targetParticipants, route.id, mergeTargetKey);
+        return targetRun.length > 1 ? { skip: true } : null;
+      }
+
+      const participants = routeStripBundledMarkerParticipants(occurrenceKey, visibleRoutes);
+      if (participants.length <= 1) return null;
+      const mergedKey = mergeTargetKey || occurrenceKey;
+      const participantRun = routeStripParticipantRun(participants, route.id, mergedKey);
+      if (participantRun.length <= 1) return null;
+      const combinesExtra = Boolean(mergeTargetKey) || participants.some((participant) => (
+        participant.route.id !== route.id &&
+        routeStripMergeTargetKey(participant.route, participant.occurrenceKey) === occurrenceKey
+      ));
+      if (routeStripIsBundleExtraStop(route, occurrenceKey, stopId) && !combinesExtra) return null;
+      const owner = participantRun.find((participant) => participant.occurrenceKey === mergedKey) || participantRun[0];
+      if (owner.route.id !== route.id) return { skip: true };
+
+      const yValues = participantRun.map((participant) => participant.y);
+      const topY = Math.min(...yValues);
+      const bottomY = Math.max(...yValues);
+      const width = selected ? 32 : 30;
+      const padding = selected ? 11 : 9;
+      const routeIds = participantRun.map((participant) => participant.route.id);
+      const markerMuted = focusedRouteId && !routeIds.includes(focusedRouteId) ? " is-muted" : "";
+
+      return {
+        geometry: {
+          x: x - width / 2,
+          y: topY - padding,
+          width,
+          height: bottomY - topY + padding * 2
+        },
+        extraClass: " route-stop-dot--bundle",
+        fill: "#fffefa",
+        routeId: routeIds.join(" "),
+        focusRouteId: null,
+        muted: markerMuted,
+        title: `${routeIds.join(" / ")} · ${routeStopDisplayLabel(stopId)}`
+      };
+    }
+
+    function routeStripParticipantRun(participants, routeId, mergedKey) {
+      const bridgedRoutes = ROUTE_STRIP_BRIDGED_MERGE_ROUTE_IDS[mergedKey];
+      if (bridgedRoutes && bridgedRoutes.has(routeId)) {
+        return participants.filter((participant) => bridgedRoutes.has(participant.route.id));
+      }
+      return ROUTE_STRIP_EXTENDED_MERGE_KEYS.has(mergedKey)
+        ? participants
+        : routeStripContiguousParticipantRun(participants, routeId);
+    }
+
+    function routeStripContiguousParticipantRun(participants, routeId) {
+      const routeIndex = participants.findIndex((participant) => participant.route.id === routeId);
+      if (routeIndex < 0) return [];
+      let start = routeIndex;
+      let end = routeIndex;
+      while (start > 0 && participants[start].laneIndex - participants[start - 1].laneIndex <= 1) start -= 1;
+      while (end + 1 < participants.length && participants[end + 1].laneIndex - participants[end].laneIndex <= 1) end += 1;
+      return participants.slice(start, end + 1);
+    }
+
+    function routeStripBundledMarkerParticipants(occurrenceKey, visibleRoutes) {
+      return visibleRoutes.map((route, routeIndex) => {
+        if (!routeStripIsBundledRoute(route)) return null;
+        const stopIds = routeStopsForDiagram(route).filter((stopId) => stops[stopId]);
+        const occurrenceKeys = routeStripOccurrenceKeysForRoute(route, stopIds);
+        const participantKey = occurrenceKeys.find((routeKey) => (
+          routeKey === occurrenceKey || routeStripMergeTargetKey(route, routeKey) === occurrenceKey
+        ));
+        if (!participantKey) return null;
+        return {
+          route,
+          routeIndex,
+          laneIndex: routeStripLaneIndex(route, visibleRoutes),
+          occurrenceKey: participantKey,
+          y: routeStripY(routeIndex, visibleRoutes.length, visibleRoutes)
+        };
+      }).filter(Boolean).sort((a, b) => a.laneIndex - b.laneIndex || a.routeIndex - b.routeIndex);
+    }
+
+    function routeStripStopMarkerGeometry(route, x, y, selected) {
+      const bundled = routeStripIsBundledRoute(route);
+      const width = selected ? 30 : (bundled ? 28 : 30);
+      const height = selected ? ROUTE_STRIP_BUNDLE_LANE_GAP + 7 : (bundled ? ROUTE_STRIP_BUNDLE_LANE_GAP + 3 : 18);
+      return {
+        x: x - width / 2,
+        y: y - height / 2,
+        width,
+        height
+      };
+    }
+
+    function routeStripY(routeIndex, routeCount, visibleRoutes) {
+      if (routeStripUsesBundledRows(visibleRoutes)) {
+        const route = visibleRoutes[routeIndex];
+        const laneKeys = routeStripBundledLaneKeys(visibleRoutes);
+        const laneIndex = Math.max(0, laneKeys.indexOf(routeStripLaneKey(route)));
+        const blockHeight = (laneKeys.length - 1) * ROUTE_STRIP_BUNDLE_LANE_GAP;
+        return ROUTE_STRIP_Y_CENTER - blockHeight / 2 + laneIndex * ROUTE_STRIP_BUNDLE_LANE_GAP;
+      }
+      if (routeCount <= 0) return ROUTE_STRIP_Y_START;
+      const blockHeight = (routeCount - 1) * ROUTE_STRIP_LANE_GAP;
+      return ROUTE_STRIP_Y_CENTER - blockHeight / 2 + routeIndex * ROUTE_STRIP_LANE_GAP;
+    }
+
+    function routeStripUsesBundledRows(visibleRoutes) {
+      if (!Array.isArray(visibleRoutes) || visibleRoutes.length < 2) return false;
+      const bundledRoutes = visibleRoutes.filter((route) => routeStripIsBundledRoute(route));
+      if (ROUTE_STRIP_MODE && Object.keys(ROUTE_STRIP_TABLE_ROWS).length) return bundledRoutes.length >= 2;
+      return bundledRoutes.length >= 2 && bundledRoutes.some((route) => route.id === ROUTE_STRIP_BUNDLE_BASE_ROUTE_ID);
+    }
+
+    function routeStripIsBundledRoute(route) {
+      return Boolean(route && ROUTE_STRIP_BUNDLE_ROUTE_IDS.has(routeBaseId(route)));
+    }
+
+    function routeStripLaneKey(route) {
+      return route ? (ROUTE_STRIP_SHARED_LANE_KEYS[route.id] || route.id) : "";
+    }
+
+    function routeStripBundledLaneKeys(visibleRoutes) {
+      return visibleRoutes
+        .filter((route) => routeStripIsBundledRoute(route))
+        .reduce((keys, route) => {
+          const laneKey = routeStripLaneKey(route);
+          if (!keys.includes(laneKey)) keys.push(laneKey);
+          return keys;
+        }, []);
+    }
+
+    function routeStripLaneIndex(route, visibleRoutes) {
+      return routeStripBundledLaneKeys(visibleRoutes).indexOf(routeStripLaneKey(route));
+    }
+
+    function routeStripLaneRoutes(route, visibleRoutes) {
+      const laneKey = routeStripLaneKey(route);
+      return visibleRoutes.filter((candidate) => routeStripLaneKey(candidate) === laneKey);
+    }
+
+    function routeStripBundledStopPositions(route, stopIds, visibleRoutes) {
+      if (!routeStripUsesBundledRows(visibleRoutes) || !routeStripIsBundledRoute(route)) return null;
+      const referenceRoute = visibleRoutes.find((candidate) => candidate.id === ROUTE_STRIP_BUNDLE_BASE_ROUTE_ID) || visibleRoutes[0];
+      const referenceStopIds = routeStopsForDiagram(referenceRoute).filter((stopId) => stops[stopId]);
+      const referenceKeys = routeStripOccurrenceKeysForRoute(referenceRoute, referenceStopIds);
+      const routeKeys = routeStripOccurrenceKeysForRoute(route, stopIds);
+      const referencePositionsByKey = new Map(referenceKeys.map((key, index) => [key, routeStripEvenX(index, referenceStopIds.length)]));
+      const directPositions = stopIds.map((stopId, index) => {
+        if (routeStripIsBundleExtraStop(route, routeKeys[index], stopId)) return NaN;
+        const directPosition = referencePositionsByKey.get(routeKeys[index]);
+        return Number.isFinite(directPosition) ? directPosition : NaN;
+      });
+
+      const positions = stopIds.map((stopId, index) => {
+        if (Number.isFinite(directPositions[index])) return directPositions[index];
+        const alignedExtraX = routeStripBundledExtraAlignedX(route, routeKeys[index], referencePositionsByKey);
+        if (Number.isFinite(alignedExtraX)) return alignedExtraX;
+        return routeStripBundledExtraStopX(routeKeys, referencePositionsByKey, index, stopIds.length, directPositions);
+      });
+      return positions;
+    }
+
+    function routeStripOccurrenceKeysForRoute(route, stopIds) {
+      const tableCells = routeStripTableCells(route && route.id);
+      if (tableCells && tableCells.length === stopIds.length && tableCells.every((cell, index) => cell.stopId === stopIds[index])) {
+        return tableCells.map((cell) => `${cell.stopId}#col${cell.column + 1}`);
+      }
+      const overrides = route && ROUTE_STRIP_OCCURRENCE_KEY_OVERRIDES[route.id];
+      const counts = {};
+      return stopIds.map((stopId, index) => {
+        const override = overrides && overrides[`${stopId}@${index}`];
+        if (override) return override;
+        counts[stopId] = (counts[stopId] || 0) + 1;
+        return `${stopId}#${counts[stopId]}`;
+      });
+    }
+
+    function routeStripOccurrenceKeys(stopIds) {
+      const counts = {};
+      return stopIds.map((stopId) => {
+        counts[stopId] = (counts[stopId] || 0) + 1;
+        return `${stopId}#${counts[stopId]}`;
+      });
+    }
+
+    function routeStripIsBundleExtraStop(route, occurrenceKey, stopId) {
+      if (routeStripTableCells(route && route.id)) return false;
+      if (ROUTE_STRIP_BUNDLE_EXTRA_STOP_IDS.has(stopId)) return true;
+      return Boolean(route && ROUTE_STRIP_BUNDLE_EXTRA_STOP_KEYS.has(`${route.id}|${occurrenceKey}`));
+    }
+
+    function routeStripEvenSmallStopRuns(route, stopIds, routeKeys, positions, visibleRoutes) {
+      const result = positions.slice();
+      for (let index = 0; index < stopIds.length; index += 1) {
+        if (!routeStripIsSmallExtraStop(route, routeKeys[index], stopIds[index], visibleRoutes)) continue;
+        const start = index;
+        while (
+          index + 1 < stopIds.length &&
+          routeStripIsSmallExtraStop(route, routeKeys[index + 1], stopIds[index + 1], visibleRoutes)
+        ) {
+          index += 1;
+        }
+        const end = index;
+        const previousIndex = start - 1;
+        const nextIndex = end + 1;
+        if (
+          previousIndex < 0 ||
+          nextIndex >= stopIds.length ||
+          !Number.isFinite(result[previousIndex]) ||
+          !Number.isFinite(result[nextIndex])
+        ) {
+          continue;
+        }
+
+        const step = (result[nextIndex] - result[previousIndex]) / (end - start + 2);
+        for (let runIndex = start; runIndex <= end; runIndex += 1) {
+          result[runIndex] = result[previousIndex] + step * (runIndex - start + 1);
+        }
+      }
+      return result;
+    }
+
+    function routeStripIsSmallExtraStop(route, occurrenceKey, stopId, visibleRoutes) {
+      return routeStripIsBundleExtraStop(route, occurrenceKey, stopId) &&
+        !routeStripWillRenderBundle(route, occurrenceKey, stopId, visibleRoutes);
+    }
+
+    function routeStripWillRenderBundle(route, occurrenceKey, stopId, visibleRoutes) {
+      const mergeTargetKey = routeStripMergeTargetKey(route, occurrenceKey);
+      if (mergeTargetKey && mergeTargetKey !== occurrenceKey) {
+        const targetRun = routeStripParticipantRun(
+          routeStripBundledMarkerParticipants(mergeTargetKey, visibleRoutes),
+          route.id,
+          mergeTargetKey
+        );
+        return targetRun.length > 1;
+      }
+
+      const participants = routeStripBundledMarkerParticipants(occurrenceKey, visibleRoutes);
+      if (participants.length <= 1) return false;
+      const mergedKey = mergeTargetKey || occurrenceKey;
+      const participantRun = routeStripParticipantRun(participants, route.id, mergedKey);
+      if (participantRun.length <= 1) return false;
+      const combinesExtra = Boolean(mergeTargetKey) || participants.some((participant) => (
+        participant.route.id !== route.id &&
+        routeStripMergeTargetKey(participant.route, participant.occurrenceKey) === occurrenceKey
+      ));
+      return !(routeStripIsBundleExtraStop(route, occurrenceKey, stopId) && !combinesExtra);
+    }
+
+    function routeStripBundledExtraAlignedX(route, occurrenceKey, referencePositionsByKey) {
+      if (!route || !occurrenceKey) return NaN;
+      const alignment = ROUTE_STRIP_BUNDLE_EXTRA_STOP_ALIGNMENTS[`${route.id}|${occurrenceKey}`];
+      if (!alignment) return NaN;
+      if (typeof alignment === "number") return Math.max(ROUTE_STRIP_OUTER_X_START, Math.min(ROUTE_STRIP_OUTER_X_END, routeStripScaleReferenceX(alignment)));
+      const referenceKey = typeof alignment === "string" ? alignment : alignment.reference;
+      const alignedX = referencePositionsByKey.get(referenceKey);
+      if (!Number.isFinite(alignedX)) return NaN;
+      const offset = typeof alignment === "object" ? Number(alignment.offset || 0) : 0;
+      return Math.max(ROUTE_STRIP_OUTER_X_START, Math.min(ROUTE_STRIP_OUTER_X_END, alignedX + offset));
+    }
+
+    function routeStripScaleReferenceX(x) {
+      const baseCenter = (ROUTE_STRIP_BASE_X_START + ROUTE_STRIP_BASE_X_END) / 2;
+      const scale = (ROUTE_STRIP_X_END - ROUTE_STRIP_X_START) / (ROUTE_STRIP_BASE_X_END - ROUTE_STRIP_BASE_X_START);
+      return baseCenter + (x - baseCenter) * scale;
+    }
+
+    function routeStripBundledExtraStopX(routeKeys, referencePositionsByKey, index, count, directPositions) {
+      let runStart = index;
+      let runEnd = index;
+      while (runStart > 0 && !Number.isFinite(directPositions[runStart - 1])) runStart -= 1;
+      while (runEnd + 1 < count && !Number.isFinite(directPositions[runEnd + 1])) runEnd += 1;
+
+      const runCount = runEnd - runStart + 1;
+      const runOffset = index - runStart;
+      const previousX = runStart > 0 ? directPositions[runStart - 1] : NaN;
+      const nextX = runEnd + 1 < count ? directPositions[runEnd + 1] : NaN;
+      const gap = ROUTE_STRIP_MIN_STOP_GAP;
+      if (Number.isFinite(previousX) && Number.isFinite(nextX)) {
+        const step = (nextX - previousX) / (runCount + 1);
+        if (Math.abs(step) >= gap * 0.72) return previousX + step * (runOffset + 1);
+        const direction = nextX >= previousX ? 1 : -1;
+        return previousX + direction * gap * (runOffset + 1);
+      }
+      if (Number.isFinite(previousX)) return Math.min(ROUTE_STRIP_X_END, previousX + gap * (runOffset + 1));
+      if (Number.isFinite(nextX)) return Math.max(ROUTE_STRIP_X_START, nextX - gap * (runCount - runOffset));
+      return routeStripEvenX(index, count);
+    }
+
+    function routeStripStopPositions(route, stopIds, alignedStopColumns, visibleRoutes) {
+      const tablePositions = routeStripTableStopPositions(route, stopIds);
+      if (tablePositions) return routeStripApplyEditedPositions(route, stopIds, tablePositions);
+      if (stopIds.length <= 1) return routeStripApplyEditedPositions(route, stopIds, [ROUTE_STRIP_X_START]);
+      const bundledPositions = routeStripBundledStopPositions(route, stopIds, visibleRoutes);
+      if (bundledPositions) {
+        const routeKeys = routeStripOccurrenceKeysForRoute(route, stopIds);
+        const editedPositions = routeStripApplyEditedPositions(route, stopIds, bundledPositions);
+        const mergedPositions = routeStripApplyMergeTargetPositions(route, stopIds, routeKeys, editedPositions, visibleRoutes);
+        const evenPositions = routeStripEvenSmallStopRuns(route, stopIds, routeKeys, mergedPositions, visibleRoutes);
+        return route.id === "8" ? routeStripPlaceRoute8AdminStationRun(routeKeys, evenPositions) : evenPositions;
+      }
+      const positions = stopIds.map((stopId, index) => {
+        const column = routeStripAlignedColumn(stopIds, stopId, index, alignedStopColumns);
+        if (Number.isFinite(column)) return routeStripColumnX(column);
+        return routeStripEvenX(index, stopIds.length);
+      });
+      return routeStripApplyEditedPositions(route, stopIds, routeStripResolveStopPositionCollisions(positions, stopIds));
+    }
+
+    function routeStripApplyEditedPositions(route, stopIds, positions) {
+      const occurrenceKeys = routeStripOccurrenceKeysForRoute(route, stopIds);
+      return positions.map((x, index) => {
+        const editKey = routeStripEditKey(route.id, occurrenceKeys[index]);
+        const editedX = ROUTE_STRIP_FIXED_EXTRA_STOP_KEYS.has(editKey) ? NaN : routeStripPositionOverrides[editKey];
+        return Number.isFinite(editedX)
+          ? Math.max(ROUTE_STRIP_OUTER_X_START, Math.min(ROUTE_STRIP_OUTER_X_END, editedX))
+          : x;
+      });
+    }
+
+    function routeStripPlaceRoute8AdminStationRun(routeKeys, positions) {
+      const start = routeKeys.indexOf("8_university_admin_sequence#1");
+      const end = routeKeys.indexOf("university_station#2");
+      if (start < 0 || end <= start || !Number.isFinite(positions[start]) || !Number.isFinite(positions[end])) return positions;
+      const indexes = routeKeys
+        .map((key, index) => ROUTE_STRIP_ROUTE8_ADMIN_STATION_KEYS.has(key) && index > start && index < end ? index : -1)
+        .filter((index) => index >= 0);
+      if (!indexes.length) return positions;
+      const result = positions.slice();
+      indexes.forEach((index, offset) => {
+        result[index] = positions[start] + (positions[end] - positions[start]) * (offset + 1) / (indexes.length + 1);
+      });
+      return result;
+    }
+
+    function routeStripApplyMergeTargetPositions(route, stopIds, routeKeys, positions, visibleRoutes) {
+      return positions.map((x, index) => {
+        const targetKey = routeStripMergeTargetKey(route, routeKeys[index]);
+        if (!targetKey || targetKey === routeKeys[index]) return x;
+        const targetX = routeStripVisibleTargetPosition(targetKey, visibleRoutes);
+        return Number.isFinite(targetX) ? targetX : x;
+      });
+    }
+
+    function routeStripVisibleTargetPosition(targetKey, visibleRoutes) {
+      for (const route of visibleRoutes) {
+        if (!routeStripIsBundledRoute(route)) continue;
+        const stopIds = routeStopsForDiagram(route).filter((stopId) => stops[stopId]);
+        const routeKeys = routeStripOccurrenceKeysForRoute(route, stopIds);
+        const targetIndex = routeKeys.indexOf(targetKey);
+        if (targetIndex < 0) continue;
+        const positions = routeStripApplyEditedPositions(route, stopIds, routeStripBundledStopPositions(route, stopIds, visibleRoutes));
+        return positions[targetIndex];
+      }
+      return NaN;
+    }
+
+    function routeStripEditKey(routeId, occurrenceKey) {
+      return `${routeId}|${occurrenceKey}`;
+    }
+
+    function routeStripMergeTargetKey(route, occurrenceKey) {
+      if (!route || !occurrenceKey) return null;
+      const editKey = routeStripEditKey(route.id, occurrenceKey);
+      const staticTarget = ROUTE_STRIP_STATIC_MERGE_ALIASES[editKey];
+      if (staticTarget) return staticTarget;
+      return ROUTE_STRIP_FIXED_EXTRA_STOP_KEYS.has(editKey) ? null : routeStripMergeAliases[editKey];
+    }
+
+    function beginRouteStripStopDrag(event, routeId, occurrenceKey, stopId, originX) {
+      if (event.button !== undefined && event.button !== 0) return;
+      const start = svgPointFromEvent(event);
+      if (!start) return;
+      event.preventDefault();
+      event.stopPropagation();
+      routeStripDragState = { routeId, occurrenceKey, stopId, startX: start[0], originX, didMove: false };
+      document.addEventListener("pointermove", handleRouteStripStopDragMove);
+      document.addEventListener("pointerup", finishRouteStripStopDrag, { once: true });
+    }
+
+    function handleRouteStripStopDragMove(event) {
+      if (!routeStripDragState) return;
+      const current = svgPointFromEvent(event);
+      if (!current) return;
+      const dx = current[0] - routeStripDragState.startX;
+      if (!routeStripDragState.didMove && Math.abs(dx) < 3) return;
+      routeStripDragState.didMove = true;
+      const editKey = routeStripEditKey(routeStripDragState.routeId, routeStripDragState.occurrenceKey);
+      routeStripPositionOverrides[editKey] = rounded(Math.max(
+        ROUTE_STRIP_OUTER_X_START,
+        Math.min(ROUTE_STRIP_OUTER_X_END, routeStripDragState.originX + dx)
+      ));
+      delete routeStripMergeAliases[editKey];
+      renderDiagram();
+    }
+
+    function finishRouteStripStopDrag() {
+      document.removeEventListener("pointermove", handleRouteStripStopDragMove);
+      if (routeStripDragState && routeStripDragState.didMove) {
+        const editKey = routeStripEditKey(routeStripDragState.routeId, routeStripDragState.occurrenceKey);
+        const currentX = routeStripPositionOverrides[editKey];
+        const snapTarget = routeStripNearestSnapTarget(routeStripDragState, currentX);
+        if (snapTarget) {
+          routeStripPositionOverrides[editKey] = rounded(snapTarget.x);
+          if (snapTarget.canMerge) {
+            routeStripMergeAliases[editKey] = snapTarget.occurrenceKey;
+          }
+        }
+        suppressNextRouteStripClick = true;
+        persistEditorState();
+        renderDiagram();
+      }
+      routeStripDragState = null;
+    }
+
+    function routeStripNearestSnapTarget(dragState, x) {
+      if (!Number.isFinite(x)) return null;
+      const visibleRoutes = routes.filter(routeIsActive);
+      const alignedStopColumns = routeStripAlignedStopColumns(visibleRoutes);
+      let best = null;
+      visibleRoutes.forEach((route) => {
+        const stopIds = routeStopsForDiagram(route).filter((stopId) => stops[stopId]);
+        const occurrenceKeys = routeStripOccurrenceKeysForRoute(route, stopIds);
+        const stopPositions = routeStripStopPositions(route, stopIds, alignedStopColumns, visibleRoutes);
+        stopIds.forEach((stopId, index) => {
+          const occurrenceKey = occurrenceKeys[index];
+          if (route.id === dragState.routeId && occurrenceKey === dragState.occurrenceKey) return;
+          if (routeStripMergeTargetKey(route, occurrenceKey)) return;
+          const distance = Math.abs(stopPositions[index] - x);
+          if (distance > ROUTE_STRIP_SNAP_DISTANCE) return;
+          const sameStop = stopId === dragState.stopId;
+          const canMerge = sameStop && !routeStripIsBundleExtraStop(route, occurrenceKey, stopId);
+          const score = distance + (sameStop ? 0 : 8) + (canMerge ? -4 : 0);
+          if (!best || score < best.score) {
+            best = { x: stopPositions[index], occurrenceKey, canMerge, score };
+          }
+        });
+      });
+      return best;
+    }
+
+    function routeStripResolveStopPositionCollisions(positions, stopIds) {
+      const resolved = positions.map((x) => Math.max(ROUTE_STRIP_X_START, Math.min(ROUTE_STRIP_X_END, x)));
+      let index = 0;
+      while (index < resolved.length) {
+        const groupStart = index;
+        while (
+          index + 1 < resolved.length &&
+          Math.abs(resolved[index + 1] - resolved[index]) < ROUTE_STRIP_MIN_STOP_GAP
+        ) {
+          index += 1;
+        }
+
+        const groupEnd = index;
+        if (groupEnd > groupStart) {
+          const groupLength = groupEnd - groupStart + 1;
+          const groupCenter = resolved
+            .slice(groupStart, groupEnd + 1)
+            .reduce((sum, x) => sum + x, 0) / groupLength;
+          const span = ROUTE_STRIP_MIN_STOP_GAP * (groupLength - 1);
+          const startX = Math.max(
+            ROUTE_STRIP_X_START,
+            Math.min(ROUTE_STRIP_X_END - span, groupCenter - span / 2)
+          );
+          for (let groupIndex = 0; groupIndex < groupLength; groupIndex += 1) {
+            resolved[groupStart + groupIndex] = startX + ROUTE_STRIP_MIN_STOP_GAP * groupIndex;
+          }
+        }
+
+        index += 1;
+      }
+      routeStripRestoreAlignedStopPositions(resolved, positions, stopIds);
+      return resolved;
+    }
+
+    function routeStripRestoreAlignedStopPositions(resolved, originalPositions, stopIds) {
+      stopIds.forEach((stopId, index) => {
+        if (ROUTE_STRIP_ALIGNED_STOP_IDS.has(stopId)) {
+          resolved[index] = originalPositions[index];
+        }
+      });
+
+      for (let pass = 0; pass < 2; pass += 1) {
+        for (let index = 1; index < resolved.length; index += 1) {
+          if (resolved[index] - resolved[index - 1] >= ROUTE_STRIP_MIN_STOP_GAP) continue;
+          if (ROUTE_STRIP_ALIGNED_STOP_IDS.has(stopIds[index]) && !ROUTE_STRIP_ALIGNED_STOP_IDS.has(stopIds[index - 1])) {
+            resolved[index - 1] = resolved[index] - ROUTE_STRIP_MIN_STOP_GAP;
+          } else if (!ROUTE_STRIP_ALIGNED_STOP_IDS.has(stopIds[index])) {
+            resolved[index] = resolved[index - 1] + ROUTE_STRIP_MIN_STOP_GAP;
+          } else {
+            resolved[index] = resolved[index - 1] + ROUTE_STRIP_MIN_STOP_GAP;
+          }
+        }
+
+        for (let index = resolved.length - 2; index >= 0; index -= 1) {
+          if (resolved[index + 1] - resolved[index] >= ROUTE_STRIP_MIN_STOP_GAP) continue;
+          if (ROUTE_STRIP_ALIGNED_STOP_IDS.has(stopIds[index]) && !ROUTE_STRIP_ALIGNED_STOP_IDS.has(stopIds[index + 1])) {
+            resolved[index + 1] = resolved[index] + ROUTE_STRIP_MIN_STOP_GAP;
+          } else if (!ROUTE_STRIP_ALIGNED_STOP_IDS.has(stopIds[index])) {
+            resolved[index] = resolved[index + 1] - ROUTE_STRIP_MIN_STOP_GAP;
+          } else {
+            resolved[index] = resolved[index + 1] - ROUTE_STRIP_MIN_STOP_GAP;
+          }
+        }
+      }
+
+      resolved.forEach((x, index) => {
+        resolved[index] = Math.max(ROUTE_STRIP_X_START, Math.min(ROUTE_STRIP_X_END, x));
+      });
+    }
+
+    function routeStripExtent(stopPositions) {
+      if (!stopPositions.length) {
+        return { start: ROUTE_STRIP_X_START, end: ROUTE_STRIP_X_START + ROUTE_STRIP_MIN_STOP_GAP };
+      }
+      const start = Math.min(...stopPositions);
+      const end = Math.max(...stopPositions);
+      if (end - start < ROUTE_STRIP_MIN_STOP_GAP) {
+        return {
+          start: Math.max(ROUTE_STRIP_X_START, start - ROUTE_STRIP_MIN_STOP_GAP / 2),
+          end: Math.min(ROUTE_STRIP_X_END, start + ROUTE_STRIP_MIN_STOP_GAP / 2)
+        };
+      }
+      return { start, end };
+    }
+
+    function routeStripAlignedStopColumns(visibleRoutes) {
+      return Array.from(ROUTE_STRIP_ALIGNED_STOP_IDS).reduce((columns, stopId) => {
+        const reference = visibleRoutes
+          .map((route) => routeStopsForDiagram(route).filter((candidateStopId) => stops[candidateStopId]))
+          .filter((stopIds) => stopIds.includes(stopId))
+          .sort((a, b) => b.length - a.length)[0];
+        if (!reference || reference.length <= 1) return columns;
+        const stepCount = Math.max(1, reference.length - 1);
+        columns[stopId] = reference
+          .map((candidateStopId, index) => candidateStopId === stopId ? index / stepCount : null)
+          .filter((column) => Number.isFinite(column));
+        return columns;
+      }, {});
+    }
+
+    function routeStripAlignedColumn(stopIds, stopId, index, alignedStopColumns) {
+      const columns = alignedStopColumns && alignedStopColumns[stopId];
+      if (!columns || !columns.length) return NaN;
+      if (columns.length === 1) return columns[0];
+
+      const occurrenceIndexes = stopIds
+        .map((candidateStopId, candidateIndex) => candidateStopId === stopId ? candidateIndex : -1)
+        .filter((candidateIndex) => candidateIndex >= 0);
+      const occurrenceIndex = occurrenceIndexes.indexOf(index);
+      if (occurrenceIndexes.length > 1 && occurrenceIndex >= 0) {
+        const sourceStepCount = Math.max(1, occurrenceIndexes.length - 1);
+        const targetIndex = Math.round((occurrenceIndex / sourceStepCount) * (columns.length - 1));
+        return columns[Math.max(0, Math.min(columns.length - 1, targetIndex))];
+      }
+
+      const naturalColumn = index / Math.max(1, stopIds.length - 1);
+      return columns.reduce((best, column) => (
+        Math.abs(column - naturalColumn) < Math.abs(best - naturalColumn) ? column : best
+      ), columns[0]);
+    }
+
+    function routeStripColumnX(column) {
+      return ROUTE_STRIP_X_START + (ROUTE_STRIP_X_END - ROUTE_STRIP_X_START) * column;
+    }
+
+    function routeStripEvenX(index, count) {
+      const steps = Math.max(1, count - 1);
+      return ROUTE_STRIP_X_START + (ROUTE_STRIP_X_END - ROUTE_STRIP_X_START) * (index / steps);
+    }
+
+    function routeStripLabelLayouts(route, stopIds, stopPositions, alignedStopColumns) {
+      const laneOffsets = [17, -10];
+      const laneBoxes = laneOffsets.map(() => []);
+      const occurrenceKeys = routeStripOccurrenceKeysForRoute(route, stopIds);
+      const candidates = stopIds
+        .map((stopId, index) => ({
+          stopId,
+          index,
+          priority: routeStripLabelPriority(route, stopIds, stopId, index, alignedStopColumns, occurrenceKeys)
+        }))
+        .filter(({ stopId, index }) => shouldShowRouteStripStopLabel(route, stopIds, stopId, index, alignedStopColumns, occurrenceKeys))
+        .sort((a, b) => b.priority - a.priority || a.index - b.index);
+
+      return candidates.reduce((layouts, { stopId, index }) => {
+        const anchor = routeStripDefaultLabelAnchor(stopIds, index);
+        const width = routeStripEstimatedLabelWidth(routeStopDisplayLabel(stopId));
+        const x = stopPositions[index];
+        const laneIndex = laneOffsets.findIndex((_, candidateLaneIndex) => {
+          const candidateBox = routeStripLabelBox(x, width, anchor);
+          return !laneBoxes[candidateLaneIndex].some((box) => routeStripBoxesOverlap(candidateBox, box));
+        });
+        if (laneIndex < 0) return layouts;
+        const resolvedLaneIndex = laneIndex;
+        laneBoxes[resolvedLaneIndex].push(routeStripLabelBox(x, width, anchor));
+        layouts[index] = { anchor, dy: laneOffsets[resolvedLaneIndex] };
+        return layouts;
+      }, {});
+    }
+
+    function routeStripLabelPriority(route, stopIds, stopId, index, alignedStopColumns, occurrenceKeys) {
+      const isEndpoint = index === 0 || index === stopIds.length - 1;
+      if (routeStripIsBundleExtraStop(route, occurrenceKeys && occurrenceKeys[index], stopId)) return 4;
+      if (isEndpoint || ROUTE_STRIP_PRIORITY_LABEL_STOPS.has(stopId)) return 4;
+      if (Boolean(alignedStopColumns && alignedStopColumns[stopId]) || ROUTE_STRIP_EDGE_ALIGNED_STOPS.has(stopId)) return 3;
+      if (stopIds.length <= 9) return 1;
+      return 0;
+    }
+
+    function routeStripDefaultLabelAnchor(stopIds, index) {
+      if (index === 0) return "start";
+      if (index === stopIds.length - 1) return "end";
+      return "middle";
+    }
+
+    function routeStripEstimatedLabelWidth(label) {
+      return Array.from(label || "").reduce((width, character) => {
+        if (/[A-Za-z0-9/]/.test(character)) return width + 5.8;
+        return width + 13.8;
+      }, 2);
+    }
+
+    function routeStripLabelBox(x, width, anchor) {
+      if (anchor === "start") return { left: x, right: x + width };
+      if (anchor === "end") return { left: x - width, right: x };
+      return { left: x - width / 2, right: x + width / 2 };
+    }
+
+    function routeStripBoxesOverlap(a, b) {
+      const gap = 4;
+      return a.left < b.right + gap && a.right + gap > b.left;
+    }
+
+    function shouldShowRouteStripStopLabel(route, stopIds, stopId, index, alignedStopColumns, occurrenceKeys) {
+      const isEndpoint = index === 0 || index === stopIds.length - 1;
+      if (!isEndpoint && ROUTE_STRIP_SECONDARY_LABEL_STOPS.has(stopId)) return false;
+      if (routeStripIsBundledRoute(route) && route.id !== ROUTE_STRIP_BUNDLE_BASE_ROUTE_ID) {
+        return routeStripIsBundleExtraStop(route, occurrenceKeys && occurrenceKeys[index], stopId);
+      }
+      return index === 0 ||
+        index === stopIds.length - 1 ||
+        ROUTE_STRIP_PRIORITY_LABEL_STOPS.has(stopId) ||
+        stopIds.length <= 9 ||
+        Boolean(alignedStopColumns && alignedStopColumns[stopId]) ||
+        ROUTE_STRIP_EDGE_ALIGNED_STOPS.has(stopId);
+    }
+
+    function routeStopDisplayLabel(stopId) {
+      return SHORT_LABELS[stopId] || LABELS[stopId] || firstName(stops[stopId] && stops[stopId].name) || stopId;
+    }
+
     function buildSegmentEntries(visibleRoutes) {
       const entries = [];
       visibleRoutes.forEach((route) => {
-        route.stops.forEach((fromId, index) => {
-          const toId = route.stops[index + 1];
+        const routeStops = routeStopsForDiagram(route);
+        routeStops.forEach((fromId, index) => {
+          const toId = routeStops[index + 1];
           if (!toId || !POINTS[fromId] || !POINTS[toId]) return;
           const diagramPoints = diagramPath(route, fromId, toId);
           diagramPoints.forEach((pointId, pointIndex) => {
@@ -924,13 +3073,46 @@
     function routeBaseVertices(route) {
       const vertices = [];
       routeDiagramPointIds(route).forEach((pointId) => {
-        const coord = POINTS[pointId];
+        const routePoint = routeDiagramVertexForPoint(route, pointId);
+        const coord = routePoint.coord;
         if (!coord) return;
         const previous = vertices[vertices.length - 1];
-        if (previous && previous.id === pointId) return;
-        vertices.push({ id: pointId, coord });
+        if (previous && previous.id === routePoint.id) return;
+        vertices.push(routePoint);
       });
-      return vertices;
+      return STRAIGHT_ROUTE_SEGMENTS ? vertices : normalizeStationApproaches(vertices);
+    }
+
+    function routeDiagramVertexForPoint(route, pointId) {
+      if (!STRAIGHT_ROUTE_SEGMENTS || !isStationId(pointId)) {
+        return { id: pointId, coord: POINTS[pointId] };
+      }
+      return {
+        id: routeStationPointId(route, pointId),
+        coord: routeStationCoord(route, pointId)
+      };
+    }
+
+    function routeStationPointId(route, stopId) {
+      return `${stopId}__route__${route.id}`;
+    }
+
+    function routeStationCoord(route, stopId) {
+      const base = POINTS[stopId] || POSITIONS[stopId];
+      if (!base) return null;
+      const routeList = routesAtStop(stopId);
+      const sortedRoutes = routeList.slice().sort((a, b) => routeOrderIndex(a.id) - routeOrderIndex(b.id));
+      const index = Math.max(0, sortedRoutes.findIndex((item) => item.id === route.id));
+      const count = Math.max(1, sortedRoutes.length);
+      const maxSpan = Math.max(0, STATION_PILL_WIDTH - 24);
+      const spacing = count > 1
+        ? Math.min(ROUTE_STATION_SPLIT_SPACING, maxSpan / (count - 1))
+        : 0;
+      const offset = (index - (count - 1) / 2) * spacing;
+      const verticalMarker = stationOrientation(stopId, routeList) === "vertical";
+      const axis = verticalMarker ? [0, 1] : [1, 0];
+      const sideAxis = verticalMarker ? [1, 0] : [0, 1];
+      return add(add(base, scale(axis, offset)), scale(sideAxis, ROUTE_STATION_ANCHOR_OFFSET));
     }
 
     function routeBundlePathVertices(route, bundleLayout) {
@@ -1029,9 +3211,14 @@
         return;
       }
 
-      orthogonalJoinPoints(previousSegment.toShifted, nextSegment.fromShifted).forEach((coord) => {
+      straightJoinPoints(previousSegment.toShifted, nextSegment.fromShifted).forEach((coord) => {
         result.push({ id: vertex.id, coord });
       });
+    }
+
+    function straightJoinPoints(from, to) {
+      if (distance(from, to) < 0.01) return [from];
+      return [from, to];
     }
 
     function orthogonalJoinPoints(from, to) {
@@ -1058,30 +3245,24 @@
     }
 
     function createBundleLayout(visibleRoutes) {
-      const groups = new Map();
+      const entries = [];
       visibleRoutes.forEach((route) => {
         const vertices = routeBaseVertices(route);
         vertices.forEach((from, index) => {
           const to = vertices[index + 1];
           if (!to) return;
           const key = segmentKey(from.id, to.id);
-          if (!groups.has(key)) {
-            groups.set(key, {
-              key,
-              routeIds: new Set(),
-              occurrences: new Map()
-            });
-          }
-          const group = groups.get(key);
-          group.routeIds.add(route.id);
-          if (!group.occurrences.has(route.id)) group.occurrences.set(route.id, []);
-          group.occurrences.get(route.id).push({
+          entries.push({
             route,
             vertices,
-            index
+            index,
+            from,
+            to,
+            key
           });
         });
       });
+      const groups = createGeometryBundleGroups(entries);
 
       let orders = new Map();
       groups.forEach((group, key) => {
@@ -1100,11 +3281,91 @@
       groups.forEach((group, key) => {
         const orderedRouteIds = orders.get(key) || initialBundleRouteOrder(group);
         orderedRouteIds.forEach((routeId, index) => {
-          offsets.set(`${key}|${routeId}`, (index - (orderedRouteIds.length - 1) / 2) * ROUTE_LANE_SPACING);
+          const offset = (index - (orderedRouteIds.length - 1) / 2) * ROUTE_LANE_SPACING;
+          const segmentKeys = group.segmentKeysByRoute.get(routeId) || new Set([key]);
+          segmentKeys.forEach((segmentKeyValue) => {
+            offsets.set(`${segmentKeyValue}|${routeId}`, offset);
+          });
         });
       });
       applyCollinearSplitOffsetContinuity(visibleRoutes, offsets);
       return { groups, offsets, orders };
+    }
+
+    function createGeometryBundleGroups(entries) {
+      const parents = entries.map((_, index) => index);
+      function find(index) {
+        while (parents[index] !== index) {
+          parents[index] = parents[parents[index]];
+          index = parents[index];
+        }
+        return index;
+      }
+      function union(a, b) {
+        const rootA = find(a);
+        const rootB = find(b);
+        if (rootA !== rootB) parents[rootB] = rootA;
+      }
+
+      for (let a = 0; a < entries.length; a += 1) {
+        for (let b = a + 1; b < entries.length; b += 1) {
+          if (bundleEntriesOverlap(entries[a], entries[b])) union(a, b);
+        }
+      }
+
+      const groups = new Map();
+      entries.forEach((entry, index) => {
+        const root = find(index);
+        const key = `geometry-bundle-${root}`;
+        if (!groups.has(key)) {
+          groups.set(key, {
+            key,
+            routeIds: new Set(),
+            occurrences: new Map(),
+            segmentKeysByRoute: new Map()
+          });
+        }
+        const group = groups.get(key);
+        group.routeIds.add(entry.route.id);
+        if (!group.occurrences.has(entry.route.id)) group.occurrences.set(entry.route.id, []);
+        group.occurrences.get(entry.route.id).push(entry);
+        if (!group.segmentKeysByRoute.has(entry.route.id)) group.segmentKeysByRoute.set(entry.route.id, new Set());
+        group.segmentKeysByRoute.get(entry.route.id).add(entry.key);
+      });
+      return groups;
+    }
+
+    function bundleEntriesOverlap(a, b) {
+      if (a.route.id === b.route.id && a.key !== b.key) return false;
+      const geometryA = segmentGeometry(a.from.coord, a.to.coord);
+      const geometryB = segmentGeometry(b.from.coord, b.to.coord);
+      if (!geometryA || !geometryB) return false;
+      if (Math.abs(dot(geometryA.dir, geometryB.dir)) < 0.998) return false;
+      if (Math.abs(geometryA.c - geometryB.c) > 2.4) return false;
+      const overlap = Math.min(geometryA.maxT, geometryB.maxT) - Math.max(geometryA.minT, geometryB.minT);
+      return overlap > Math.min(16, Math.min(geometryA.length, geometryB.length) * 0.35);
+    }
+
+    function segmentGeometry(fromCoord, toCoord) {
+      const vector = subtract(toCoord, fromCoord);
+      const length = Math.hypot(vector[0], vector[1]);
+      if (length < 0.01) return null;
+      const dir = [vector[0] / length, vector[1] / length];
+      if (dir[0] < -0.0001 || (Math.abs(dir[0]) < 0.0001 && dir[1] < 0)) {
+        dir[0] *= -1;
+        dir[1] *= -1;
+      }
+      const normal = [-dir[1], dir[0]];
+      const c = dot(normal, fromCoord);
+      const t1 = dot(dir, fromCoord);
+      const t2 = dot(dir, toCoord);
+      return {
+        dir,
+        c,
+        minT: Math.min(t1, t2),
+        maxT: Math.max(t1, t2),
+        length
+      };
     }
 
     function applyCollinearSplitOffsetContinuity(visibleRoutes, offsets) {
@@ -1144,7 +3405,11 @@
     function bundleSegmentOffset(route, fromId, toId, bundleLayout) {
       const key = segmentKey(fromId, toId);
       const value = bundleLayout.offsets.get(`${key}|${route.id}`);
-      return Number.isFinite(value) ? value : 0;
+      return (Number.isFinite(value) ? value : 0) + routeGlobalLaneOffset(route);
+    }
+
+    function routeGlobalLaneOffset(route) {
+      return (routeOrderIndex(route.id) - (routes.length - 1) / 2) * ROUTE_GLOBAL_LANE_SPACING;
     }
 
     function routeOrderIndex(routeId) {
@@ -1153,14 +3418,16 @@
         "1B",
         "2",
         "3",
-        "7",
         "4",
         "8",
         "N",
         "H",
         "5",
         "6A",
-        "6B"
+        "6B",
+        "7",
+        "MINI-S",
+        "MINI-N"
       ];
       const preferredIndex = order.indexOf(routeId);
       if (preferredIndex >= 0) return preferredIndex;
@@ -1364,7 +3631,7 @@
 
     function virtualVertex(stationId, coord) {
       return {
-        id: `${stationId}__approach`,
+        id: `${stationId}__approach__${rounded(coord[0])}_${rounded(coord[1])}`,
         coord
       };
     }
@@ -1383,7 +3650,8 @@
 
     function stationConnectorDirection(stopId) {
       if (stationConnectorDirectionCache.has(stopId)) return stationConnectorDirectionCache.get(stopId);
-      const capsuleOrientation = stationOrientation(stopId, routesAtStop(stopId));
+      const visibleRoutes = routes.filter(routeIsActive);
+      const capsuleOrientation = stationOrientation(stopId, visibleRoutes.length ? visibleRoutes : routes);
       const direction = capsuleOrientation === "vertical" ? "horizontal" : "vertical";
       stationConnectorDirectionCache.set(stopId, direction);
       return direction;
@@ -1401,8 +3669,9 @@
 
     function routeDiagramPointIds(route) {
       const pointIds = [];
-      route.stops.forEach((fromId, index) => {
-        const toId = route.stops[index + 1];
+      const routeStops = routeStopsForDiagram(route);
+      routeStops.forEach((fromId, index) => {
+        const toId = routeStops[index + 1];
         if (!toId || !POINTS[fromId] || !POINTS[toId]) return;
         const segmentPoints = diagramPath(route, fromId, toId);
         if (!pointIds.length) {
@@ -1617,11 +3886,37 @@
     }
 
     function diagramPath(route, fromId, toId) {
+      if (STRAIGHT_ROUTE_SEGMENTS && POINTS[fromId] && POINTS[toId]) return [fromId, toId];
+      if (TOPOLOGY_DIRECT_SEGMENTS && POINTS[fromId] && POINTS[toId]) return orthogonalPathPointIds(fromId, toId);
       const directedKey = pathKey(fromId, toId);
       const reverseKey = pathKey(toId, fromId);
       if (DIAGRAM_PATHS.has(directedKey)) return DIAGRAM_PATHS.get(directedKey);
       if (DIAGRAM_PATHS.has(reverseKey)) return [...DIAGRAM_PATHS.get(reverseKey)].reverse();
       return [fromId, toId];
+    }
+
+    function orthogonalPathPointIds(fromId, toId) {
+      const from = POINTS[fromId];
+      const to = POINTS[toId];
+      if (!from || !to) return [fromId, toId];
+      if (Math.abs(from[0] - to[0]) < 0.01 || Math.abs(from[1] - to[1]) < 0.01) return [fromId, toId];
+      const cornerId = orthogonalCornerId(fromId, toId);
+      POINTS[cornerId] = orthogonalCornerCoord(fromId, toId);
+      return [fromId, cornerId, toId];
+    }
+
+    function orthogonalCornerId(fromId, toId) {
+      return `__corner__${[fromId, toId].sort().join("__")}`;
+    }
+
+    function orthogonalCornerCoord(fromId, toId) {
+      const from = POINTS[fromId];
+      const to = POINTS[toId];
+      const horizontalFirst = Math.abs(to[0] - from[0]) >= Math.abs(to[1] - from[1]);
+      const candidate = horizontalFirst
+        ? [to[0], from[1]]
+        : [from[0], to[1]];
+      return candidate;
     }
 
     function assignSegmentOffsets(entries) {
@@ -1673,13 +3968,24 @@
       const [x, y] = POSITIONS[stopId];
       const routeList = routesAtStop(stopId, visibleRoutes);
       const isHub = routeList.length >= 4;
-      const marker = stationMarkerGeometry(stopId, routeList);
+      const marker = stationMarkerGeometry(stopId, visibleRoutes);
       const isMuted = focusedRouteId && !routeList.some((route) => route.id === focusedRouteId);
+      const isRouteEnd = editorMode && activeRouteEndStopId() === stopId;
       const group = svgEl("g", {
-        class: `station-node${isHub ? " is-hub" : ""}${selectedStopId === stopId ? " is-selected" : ""}${isMuted ? " is-muted" : ""}`,
+        class: `station-node${isHub ? " is-hub" : ""}${selectedStopId === stopId ? " is-selected" : ""}${isRouteEnd ? " is-route-end" : ""}${isMuted ? " is-muted" : ""}`,
         "data-stop-id": stopId
       });
       const transform = marker.vertical ? `rotate(90, ${rounded(marker.cx)}, ${rounded(marker.cy)})` : "";
+      group.append(svgEl("rect", {
+        class: "station-shield",
+        x: rounded(marker.cx - marker.width / 2 - STATION_SHORT_SIDE_MASK),
+        y: rounded(marker.cy - marker.height / 2),
+        width: rounded(marker.width + STATION_SHORT_SIDE_MASK * 2),
+        height: rounded(marker.height),
+        rx: rounded(marker.height / 2),
+        ry: rounded(marker.height / 2),
+        transform
+      }));
       group.append(svgEl("rect", {
         class: "station-ring",
         x: rounded(marker.cx - marker.width / 2),
@@ -1701,18 +4007,107 @@
         transform
       }));
 
+      appendStationRouteAnchors(group, stopId, routeList);
+
       const labelText = SHORT_LABELS[stopId] || LABELS[stopId] || firstName(stops[stopId] && stops[stopId].name) || stopId;
       appendStationLabel(group, marker, labelText);
 
-      group.addEventListener("click", (event) => {
-        event.stopPropagation();
-        selectedStopId = stopId;
-        focusedRouteId = null;
-        renderToolbar();
-        renderDiagram();
-        renderInfoPanel();
-      });
+      group.addEventListener("pointerdown", (event) => beginStationDrag(event, stopId));
+      group.addEventListener("click", (event) => handleStationClick(event, stopId));
       return group;
+    }
+
+    function appendStationRouteAnchors(group, stopId, routeList) {
+      routeList
+        .slice()
+        .sort((a, b) => routeOrderIndex(a.id) - routeOrderIndex(b.id))
+        .forEach((route) => {
+          const coord = routeStationCoord(route, stopId);
+          if (!coord) return;
+          group.append(svgEl("circle", {
+            class: "station-route-anchor",
+            cx: rounded(coord[0]),
+            cy: rounded(coord[1]),
+            r: 3.8,
+            fill: routeColor(route),
+            "data-route-id": route.id
+          }));
+        });
+    }
+
+    function activeRouteEndStopId() {
+      const routeStops = activeEditorRouteStops();
+      return routeStops[routeStops.length - 1] || null;
+    }
+
+    function handleStationClick(event, stopId) {
+      event.stopPropagation();
+      if (suppressNextStationClick) {
+        suppressNextStationClick = false;
+        return;
+      }
+      if (editorMode) {
+        appendStopToActiveRoute(stopId);
+        return;
+      }
+      selectedStopId = stopId;
+      focusedRouteId = null;
+      renderToolbar();
+      renderDiagram();
+      renderInfoPanel();
+    }
+
+    function beginStationDrag(event, stopId) {
+      if (event.button !== undefined && event.button !== 0) return;
+      const start = svgPointFromEvent(event);
+      if (!start || !POSITIONS[stopId]) return;
+      dragState = {
+        stopId,
+        start,
+        origin: [...POSITIONS[stopId]],
+        didMove: false
+      };
+      document.addEventListener("pointermove", handleStationDragMove);
+      document.addEventListener("pointerup", finishStationDrag, { once: true });
+    }
+
+    function handleStationDragMove(event) {
+      if (!dragState) return;
+      const current = svgPointFromEvent(event);
+      if (!current) return;
+      const dx = current[0] - dragState.start[0];
+      const dy = current[1] - dragState.start[1];
+      if (!dragState.didMove && Math.hypot(dx, dy) < 4) return;
+      dragState.didMove = true;
+      const next = [
+        clamp(dragState.origin[0] + dx, 180, 1160),
+        clamp(dragState.origin[1] + dy, 100, 800)
+      ];
+      POSITIONS[dragState.stopId] = next;
+      POINTS[dragState.stopId] = next;
+      stationConnectorDirectionCache.clear();
+      renderDiagram();
+      renderStats();
+    }
+
+    function finishStationDrag() {
+      document.removeEventListener("pointermove", handleStationDragMove);
+      if (dragState && dragState.didMove) {
+        suppressNextStationClick = true;
+        persistEditorState();
+        renderInfoPanel();
+      }
+      dragState = null;
+    }
+
+    function svgPointFromEvent(event) {
+      const matrix = diagram.getScreenCTM();
+      if (!matrix) return null;
+      const point = diagram.createSVGPoint();
+      point.x = event.clientX;
+      point.y = event.clientY;
+      const transformed = point.matrixTransform(matrix.inverse());
+      return [transformed.x, transformed.y];
     }
 
     function appendStationLabel(group, marker, labelText) {
@@ -1767,26 +4162,50 @@
       };
     }
 
-    function stationOrientation(stopId, routeList) {
-      if (STATION_ORIENTATION_OVERRIDES[stopId]) return STATION_ORIENTATION_OVERRIDES[stopId];
-      let verticalScore = 0;
-      let horizontalScore = 0;
-      routeList.forEach((route) => {
+    function stationOrientation(stopId, routePool = routes) {
+      const pool = Array.isArray(routePool) && routePool.length ? routePool : routes;
+      const scores = stationRouteAxisScores(stopId, pool);
+      if (scores.horizontal > scores.vertical + 0.5) return "vertical";
+      if (scores.vertical > scores.horizontal + 0.5) return "horizontal";
+      return STATION_ORIENTATION_OVERRIDES[stopId] || "horizontal";
+    }
+
+    function stationRouteAxisScores(stopId, routePool) {
+      const stationCoord = POINTS[stopId] || POSITIONS[stopId];
+      const scores = { vertical: 0, horizontal: 0 };
+      if (!stationCoord) return scores;
+      routePool.forEach((route) => {
         const pointIds = routeDiagramPointIds(route);
-        pointIds.forEach((pointId, index) => {
-          if (pointId !== stopId) return;
-          [pointIds[index - 1], pointIds[index + 1]].forEach((neighborId) => {
-            if (!neighborId || !POINTS[neighborId] || !POINTS[stopId]) return;
-            const dx = Math.abs(POINTS[neighborId][0] - POINTS[stopId][0]);
-            const dy = Math.abs(POINTS[neighborId][1] - POINTS[stopId][1]);
-            if (dy > dx) verticalScore += 1;
-            if (dx > dy) horizontalScore += 1;
-          });
-        });
+        for (let index = 0; index < pointIds.length - 1; index += 1) {
+          const fromId = pointIds[index];
+          const toId = pointIds[index + 1];
+          const from = POINTS[fromId];
+          const to = POINTS[toId];
+          if (!from || !to) continue;
+          const direction = segmentDirection(from, to);
+          if (direction === "none") continue;
+          const touchesStation = fromId === stopId || toId === stopId;
+          if (!touchesStation && !segmentIntersectsStationProbe(from, to, stationCoord)) continue;
+          scores[direction] += touchesStation ? 4 : 1;
+        }
       });
-      if (horizontalScore > verticalScore) return "vertical";
-      if (verticalScore > horizontalScore) return "horizontal";
-      return "horizontal";
+      return scores;
+    }
+
+    function segmentIntersectsStationProbe(from, to, stationCoord) {
+      const halfSize = STATION_PILL_WIDTH / 2 + ROUTE_LANE_SPACING * 2;
+      const minX = stationCoord[0] - halfSize;
+      const maxX = stationCoord[0] + halfSize;
+      const minY = stationCoord[1] - halfSize;
+      const maxY = stationCoord[1] + halfSize;
+      const segmentMinX = Math.min(from[0], to[0]);
+      const segmentMaxX = Math.max(from[0], to[0]);
+      const segmentMinY = Math.min(from[1], to[1]);
+      const segmentMaxY = Math.max(from[1], to[1]);
+      return segmentMaxX >= minX &&
+        segmentMinX <= maxX &&
+        segmentMaxY >= minY &&
+        segmentMinY <= maxY;
     }
 
     function averagePoint(points) {
@@ -1846,7 +4265,7 @@
     function renderInfoPanel() {
       if (!infoTitle || !infoBody || !infoChips) return;
       infoChips.innerHTML = "";
-      const visibleRoutes = routes.filter((route) => activeRoutes.has(route.id));
+      const visibleRoutes = routes.filter(routeIsActive);
       if (selectedStopId) {
         const stop = stops[selectedStopId];
         const stopRoutes = routesAtStop(selectedStopId, visibleRoutes);
@@ -1881,7 +4300,7 @@
     }
 
     function renderStats() {
-      const visibleRoutes = routes.filter((route) => activeRoutes.has(route.id));
+      const visibleRoutes = routes.filter(routeIsActive);
       const stationCount = visibleStationIds(visibleRoutes).length;
       const segmentCount = buildSegmentEntries(visibleRoutes).length;
       stats.innerHTML = "";
@@ -1939,7 +4358,7 @@
     }
 
     function routeColor(route) {
-      return ROUTE_COLOR_OVERRIDES[route.id] || route.color;
+      return ROUTE_COLOR_OVERRIDES[routeBaseId(route)] || route.color;
     }
   </script>
 </body>
