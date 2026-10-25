@@ -5691,6 +5691,7 @@ function departuresForRule(rule) {
 
 function todayRules(route, clock = hongKongClock()) {
   if (!route.schedule) return [];
+  if (root.CUHK_CAMPUS_UPDATES?.suspensionForRoute(route.id, clock.dateString)) return [];
   return route.schedule.rules.filter((rule) => {
     if (!rule.days.includes(clock.weekday)) return false;
     if (rule.teachingDaysOnly && !isAcademicTeachingBusDateString(clock.dateString)) return false;
@@ -5719,6 +5720,7 @@ function isAcademicTeachingBusDateString(dateString) {
 }
 
 function activeVehicles(route, at = new Date()) {
+  root.CUHK_CAMPUS_UPDATES?.applyTemporaryStops(root.CUHK_BUS_DATA, at);
   const schedule = route.schedule;
   const coords = routeCoordinates(route);
   if (!schedule || coords.length < 2) return [];
@@ -5737,6 +5739,7 @@ function activeVehicles(route, at = new Date()) {
         route,
         departure,
         elapsedMinutes: elapsed,
+        predictionAt: at,
         tripMinutes,
         progress,
         coord: point.coord,
@@ -5764,6 +5767,9 @@ function nextDeparture(route, at = new Date()) {
 }
 
 function nextStopArrival(route, stopIndex, at = new Date()) {
+  root.CUHK_CAMPUS_UPDATES?.applyTemporaryStops(root.CUHK_BUS_DATA, at);
+  const suspension = root.CUHK_CAMPUS_UPDATES?.suspensionForRoute(route.id, at);
+  if (suspension) return { route, stopIndex, status: "suspended", label: suspension.text };
   const schedule = route.schedule;
   if (!schedule) {
     return { route, stopIndex, status: "no_schedule", label: "暂无官方时刻表" };
@@ -5858,6 +5864,7 @@ function compareStopArrival(a, b) {
 
 function stopArrivalSummary(arrival) {
   if (!arrival) return "暂无预计到站";
+  if (arrival.status === "suspended") return arrival.label || "临时暂停服务";
   if (arrival.status === "scheduled") {
     const directionText = arrival.direction ? ` · ${arrival.direction}` : "";
     return `预计下一班 ${formatTime(arrival.arrival)}（${arrivalEtaText(arrival)}${directionText}）`;
@@ -5881,6 +5888,8 @@ function formatEtaMinutes(value) {
 }
 
 function serviceStatus(route, at = new Date()) {
+  const suspension = root.CUHK_CAMPUS_UPDATES?.suspensionForRoute(route.id, at);
+  if (suspension) return { label: suspension.text, activeCount: 0, hasServiceToday: false, next: null };
   const schedule = route.schedule;
   if (!schedule) {
     return { label: "暂无官方时刻表", activeCount: 0, hasServiceToday: false, next: null };
@@ -5937,6 +5946,8 @@ function routeStopEtaConfidence(route, stopIndex) {
 }
 
 function routeSegmentEvidence(route, upToStopIndex = Infinity) {
+  const current = root.CUHK_ETA_PREDICTION && root.CUHK_ETA_PREDICTION.evidence(route, upToStopIndex);
+  if (current) return current;
   let samples = 0;
   let covered = 0;
   let total = 0;
@@ -6043,6 +6054,9 @@ function routeSegmentTravelMinutes(route, toStopIndex, tripMinutes = route.sched
   if (!route || !Array.isArray(route.stops) || toStopIndex <= 0 || toStopIndex >= route.stops.length) return 0;
   const predicted = root.CUHK_ETA_PREDICTION && root.CUHK_ETA_PREDICTION.segment(route, toStopIndex, at);
   if (Number.isFinite(predicted)) return predicted;
+  const distances = routeStopDistances(route);
+  const termEstimate = root.CUHK_ETA_PREDICTION && root.CUHK_ETA_PREDICTION.fallbackSegment(Math.max(0, distances[toStopIndex] - distances[toStopIndex - 1]));
+  if (Number.isFinite(termEstimate)) return termEstimate;
   const fromStopId = route.stops[toStopIndex - 1];
   const toStopId = route.stops[toStopIndex];
   const calibrated = defaultSegmentTravelMinutes(route.etaRouteId || route.id, fromStopId, toStopId);
@@ -6117,6 +6131,8 @@ function routeStopDwellMinutes(route, stopIndex, segmentMinutes = 1, at = new Da
   if (!route || !Array.isArray(route.stops) || stopIndex < 0 || stopIndex >= route.stops.length - 1) return 0;
   const predicted = root.CUHK_ETA_PREDICTION && root.CUHK_ETA_PREDICTION.dwell(route, stopIndex, at);
   if (Number.isFinite(predicted)) return Math.max(0, Math.min(150, predicted, segmentMinutes * 60 - 3)) / 60;
+  const termDwell = root.CUHK_ETA_PREDICTION && root.CUHK_ETA_PREDICTION.fallbackDwell();
+  if (Number.isFinite(termDwell)) return Math.max(0, Math.min(termDwell, segmentMinutes * 60 * 0.45)) / 60;
   const stopId = route.stops[stopIndex];
   const seconds = defaultStopDwellSeconds(stopId, at);
   return Math.max(
@@ -6145,7 +6161,7 @@ function stopDwellTimeMultiplier(at = new Date()) {
 }
 
 function routeStopDistances(route) {
-  const cacheKey = route.id;
+  const cacheKey = `${route.id}:${(route.stops || []).join("|")}`;
   if (ROUTE_STOP_DISTANCE_CACHE.has(cacheKey)) return ROUTE_STOP_DISTANCE_CACHE.get(cacheKey);
 
   const profile = routeDistanceProfile(route);

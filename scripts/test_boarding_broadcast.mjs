@@ -78,6 +78,24 @@ assert.equal(vm.runInContext('boardingClockTime("2026-10-04T01:25:00Z")', contex
 assert.equal(vm.runInContext('boardReportMessage({timestamp:"2020-01-01T00:00:00Z",stopName:"TEST"})', context), '');
 const markup = fs.readFileSync(source.replace('.js', '.wxml'), 'utf8');
 assert.match(markup, /bindtap="toggleTrajectoryFromMenu"/);
+const queueKey = vm.runInContext('GPS_UPLOAD_QUEUE_KEY', context);
+storage.set(queueKey, [{id:'old-gps',recordType:'ride_gps_session'}, {id:'new-broadcast',recordType:'board_broadcast'}]);
+const uploadOrder = [];
+context.uploadOrder = uploadOrder;
+context.wx.cloud = {callFunction() {}};
+vm.runInContext(`
+  gpsUploadConfig = () => ({enabled:true,uploadFunction:'uploadGpsPayload'});
+  uploadGpsPayloadToCloud = async (config,payload) => {
+    uploadOrder.push(payload.id);
+    if (payload.id === 'old-gps') throw new Error('GPS timeout');
+  };
+`, context);
+const uploader = Object.create(page);
+uploader.refreshGpsRetryState = uploader.clearUploadedRideLocalData = () => {};
+const uploadResult = await uploader.runGpsUploadQueue({silent:true});
+assert.deepEqual(uploadOrder, ['new-broadcast','old-gps']);
+assert(uploadResult.uploadedIds.includes('new-broadcast'));
+assert.equal(storage.get(queueKey)[0].id,'old-gps');
 context.testRoute = route;
 vm.runInContext(`
   activeVehicles = () => [{id:'scheduled',route:testRoute,coord:[1,2],progress:0.4}];
@@ -91,4 +109,4 @@ assert.equal(vehicles.length, 1);
 assert.equal(vehicles[0].progress, 0.4);
 assert.equal(vehicles[0].coord[0], 1);
 assert.equal(vehicles[0].boardReport.id, 'message');
-console.log('PASS: broadcast-only boarding, upload failure, opt-in trajectory, finish action, HK clock and expiry');
+console.log('PASS: broadcast-only boarding, upload failure, opt-in trajectory, finish action, HK clock, expiry and broadcast-priority queue');
