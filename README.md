@@ -2,6 +2,10 @@
 
 香港中文大学校园餐饮和校巴地图。
 
+## UI Prototype
+
+[A/F 浅色与深色双模式演示](https://hainahuang729.github.io/cuhk-map/demos/ui-modes/)位于 `demos/ui-modes/`，独立于正式地图首页。可在样品顶部或侧边栏切换模式，切换时共享地图和日程状态。到站时间、天气、课程和餐厅时间均为演示内容，不连接云端、不读取定位、不发送上车广播。其他设计方案保留供对比参考。
+
 ## Files
 
 - `index.html`: GitHub Pages 入口页，使用 Leaflet、OpenStreetMap 底图，并通过 Overpass API 实时读取校园 POI，同时显示可开关的校巴路线和手机 GPS 采集面板。

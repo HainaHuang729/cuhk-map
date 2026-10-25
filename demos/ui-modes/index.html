@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="light" />
+    <title>CUHK 校巴 · UI 与动效样品</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="assets/leaflet.css" />
+    <link rel="stylesheet" href="sample.css" />
+    <link rel="stylesheet" href="variants.css" />
+  </head>
+  <body>
+    <header class="studio-header">
+      <div class="studio-name">
+        <span class="identity-mark">中</span>
+        <div>
+          <h1>CUHK 校巴</h1>
+          <p>界面与动效样品 <span>仅演示，不连接云端</span></p>
+        </div>
+      </div>
+      <div class="studio-tools">
+        <button
+          class="studio-icon"
+          id="motion-toggle"
+          title="暂停动效"
+          aria-label="暂停动效"
+        >
+          <i data-lucide="pause"></i>
+        </button>
+        <button
+          class="studio-icon"
+          id="reset"
+          title="重置样品"
+          aria-label="重置样品"
+        >
+          <i data-lucide="rotate-ccw"></i>
+        </button>
+        <label class="motion-setting"
+          ><input type="checkbox" id="reduce-motion" />减弱动效</label
+        >
+      </div>
+    </header>
+    <nav class="edition-nav" aria-label="样品组"></nav>
+    <main class="studio-layout">
+      <aside class="scene-nav" aria-label="样品场景">
+        <div class="nav-label">场景</div>
+        <div id="scene-options"></div>
+        <div class="studio-meta">2026.10.25<br />独立样品</div>
+      </aside>
+      <section class="comparison" aria-label="界面方案对比">
+        <div class="mobile-variants" role="tablist" aria-label="界面方案"></div>
+        <div class="phones" id="phones"></div>
+      </section>
+    </main>
+    <script src="assets/leaflet.js"></script>
+    <script src="assets/lucide.js"></script>
+    <script src="assets/campus.js"></script>
+    <script src="sample.js"></script>
+  </body>
+</html>
