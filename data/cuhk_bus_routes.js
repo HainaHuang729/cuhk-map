@@ -145,8 +145,8 @@ root.CUHK_BUS_DATA = {
       "coord": [114.20929, 22.41906]
     },
     "university_library": {
-      "name": "大学图书馆",
-      "coord": [114.20555, 22.41938]
+      "name": "大学图书馆 / 文物馆",
+      "coord": [114.20555, 22.41988]
     },
     "engineering": {
       "name": "何善衡工程学大楼",
@@ -4899,30 +4899,6 @@ root.CUHK_BUS_DATA = {
         [114.2056367, 22.41988],
         [114.204754, 22.4198697],
         [114.2043506, 22.4198723],
-        [114.2043556, 22.4187566],
-        [114.2048809, 22.4187595],
-        [114.2052579, 22.4187521],
-        [114.205505, 22.4187372],
-        [114.2055824, 22.4187297],
-        [114.2055993, 22.4188393],
-        [114.2056209, 22.4188768],
-        [114.2056535, 22.4189007],
-        [114.205685, 22.4189174],
-        [114.2056535, 22.4189007],
-        [114.2056209, 22.4188768],
-        [114.2055993, 22.4188393],
-        [114.2055824, 22.4187297],
-        [114.2054556, 22.418741],
-        [114.2052579, 22.4187521],
-        [114.2048809, 22.4187595],
-        [114.2043556, 22.4187566],
-        [114.2043528, 22.4192583],
-        [114.2042688, 22.4192581],
-        [114.2042366, 22.4192406],
-        [114.2042462, 22.419311],
-        [114.2042493, 22.4197591],
-        [114.2042372, 22.4198113],
-        [114.2042141, 22.4198427],
         [114.2041843, 22.4198695],
         [114.20408, 22.4198726],
         [114.2033988, 22.4198754],
@@ -5460,50 +5436,127 @@ const ROUTE_STOP_DIRECTIONS = {
   "7": { 0: "下行", 1: "下行", 3: "下行" },
 };
 const DEFAULT_SEGMENT_TRAVEL_MINUTES = {
-  "science_centre->new_asia": { minutes: 1.94, samples: 2, source: "merged_gps_2026_06_12_15_route_8" },
-  "new_asia->united_college": { minutes: 1.2, samples: 2, source: "merged_gps_2026_06_12_15_route_8" },
-  "united_college->residences_3_4": { minutes: 1.52, samples: 2, source: "merged_gps_2026_06_12_15_route_8" },
-  "residences_3_4->shaw_college": { minutes: 1.32, samples: 2, source: "merged_gps_2026_06_12_15_route_8" },
-  "shaw_college->area_39": { minutes: 3.84, samples: 2, source: "merged_gps_2026_06_12_15_route_8" },
-  "area_39->cw_chu": { minutes: 1.75, samples: 2, source: "merged_gps_2026_06_12_15_route_8" },
-  "cw_chu->campus_circuit_east": { minutes: 1.79, samples: 1, source: "cloud_gps_2026_06_15_route_8" },
-  "campus_circuit_east->university_station": { minutes: 1.73, samples: 1, source: "cloud_gps_2026_06_15_route_8" },
-  "cw_chu->residence_15": { minutes: 0.84, samples: 1, source: "local_gps_2026_06_12_route_3" },
-  "residence_15->united_residence": { minutes: 1.2, samples: 1, source: "local_gps_2026_06_12_route_3" },
+  "science_centre->new_asia": { minutes: 1.54, samples: 6, source: "merged_gps_2026_06_12_07_02_cloud_CHw" },
+  "new_asia->united_college": { minutes: 1.31, samples: 20, source: "merged_current_routes_gps_through_2026_08_31" },
+  "united_college->residences_3_4": { minutes: 0.98, samples: 14, source: "merged_current_routes_gps_through_2026_08_31" },
+  "residences_3_4->shaw_college": { minutes: 1.41, samples: 18, source: "merged_current_routes_gps_through_2026_08_31" },
+  "shaw_college->area_39": { minutes: 3.22, samples: 13, source: "merged_current_routes_gps_through_2026_08_31" },
+  "area_39->cw_chu": { minutes: 1.34, samples: 19, source: "merged_current_routes_gps_through_2026_08_31" },
+  "cw_chu->campus_circuit_east": { minutes: 1.71, samples: 16, source: "merged_current_routes_gps_through_2026_08_31" },
+  "campus_circuit_east->university_station": { minutes: 1.65, samples: 23, source: "merged_current_routes_gps_through_2026_08_31" },
+  "yasumoto->university_sports_centre": { minutes: 1.46, samples: 3, source: "merged_gps_2026_06_12_07_13_cloud_BnR_5lw" },
+  "university_sports_centre->science_centre": { minutes: 2.13, samples: 3, source: "merged_gps_2026_06_12_07_13_cloud_BnR_5lw" },
+  "science_centre->fung_king_hey": { minutes: 0.92, samples: 8, source: "merged_gps_2026_06_12_07_13_cloud_BnR_5lw" },
+  "fung_king_hey->residences_3_4": { minutes: 0.69, samples: 8, source: "merged_gps_2026_06_12_07_13_cloud_BnR_5lw" },
+  "cw_chu->residence_15": { minutes: 1.42, samples: 11, source: "merged_gps_2026_06_12_07_23_cloud_UVN_LHh" },
+  "residence_15->united_residence": { minutes: 0.72, samples: 10, source: "merged_gps_2026_06_12_07_23_cloud_UVN_LHh" },
   "united_residence->lee_woo_sing": { minutes: 1.2, samples: 1, source: "local_gps_2026_06_12_route_3" },
   "lee_woo_sing->shaw_college": { minutes: 1.7, samples: 1, source: "local_gps_2026_06_12_route_3" },
-  "shaw_college->residences_3_4": { minutes: 1.46, samples: 1, source: "local_gps_2026_06_12_route_3" },
-  "residences_3_4->university_admin": { minutes: 1.39, samples: 1, source: "local_gps_2026_06_12_route_3" },
-  "shaw_hall->university_admin": { minutes: 1.66, samples: 2, source: "merged_gps_2026_06_12_17_route_1b" },
-  "university_admin->sh_ho": { minutes: 2.03, samples: 2, source: "merged_gps_2026_06_12_17_route_1b" },
-  "sh_ho->postgraduate_hostel": { minutes: 1.73, samples: 2, source: "merged_gps_2026_06_12_17_route_1b" },
-  "postgraduate_hostel->university_station": { minutes: 2.14, samples: 1, source: "cloud_gps_2026_06_12_route_1b" },
+  "shaw_college->cw_chu": { minutes: 2.61, samples: 8, source: "merged_gps_2026_06_12_07_13_cloud_BnR_5lw" },
+  "shaw_college->residences_3_4": { minutes: 1.93, samples: 13, source: "merged_current_routes_gps_through_2026_08_31" },
+  "residences_3_4->new_asia": { minutes: 1.55, samples: 8, source: "merged_current_routes_gps_through_2026_08_31" },
+  "residences_3_4->university_admin": { minutes: 1.65, samples: 11, source: "merged_current_routes_gps_through_2026_08_31" },
+  "residence_10_11->residence_15": { minutes: 1.11, samples: 3, source: "merged_gps_2026_06_12_29_cloud_uwig" },
+  "shaw_hall->university_admin": { minutes: 1.3, samples: 7, source: "merged_gps_2026_06_12_07_23_cloud_UVN_LHh" },
+  "university_admin->sh_ho": { minutes: 1.95, samples: 12, source: "merged_gps_2026_06_12_07_13_cloud_BnR_5lw" },
+  "sh_ho->postgraduate_hostel": { minutes: 1.8, samples: 9, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
+  "sh_ho->university_station": { minutes: 1.23, samples: 1, source: "cloud_gps_2026_06_18_route_2" },
+  "postgraduate_hostel->university_station": { minutes: 2.77, samples: 3, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
+  "campus_circuit_east->cw_chu": { minutes: 1.71, samples: 2, source: "cloud_gps_2026_07_03_09_route_4" },
+  "chan_chun_ha_hostel->residences_3_4": { minutes: 0.54, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "chan_chun_ha_hostel->shaw_college": { minutes: 1.82, samples: 15, source: "merged_current_routes_gps_through_2026_08_31" },
+  "chung_chi_staff_quarters->ho_tim": { minutes: 1.36, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "chung_chi_staff_quarters->teaching_research_1": { minutes: 1.5, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "chung_chi_teaching->university_sports_centre": { minutes: 2.55, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "cw_chu->area_39": { minutes: 1.41, samples: 2, source: "cloud_gps_2026_07_03_07_route_4" },
+  "cw_chu->residence_10_11": { minutes: 0.48, samples: 2, source: "cloud_gps_2026_07_01_route_H" },
+  "cw_chu->united_residence": { minutes: 1.21, samples: 2, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
+  "engineering->teaching_research_1": { minutes: 0.78, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "fung_king_hey->united_college": { minutes: 1.07, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "ho_tim->yasumoto": { minutes: 0.42, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "lee_woo_sing->united_residence": { minutes: 0.88, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "new_asia->residences_3_4": { minutes: 1.89, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "new_asia->university_admin": { minutes: 2.68, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "postgraduate_hostel->university_sports_centre": { minutes: 2.16, samples: 1, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
+  "residence_15->residence_10_11": { minutes: 1.06, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "residences_3_4->lee_woo_sing": { minutes: 0.35, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "sh_ho->university_station_piazza": { minutes: 2.68, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "shaw_hall->fung_king_hey": { minutes: 1.36, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "shaw_hall->new_asia": { minutes: 1.04, samples: 8, source: "merged_current_routes_gps_through_2026_08_31" },
+  "shaw_hall->university_library": { minutes: 0.48, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "teaching_research_1->chung_chi_staff_quarters": { minutes: 1.54, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "teaching_research_1->university_health": { minutes: 1.48, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "united_college->new_asia": { minutes: 0.86, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "united_college->university_admin": { minutes: 1.41, samples: 3, source: "merged_gps_2026_06_29_07_05_cloud_BnR_5lw" },
+  "united_residence->chan_chun_ha_hostel": { minutes: 0.78, samples: 15, source: "merged_gps_2026_06_12_07_23_cloud_UVN_LHh" },
+  "united_residence->residence_15": { minutes: 0.64, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "university_admin->science_centre": { minutes: 2.48, samples: 1, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
+  "university_admin->university_health": { minutes: 1.49, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "university_health->engineering": { minutes: 0.77, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "university_health->shaw_hall": { minutes: 1.36, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "university_library->fung_king_hey": { minutes: 0.87, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "university_sports_centre->shaw_hall": { minutes: 2.13, samples: 9, source: "merged_current_routes_gps_through_2026_08_31" },
+  "university_station_piazza->chung_chi_teaching": { minutes: 1.06, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "university_station_piazza->university_sports_centre": { minutes: 2.45, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "university_station->postgraduate_hostel": { minutes: 2.99, samples: 1, source: "merged_gps_2026_06_12_26_cloud_0eB3" },
+  "university_station->university_sports_centre": { minutes: 1.83, samples: 5, source: "merged_current_routes_gps_through_2026_08_31" },
+  "university_station->wong_foo_yuan": { minutes: 0.35, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "wong_foo_yuan->chung_chi_staff_quarters": { minutes: 1.07, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
+  "yasumoto->campus_circuit_east": { minutes: 1.44, samples: 2, source: "current_routes_gps_2026_08_28" },
+  "yasumoto->university_station": { minutes: 0.59, samples: 0, source: "average_speed_17_8kmh_2026_06_22", estimated: true },
 };
 const DEFAULT_ROUTE_SEGMENT_TRAVEL_MINUTES = {
+  "2S:university_station_piazza->postgraduate_hostel": { minutes: 5, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "2S:postgraduate_hostel->university_sports_centre": { minutes: 3, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "2S:university_sports_centre->shaw_hall": { minutes: 2, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "2S:shaw_hall->fung_king_hey": { minutes: 2, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "2S:fung_king_hey->united_college": { minutes: 1, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "2S:united_college->new_asia": { minutes: 1, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "2S:new_asia->united_college": { minutes: 2, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "2S:united_college->university_admin": { minutes: 2, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "2S:university_admin->sh_ho": { minutes: 2, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "2S:sh_ho->postgraduate_hostel": { minutes: 2, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "2S:postgraduate_hostel->university_station": { minutes: 3, samples: 1, source: "manual_reference_2026_09_01_0830_rain_low_load" },
+  "8:shaw_college->area_39": { minutes: 2.95, samples: 2, source: "merged_gps_2026_06_23_30_route_8" },
+  "8:residences_3_4->university_admin": { minutes: 0.92, samples: 1, source: "cloud_gps_2026_06_24_route_8_corrected" },
+  "8:cw_chu->campus_circuit_east": { minutes: 1.56, samples: 6, source: "merged_gps_2026_06_24_07_10_route_8" },
+  "8:campus_circuit_east->university_station": { minutes: 1.64, samples: 9, source: "merged_gps_2026_06_23_07_10_route_8" },
+  "N:area_39->cw_chu": { minutes: 1.12, samples: 3, source: "merged_gps_2026_06_22_07_08_route_N" },
+  "N:shaw_hall->new_asia": { minutes: 1.03, samples: 4, source: "merged_gps_2026_06_22_07_04_route_N" },
   "N:shaw_college->residences_3_4": { minutes: 1.94, samples: 1, source: "cloud_gps_2026_06_13_route_N_passage" },
   "N:residences_3_4->new_asia": { minutes: 0.63, samples: 1, source: "cloud_gps_2026_06_13_route_N_passage" },
-  "N:new_asia->united_college": { minutes: 1.22, samples: 1, source: "cloud_gps_2026_06_13_route_N_interpolated" },
+  "N:new_asia->united_college": { minutes: 1.31, samples: 6, source: "merged_gps_2026_06_13_07_20_route_N_UVN_LHh" },
+  "N:united_college->residences_3_4": { minutes: 1, samples: 4, source: "merged_gps_2026_06_22_07_20_route_N_UVN_LHh" },
   "N:united_college->university_admin": { minutes: 2.88, samples: 1, source: "cloud_gps_2026_06_13_route_N_interpolated" },
   "N:university_admin->sh_ho": { minutes: 1.24, samples: 1, source: "cloud_gps_2026_06_13_route_N_passage" },
-  "N:sh_ho->postgraduate_hostel": { minutes: 1.4, samples: 1, source: "cloud_gps_2026_06_13_route_N_passage" },
-  "1B:postgraduate_hostel->university_sports_centre": { minutes: 1.44, samples: 1, source: "cloud_gps_2026_06_17_route_1b_interpolated" },
-  "1B:university_sports_centre->shaw_hall": { minutes: 1.79, samples: 1, source: "cloud_gps_2026_06_17_route_1b_interpolated" },
+  "N:sh_ho->postgraduate_hostel": { minutes: 1.49, samples: 2, source: "merged_gps_2026_06_13_23_route_N" },
+  "1A:university_station->university_sports_centre": { minutes: 1.61, samples: 1, source: "cloud_gps_2026_06_24_route_1a" },
+  "1A:university_sports_centre->shaw_hall": { minutes: 1.72, samples: 2, source: "merged_gps_2026_06_24_07_15_route_1a_UVN_LHh" },
+  "1B:university_station->postgraduate_hostel": { minutes: 2.99, samples: 1, source: "cloud_gps_2026_06_20_route_1b_passage" },
+  "1B:postgraduate_hostel->university_sports_centre": { minutes: 1.8, samples: 2, source: "merged_gps_2026_06_17_20_route_1b" },
+  "1B:university_sports_centre->shaw_hall": { minutes: 2.19, samples: 2, source: "merged_gps_2026_06_17_20_route_1b" },
 };
 const DEFAULT_STOP_DWELL_SECONDS = {
-  university_station: 35,
+  university_station: 37,
   university_station_piazza: 24,
-  postgraduate_hostel: 24,
-  shaw_hall: 28,
-  science_centre: 24,
-  university_admin: 28,
-  sh_ho: 22,
-  new_asia: 22,
-  united_college: 22,
-  residences_3_4: 20,
-  shaw_college: 24,
-  area_39: 18,
-  cw_chu: 18,
-  campus_circuit_east: 12,
+  postgraduate_hostel: 71,
+  shaw_hall: 10,
+  science_centre: 25,
+  university_admin: 34,
+  sh_ho: 53,
+  new_asia: 74,
+  united_college: 46,
+  residences_3_4: 57,
+  shaw_college: 72,
+  area_39: 54,
+  cw_chu: 35,
+  campus_circuit_east: 43,
+  university_sports_centre: 57,
+  chan_chun_ha_hostel: 69,
+  fung_king_hey: 54,
+  residence_15: 48,
+  united_residence: 59,
+  residence_10_11: 75,
 };
 const DEFAULT_STOP_DWELL_SECONDS_FALLBACK = 14;
 const STOP_DWELL_MAX_SECONDS = 95;
@@ -5511,6 +5564,9 @@ const STOP_DWELL_SEGMENT_MAX_RATIO = 0.45;
 const ROUTE_STOP_DISTANCE_CACHE = new Map();
 const clockFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: HK_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
   weekday: "short",
   hour: "2-digit",
   minute: "2-digit",
@@ -5530,12 +5586,14 @@ function hongKongClock(at = new Date()) {
   const hour = Number(parts.hour) % 24;
   const minute = Number(parts.minute);
   const second = Number(parts.second);
+  const dateString = `${parts.year}-${parts.month}-${parts.day}`;
   return {
     weekday: WEEKDAY_IDS[parts.weekday],
     hour,
     minute,
     second,
     minutes: hour * 60 + minute + second / 60,
+    dateString,
     label: `${pad(hour)}:${pad(minute)}`,
   };
 }
@@ -5572,6 +5630,7 @@ function routeDirectionGlyph(route) {
 }
 
 function routeStopDirectionLabel(route, stopIndex) {
+  if (route.stopDirections && route.stopDirections[stopIndex]) return route.stopDirections[stopIndex];
   const routeDirections = ROUTE_STOP_DIRECTIONS[route.id];
   return routeDirections && routeDirections[stopIndex] || "";
 }
@@ -5632,16 +5691,42 @@ function departuresForRule(rule) {
 
 function todayRules(route, clock = hongKongClock()) {
   if (!route.schedule) return [];
-  return route.schedule.rules.filter((rule) => rule.days.includes(clock.weekday));
+  if (root.CUHK_CAMPUS_UPDATES?.suspensionForRoute(route.id, clock.dateString)) return [];
+  return route.schedule.rules.filter((rule) => {
+    if (!rule.days.includes(clock.weekday)) return false;
+    if (rule.teachingDaysOnly && !isAcademicTeachingBusDateString(clock.dateString)) return false;
+    return true;
+  });
+}
+
+function isAcademicTeachingBusDateString(dateString) {
+  const teachingRanges = [
+    ["2026-09-07", "2026-12-05"],
+    ["2026-12-07", "2026-12-08"],
+    ["2027-01-11", "2027-04-24"],
+    ["2027-04-26", "2027-04-27"],
+  ];
+  const noClassRanges = [
+    ["2026-09-26", "2026-09-26"],
+    ["2026-10-01", "2026-10-01"],
+    ["2026-10-19", "2026-10-19"],
+    ["2027-02-05", "2027-02-11"],
+    ["2027-03-08", "2027-03-13"],
+    ["2027-03-26", "2027-03-29"],
+    ["2027-04-05", "2027-04-05"],
+  ];
+  const inRange = ([start, end]) => dateString >= start && dateString <= end;
+  return teachingRanges.some(inRange) && !noClassRanges.some(inRange);
 }
 
 function activeVehicles(route, at = new Date()) {
+  root.CUHK_CAMPUS_UPDATES?.applyTemporaryStops(root.CUHK_BUS_DATA, at);
   const schedule = route.schedule;
   const coords = routeCoordinates(route);
   if (!schedule || coords.length < 2) return [];
 
   const clock = hongKongClock(at);
-  const tripMinutes = effectiveRouteTripMinutes(route);
+  const tripMinutes = effectiveRouteTripMinutes(route, undefined, at);
   const vehicles = [];
   todayRules(route, clock).forEach((rule) => {
     departuresForRule(rule).forEach((departure) => {
@@ -5654,6 +5739,7 @@ function activeVehicles(route, at = new Date()) {
         route,
         departure,
         elapsedMinutes: elapsed,
+        predictionAt: at,
         tripMinutes,
         progress,
         coord: point.coord,
@@ -5681,6 +5767,9 @@ function nextDeparture(route, at = new Date()) {
 }
 
 function nextStopArrival(route, stopIndex, at = new Date()) {
+  root.CUHK_CAMPUS_UPDATES?.applyTemporaryStops(root.CUHK_BUS_DATA, at);
+  const suspension = root.CUHK_CAMPUS_UPDATES?.suspensionForRoute(route.id, at);
+  if (suspension) return { route, stopIndex, status: "suspended", label: suspension.text };
   const schedule = route.schedule;
   if (!schedule) {
     return { route, stopIndex, status: "no_schedule", label: "暂无官方时刻表" };
@@ -5692,13 +5781,14 @@ function nextStopArrival(route, stopIndex, at = new Date()) {
     return { route, stopIndex, status: "no_service_today", label: "今日无常规班次", clock };
   }
 
-  const tripMinutes = effectiveRouteTripMinutes(route);
+  const tripMinutes = effectiveRouteTripMinutes(route, undefined, at);
   const stopProgress = routeStopProgress(route, stopIndex);
-  const offsetMinutes = routeStopOffsetMinutes(route, stopIndex, tripMinutes);
+  const offsetMinutes = routeStopOffsetMinutes(route, stopIndex, tripMinutes, at);
   let next = null;
 
   rules.forEach((rule) => {
     departuresForRule(rule).forEach((departure) => {
+      if (!routeStopServedAtDeparture(route, stopIndex, departure, at)) return;
       const arrival = departure + offsetMinutes;
       const graceMinutes = stopIndex === 0 ? 0.75 : 0.25;
       if (arrival + graceMinutes < clock.minutes) return;
@@ -5726,6 +5816,22 @@ function nextStopArrival(route, stopIndex, at = new Date()) {
   next.arrivalLabel = formatTime(next.arrival);
   next.label = stopArrivalSummary(next);
   return next;
+}
+
+function routeStopServedAtDeparture(route, stopIndex, departure, at = new Date()) {
+  const stopId = route && route.stops && route.stops[stopIndex];
+  const rule = route && route.conditionalStops && route.conditionalStops[stopId];
+  if (!rule) return true;
+  if (Array.isArray(rule.departMinutes) && Number.isFinite(departure)) {
+    const minute = ((Math.floor(departure) % 60) + 60) % 60;
+    if (!rule.departMinutes.includes(minute)) return false;
+  }
+  if (rule.teachingDaysOnly || rule.nonTeachingDaysOnly) {
+    const teachingDay = isAcademicTeachingBusDateString(hongKongClock(at).dateString);
+    if (rule.teachingDaysOnly && !teachingDay) return false;
+    if (rule.nonTeachingDaysOnly && teachingDay) return false;
+  }
+  return true;
 }
 
 function nextStopArrivals(items, at = new Date()) {
@@ -5758,6 +5864,7 @@ function compareStopArrival(a, b) {
 
 function stopArrivalSummary(arrival) {
   if (!arrival) return "暂无预计到站";
+  if (arrival.status === "suspended") return arrival.label || "临时暂停服务";
   if (arrival.status === "scheduled") {
     const directionText = arrival.direction ? ` · ${arrival.direction}` : "";
     return `预计下一班 ${formatTime(arrival.arrival)}（${arrivalEtaText(arrival)}${directionText}）`;
@@ -5781,6 +5888,8 @@ function formatEtaMinutes(value) {
 }
 
 function serviceStatus(route, at = new Date()) {
+  const suspension = root.CUHK_CAMPUS_UPDATES?.suspensionForRoute(route.id, at);
+  if (suspension) return { label: suspension.text, activeCount: 0, hasServiceToday: false, next: null };
   const schedule = route.schedule;
   if (!schedule) {
     return { label: "暂无官方时刻表", activeCount: 0, hasServiceToday: false, next: null };
@@ -5809,6 +5918,67 @@ function scheduleSummary(route) {
 function scheduleSourceUrl(route) {
   if (!route.schedule || !route.schedule.source) return root.CUHK_BUS_DATA.metadata.sourceUrl;
   return root.CUHK_BUS_DATA.metadata.timetableSources[route.schedule.source] || root.CUHK_BUS_DATA.metadata.sourceUrl;
+}
+
+function routeEtaConfidence(route) {
+  const evidence = routeSegmentEvidence(route);
+  const coverageText = evidence.total ? `${evidence.covered}/${evidence.total}站段` : "0站段";
+  if (evidence.samples >= 8 || evidence.covered >= 6) {
+    return { label: `GPS样本较多 · ${coverageText} · ${evidence.samples}个样本`, shortLabel: "样本较多" };
+  }
+  if (evidence.samples >= 2 || evidence.covered >= 2) {
+    return { label: `GPS校准 · ${coverageText} · ${evidence.samples}个样本`, shortLabel: "GPS校准" };
+  }
+  if (evidence.samples > 0 || evidence.covered > 0) {
+    return { label: `GPS样本少 · ${coverageText} · 需继续校准`, shortLabel: "样本少" };
+  }
+  return { label: "按时刻表和路线估算", shortLabel: "时刻表估算" };
+}
+
+function routeStopEtaConfidence(route, stopIndex) {
+  const evidence = routeSegmentEvidence(route, stopIndex);
+  if (!evidence.total) return { label: "时刻表估算", shortLabel: "时刻表估算" };
+  if (!evidence.covered) return { label: `时刻表估算 · 0/${evidence.total}站段`, shortLabel: "时刻表估算" };
+  if (evidence.covered === evidence.total && evidence.samples >= evidence.total) {
+    return { label: `GPS校准 · ${evidence.covered}/${evidence.total}站段 · ${evidence.samples}样本`, shortLabel: "全段校准" };
+  }
+  return { label: `部分GPS校准 · ${evidence.covered}/${evidence.total}站段 · ${evidence.samples}样本`, shortLabel: "部分校准" };
+}
+
+function routeSegmentEvidence(route, upToStopIndex = Infinity) {
+  const current = root.CUHK_ETA_PREDICTION && root.CUHK_ETA_PREDICTION.evidence(route, upToStopIndex);
+  if (current) return current;
+  let samples = 0;
+  let covered = 0;
+  let total = 0;
+  if (!route || !Array.isArray(route.stops)) return { samples, covered, total };
+  const limit = Math.min(route.stops.length - 1, Number.isFinite(upToStopIndex) ? Math.max(0, upToStopIndex) : route.stops.length - 1);
+  for (let i = 1; i <= limit; i += 1) {
+    const fromStopId = route.stops[i - 1];
+    const toStopId = route.stops[i];
+    const fromStop = root.CUHK_BUS_DATA.stops[fromStopId];
+    const toStop = root.CUHK_BUS_DATA.stops[toStopId];
+    if (!fromStop || !toStop || fromStop.kind === "waypoint" || toStop.kind === "waypoint") continue;
+    total += 1;
+    const key = segmentKey(fromStopId, toStopId);
+    const routeKey = `${route.id}:${key}`;
+    const routeItem = DEFAULT_ROUTE_SEGMENT_TRAVEL_MINUTES[routeKey];
+    const sharedItem = DEFAULT_SEGMENT_TRAVEL_MINUTES[key];
+    const item = !isSoftSegmentReference(routeItem) ? routeItem : sharedItem || routeItem;
+    if (!item || item.estimated) continue;
+    covered += 1;
+    samples += Math.max(1, Number(item.samples) || 1);
+  }
+  return { samples, covered, total };
+}
+
+function servicePeriodHint(at = new Date()) {
+  const clock = hongKongClock(at);
+  const month = Number(new Intl.DateTimeFormat("en-US", { timeZone: HK_TIME_ZONE, month: "numeric" }).format(at));
+  if (clock.weekday === 0 || clock.weekday === 6) return "周末样本少，ETA仅供参考";
+  if (month >= 6 && month <= 8) return "暑期/假期班次和客流会变，ETA仅供参考";
+  if (month === 12 || month === 1) return "假期前后班次和客流会变，ETA仅供参考";
+  return "";
 }
 
 function coordAtProgress(coords, progress) {
@@ -5856,7 +6026,9 @@ function routeStopOffsetsMinutes(route) {
   return offsets.map((value) => Number(value));
 }
 
-function routeStopOffsetMinutes(route, stopIndex, tripMinutes = route.schedule && route.schedule.estimatedTripMinutes || 15) {
+function routeStopOffsetMinutes(route, stopIndex, tripMinutes = route.schedule && route.schedule.estimatedTripMinutes || 15, at = new Date()) {
+  const predicted = root.CUHK_ETA_PREDICTION && root.CUHK_ETA_PREDICTION.offset(route, stopIndex, at);
+  if (Number.isFinite(predicted)) return predicted;
   const segmentOffset = segmentBasedRouteStopOffsetMinutes(route, stopIndex, tripMinutes);
   if (Number.isFinite(segmentOffset)) return Math.max(0, Math.min(tripMinutes + 8, segmentOffset));
   return baseRouteStopOffsetMinutes(route, stopIndex, tripMinutes);
@@ -5878,11 +6050,16 @@ function segmentBasedRouteStopOffsetMinutes(route, stopIndex, tripMinutes = rout
   return offset;
 }
 
-function routeSegmentTravelMinutes(route, toStopIndex, tripMinutes = route.schedule && route.schedule.estimatedTripMinutes || 15) {
+function routeSegmentTravelMinutes(route, toStopIndex, tripMinutes = route.schedule && route.schedule.estimatedTripMinutes || 15, at = new Date()) {
   if (!route || !Array.isArray(route.stops) || toStopIndex <= 0 || toStopIndex >= route.stops.length) return 0;
+  const predicted = root.CUHK_ETA_PREDICTION && root.CUHK_ETA_PREDICTION.segment(route, toStopIndex, at);
+  if (Number.isFinite(predicted)) return predicted;
+  const distances = routeStopDistances(route);
+  const termEstimate = root.CUHK_ETA_PREDICTION && root.CUHK_ETA_PREDICTION.fallbackSegment(Math.max(0, distances[toStopIndex] - distances[toStopIndex - 1]));
+  if (Number.isFinite(termEstimate)) return termEstimate;
   const fromStopId = route.stops[toStopIndex - 1];
   const toStopId = route.stops[toStopIndex];
-  const calibrated = defaultSegmentTravelMinutes(route.id, fromStopId, toStopId);
+  const calibrated = defaultSegmentTravelMinutes(route.etaRouteId || route.id, fromStopId, toStopId);
   if (Number.isFinite(calibrated)) return Math.max(0, calibrated);
   const basePrevious = baseRouteStopOffsetMinutes(route, toStopIndex - 1, tripMinutes);
   const baseCurrent = baseRouteStopOffsetMinutes(route, toStopIndex, tripMinutes);
@@ -5892,16 +6069,24 @@ function routeSegmentTravelMinutes(route, toStopIndex, tripMinutes = route.sched
 function defaultSegmentTravelMinutes(routeId, fromStopId, toStopId) {
   const key = segmentKey(fromStopId, toStopId);
   const routeKey = `${routeId}:${key}`;
-  const item = DEFAULT_ROUTE_SEGMENT_TRAVEL_MINUTES[routeKey] || DEFAULT_SEGMENT_TRAVEL_MINUTES[key];
+  const routeItem = DEFAULT_ROUTE_SEGMENT_TRAVEL_MINUTES[routeKey];
+  const sharedItem = DEFAULT_SEGMENT_TRAVEL_MINUTES[key];
+  const item = !isSoftSegmentReference(routeItem) ? routeItem : sharedItem || routeItem;
   return item && Number.isFinite(item.minutes) ? item.minutes : NaN;
+}
+
+function isSoftSegmentReference(item) {
+  return Boolean(item && String(item.source || "").startsWith("manual_reference_"));
 }
 
 function segmentKey(fromStopId, toStopId) {
   return `${fromStopId}->${toStopId}`;
 }
 
-function effectiveRouteTripMinutes(route, scheduledTripMinutes = route && route.schedule && route.schedule.estimatedTripMinutes || 15) {
+function effectiveRouteTripMinutes(route, scheduledTripMinutes = route && route.schedule && route.schedule.estimatedTripMinutes || 15, at = new Date()) {
   if (!route || !Array.isArray(route.stops) || !route.stops.length) return scheduledTripMinutes;
+  const predicted = root.CUHK_ETA_PREDICTION && root.CUHK_ETA_PREDICTION.offset(route, route.stops.length - 1, at);
+  if (Number.isFinite(predicted)) return predicted;
   const finalOffset = segmentBasedRouteStopOffsetMinutes(route, route.stops.length - 1, scheduledTripMinutes);
   return Number.isFinite(finalOffset) && finalOffset > 0
     ? Math.max(1, finalOffset)
@@ -5914,7 +6099,7 @@ function routeProgressAtElapsed(route, elapsedMinutes, tripMinutes = route.sched
   const checkpoints = (route.stops || [])
     .map((_, stopIndex) => ({
       stopIndex,
-      minutes: routeStopOffsetMinutes(route, stopIndex, tripMinutes),
+      minutes: routeStopOffsetMinutes(route, stopIndex, tripMinutes, at),
       progress: routeStopProgress(route, stopIndex),
     }))
     .filter((item) => Number.isFinite(item.minutes) && Number.isFinite(item.progress))
@@ -5944,6 +6129,10 @@ function routeProgressAtElapsed(route, elapsedMinutes, tripMinutes = route.sched
 
 function routeStopDwellMinutes(route, stopIndex, segmentMinutes = 1, at = new Date()) {
   if (!route || !Array.isArray(route.stops) || stopIndex < 0 || stopIndex >= route.stops.length - 1) return 0;
+  const predicted = root.CUHK_ETA_PREDICTION && root.CUHK_ETA_PREDICTION.dwell(route, stopIndex, at);
+  if (Number.isFinite(predicted)) return Math.max(0, Math.min(150, predicted, segmentMinutes * 60 - 3)) / 60;
+  const termDwell = root.CUHK_ETA_PREDICTION && root.CUHK_ETA_PREDICTION.fallbackDwell();
+  if (Number.isFinite(termDwell)) return Math.max(0, Math.min(termDwell, segmentMinutes * 60 * 0.45)) / 60;
   const stopId = route.stops[stopIndex];
   const seconds = defaultStopDwellSeconds(stopId, at);
   return Math.max(
@@ -5972,7 +6161,7 @@ function stopDwellTimeMultiplier(at = new Date()) {
 }
 
 function routeStopDistances(route) {
-  const cacheKey = route.id;
+  const cacheKey = `${route.id}:${(route.stops || []).join("|")}`;
   if (ROUTE_STOP_DISTANCE_CACHE.has(cacheKey)) return ROUTE_STOP_DISTANCE_CACHE.get(cacheKey);
 
   const profile = routeDistanceProfile(route);
@@ -6075,7 +6264,9 @@ root.CUHK_BUS_UTILS = {
   routeCoordinates,
   routeDirectionGlyph,
   routeDirectionLabel,
+  routeEtaConfidence,
   routeProgressAtElapsed,
+  routeStopEtaConfidence,
   routeStopOffsetMinutes,
   routeStopProgress,
   routeStopDirectionGlyph,
@@ -6083,8 +6274,10 @@ root.CUHK_BUS_UTILS = {
   stopArrivalSummary,
   scheduleSourceUrl,
   scheduleSummary,
+  servicePeriodHint,
   serviceStatus,
   stopDirectionGlyph,
   stopDirectionSummary,
 };
+if (root.CUHK_ETA_PREDICTION && root.CUHK_ETA_MODEL) root.CUHK_ETA_PREDICTION.setModel(root.CUHK_ETA_MODEL);
 })(typeof window !== "undefined" ? window : globalThis);
