@@ -76,4 +76,11 @@ assert.equal(web.CUHK_BUS_UTILS.routeSegmentTravelMinutes(changed, 1),
   web.CUHK_ETA_PREDICTION.fallbackSegment(Math.max(0, distances[1] - distances[0])),
   'changed route fallback must use the term model, never old summer constants');
 assert.equal(web.CUHK_ETA_PREDICTION.evidence(changed).covered, 0);
+const html = fs.readFileSync('index.html', 'utf8');
+const assets = [...html.matchAll(/<script src="(data\/[^\"]+)"/g)].map(match => new URL(match[1], 'https://example.invalid/'));
+assert.equal(assets.length, 6);
+for (const asset of assets) {
+  assert.equal(asset.searchParams.get('v'), '20261025.2', 'release assets must share a new cache key');
+  assert(fs.existsSync(asset.pathname.slice(1)));
+}
 console.log('PASS: term-only fitting, summer/transition/interpolation separation, completed dwell, neutral fallback, honest coverage and narrowly scoped cloud patch');
