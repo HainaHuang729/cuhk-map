@@ -3,8 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>香港中文大学餐饮校巴地图</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <title>香港中文大学校园地图</title>
+  <meta name="description" content="中大校巴、餐厅与校园设施查询。">
+  <link rel="stylesheet" href="demos/ui-modes/assets/leaflet.css">
+  <link rel="stylesheet" href="assets/campus_guide.css?v=20261026.5">
   <style>
     :root {
       --ink: #14211d;
@@ -1337,15 +1339,20 @@
       <div class="row"><span>状态</span><span>正在读取 OpenStreetMap / Overpass</span></div>
     </div>
   </section>
-  <div id="loading" class="loading">正在从 OpenStreetMap 加载校园 POI。</div>
+  <div id="loading" class="loading" hidden></div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="demos/ui-modes/assets/leaflet.js"></script>
   <script src="data/campus_updates.js?v=20261025.2"></script>
   <script src="data/cuhk_bus_routes.js?v=20261025.2"></script>
   <script src="data/eta_prediction.js?v=20261025.2"></script>
   <script src="data/eta_model.js?v=20261025.2"></script>
   <script src="data/transport_route_schemes.js?v=20261025.2"></script>
-  <script src="data/cuhk_dining_pois.js?v=20261025.2"></script>
+  <script src="data/cuhk_dining_pois.js?v=20261026.1"></script>
+  <script src="demos/ui-modes/assets/lucide.js"></script>
+  <script src="assets/campus_coordinates.js?v=20261026.5"></script>
+  <script src="data/campus_guide.js?v=20261026.5"></script>
+  <script src="assets/campus_guide_core.js?v=20261026.5"></script>
+  <script src="assets/campus_guide_ui.js?v=20261026.5"></script>
   <script>
     const OVERPASS_ENDPOINT = "https://overpass-api.de/api/interpreter";
     const CUHK_CENTER = [22.4194, 114.2072];
@@ -1400,11 +1407,10 @@
       preferCanvas: true
     }).setView(CUHK_CENTER, 16);
 
-    L.control.zoom({ position: "topleft" }).addTo(map);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 20,
-      attribution: "© OpenStreetMap contributors"
-    }).addTo(map);
+    L.control.zoom({ position: "bottomright" }).addTo(map);
+    map.setMinZoom(14);
+    map.setMaxZoom(20);
+    map.attributionControl.addAttribution('© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>');
 
     const activityLayer = L.layerGroup().addTo(map);
     function renderCampusEvents() {
@@ -1438,10 +1444,11 @@
     ];
     const POI_CATEGORY_BY_ID = Object.fromEntries(POI_CATEGORIES.map((category) => [category.id, category]));
     const POI_LAYER_GROUPS = [
+      { id: "dining", label: "餐厅", categoryIds: ["restaurant", "fast_food", "coffee", "milk_tea", "other_drink"] },
       {
         id: "common",
         label: "常用信息",
-        categoryIds: ["restaurant", "fast_food", "coffee", "milk_tea", "other_drink", "medical", "accommodation", "ferry"],
+        categoryIds: ["medical", "accommodation", "ferry"],
       },
     ];
     const POI_LAYER_GROUP_BY_CATEGORY = Object.fromEntries(
@@ -1503,6 +1510,7 @@
     let selectedMetroItemId = "";
     let metroMotionTimer = null;
     let latestStats = null;
+    let guideAllStops = false;
 
     CUHK_BUS_DATA.routes.forEach((route) => {
       const layer = L.layerGroup();
@@ -1515,13 +1523,7 @@
     metroList.addEventListener("click", handleMetroListClick);
     updateBusStops();
 
-    const compactViewport = window.matchMedia("(max-width: 720px)").matches;
-    L.control.layers(null, {
-      ...poiLayers
-    }, {
-      collapsed: compactViewport,
-      position: "topright"
-    }).addTo(map);
+    // Layer switches live in the responsive campus menu, rather than covering search.
     if (ENABLE_WEB_GPS_COLLECTION) {
       gpsCollector.hidden = false;
       gpsCollector.setAttribute("aria-hidden", "false");
@@ -1975,7 +1977,7 @@
     function updateBusStops() {
       busStopsLayer.clearLayers();
       busStopPopupRefs.length = 0;
-      addBusStops(visibleBusRoutes());
+      addBusStops(guideAllStops ? CUHK_BUS_DATA.routes : visibleBusRoutes());
     }
 
     function addBusStops(routes = CUHK_BUS_DATA.routes) {
@@ -3020,7 +3022,13 @@
         <div>${escapeHtml(category.label)}</div>
         ${tags.floor ? `<div>${escapeHtml(tags.floor)}</div>` : ""}
         ${tags.opening_hours ? `<div>营业时间：${escapeHtml(tags.opening_hours)}</div>` : ""}
+        ${tags.access_note ? `<div>${escapeHtml(tags.access_note)}</div>` : ""}
       `, { closeButton: false });
+      marker.on("click", () => {
+        const id = tags.curated_id || tags["@id"];
+        const item = CUHK_GUIDE_CORE.search("", "dining").find(candidate => candidate.id === id);
+        if (item) campusGuide.select(item);
+      });
       marker.addTo(poiLayerGroups[poiLayerGroupForCategory(category).id]);
       return true;
     }
@@ -3103,6 +3111,7 @@
             amenity,
             poi_category: poi.category,
             opening_hours: poi.openingHours,
+            access_note: poi.accessNote,
             floor: poi.floor,
             source: poi.source,
             curated_id: poi.id,
@@ -3142,6 +3151,7 @@
     async function loadData() {
       const loading = document.getElementById("loading");
       const response = await fetch(OVERPASS_ENDPOINT, {
+        signal: AbortSignal.timeout(12000),
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
         body: "data=" + encodeURIComponent(OVERPASS_QUERY)
@@ -3163,6 +3173,7 @@
 
       geojson.features.forEach((feature) => {
         const tags = tagsOf(feature);
+        if (tags.curated_id && localDiningIds.has(tags.curated_id)) return;
         const category = poiCategory(tags);
         if (category && addPoi(feature, category)) {
           const coords = feature.geometry.coordinates;
@@ -3172,18 +3183,38 @@
         }
       });
 
-      if (fitBounds.isValid()) {
-        map.fitBounds(fitBounds, { padding: [28, 28] });
-      }
+      // Do not reframe a user's selection when the slower Overpass response arrives.
       updateStats(stats);
-      loading.textContent = "加载完成。点击顶部校巴标志显示线路；右上角可显示或隐藏常用信息。";
+      loading.textContent = "";
       setTimeout(() => loading.remove(), 4200);
     }
 
+    const guideLayers = { bus: busVehiclesLayer, stop: busStopsLayer, dining: poiLayerGroups.dining, common: poiLayerGroups.common };
+    const campusGuide = CUHK_CAMPUS_UI.init({
+      map, setViewMode,
+      stops: () => allBusStopEntries().map(entry => ({ id: entry.id, name: entry.stop.name, webCoord: entry.coord })),
+      stopPopup: id => { const entry = allBusStopEntryById(id); return entry ? busStopPopupHtml(entry) : ""; },
+      layerVisible: key => key === "stop" ? guideAllStops : map.hasLayer(guideLayers[key]),
+      toggleLayer: key => {
+        if (key === "stop") { guideAllStops = !guideAllStops; updateBusStops(); return; }
+        const layer = guideLayers[key];
+        if (map.hasLayer(layer)) map.removeLayer(layer);
+        else { if (key === "stop") { busStopsLayer.clearLayers(); addBusStops(); } map.addLayer(layer); }
+      },
+    });
+    // Reviewed local dining data works even when Overpass is slow or unavailable.
+    const localDiningIds = new Set();
+    CUHK_GUIDE_CORE.search("", "dining").filter(item => item.webCoord).forEach(item => {
+      const category = POI_CATEGORY_BY_ID[item.category === "tea" ? "milk_tea" : item.category];
+      if (!category) return;
+      localDiningIds.add(item.id);
+      addPoi({ geometry: { type: "Point", coordinates: item.webCoord }, properties: {
+        name: item.name, floor: item.floor, opening_hours: item.hours, curated_id: item.id,
+      } }, category);
+    });
     loadData().catch((error) => {
       const loading = document.getElementById("loading");
-      loading.classList.add("error");
-      loading.textContent = `加载失败：${error.message}`;
+      loading.remove();
       document.getElementById("stats").innerHTML = "<div class='row'><span>状态</span><span>加载失败，请稍后刷新</span></div>";
     });
   </script>

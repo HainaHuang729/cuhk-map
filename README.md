@@ -2,13 +2,26 @@
 
 香港中文大学校园餐饮和校巴地图。
 
+## 2026-10-26 网页同步
+
+正式入口：https://hainahuang729.github.io/cuhk-map/
+
+- 同步小程序的 132 条已核对设施/服务、66 个建筑条目和餐饮资料，支持中英及繁简搜索。
+- 地图选中设施使用同款紫金标志。详情保留楼层、开放时段、使用资格、电话和官方链接。
+- 宿舍限制、暂停服务、未知位置及官方示意步行路线继续限制导航；设备只定位至所在建筑，不假定为入口。
+- 可选择起点或按需获取一次当前位置，使用小程序同一份步行路网；路线资料仅在导航时下载，不调用云函数，不记录轨迹，不发上车广播。
+- 同步小程序浅/深色校园底图、建筑标签及控件配色；A/F 样品仍是独立演示，不混用其虚构天气和课程。
+- `node scripts/sync_campus_guide.js /path/to/miniprogram-1` 生成公开资料和经过测试的路网引擎；`node scripts/test_campus_guide.js` 检查查询、坐标与导航限制。
+
+以下历史采集说明不代表当前线上功能；网页 GPS 采集和乘客上报均保持关闭。
+
 ## UI Prototype
 
 [A/F 浅色与深色双模式演示](https://hainahuang729.github.io/cuhk-map/demos/ui-modes/)位于 `demos/ui-modes/`，独立于正式地图首页。可在样品顶部或侧边栏切换模式，切换时共享地图和日程状态。到站时间、天气、课程和餐厅时间均为演示内容，不连接云端、不读取定位、不发送上车广播。其他设计方案保留供对比参考。
 
 ## Files
 
-- `index.html`: GitHub Pages 入口页，使用 Leaflet、OpenStreetMap 底图，并通过 Overpass API 实时读取校园 POI，同时显示可开关的校巴路线和手机 GPS 采集面板。
+- `index.html`: GitHub Pages 入口页，使用 Leaflet、OpenStreetMap 底图、本地已审核校园资料与可选 Overpass POI；网页仅展示内容，不启用轨迹采集或乘客上报。
 - `cuhk_map.html`: 本地生成的离线版页面，已经内嵌扩展道路、楼宇、绿地/水体、餐饮和功能 POI 数据；前台当前只绘制楼宇、常用信息和校巴，并引用本地校巴路线数据。
 - `data/cuhk_bus_routes.js`: CUHK 校巴路线、站点、颜色、官方时刻表规则和小车位置估算函数。路线站序来自公开校内交通资料；可匹配的站点使用 OSM bus-stop/platform 节点，线路沿本地 OSM 校园道路中心线绘制。
 - `data/cuhk_boundary.geojson`: CUHK 校园边界原始数据，当前页面不再显示边界图层。
