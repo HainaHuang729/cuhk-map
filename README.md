@@ -2,6 +2,31 @@
 
 香港中文大学校园餐饮和校巴地图。
 
+[在线使用](https://hainahuang729.github.io/cuhk-map/) · [源码仓库](https://github.com/HainaHuang729/cuhk-map) · [MIT 许可证](LICENSE) · [参与贡献](CONTRIBUTING.md)
+
+## 开源范围
+
+本仓库开源网页版及其现有维护脚本，原创代码采用 MIT 许可证。微信小程序、云函数和云端数据库不在本次开源范围；个人课表、原始 GPS、乘客广播及账户资料不公开。
+
+地图数据库、第三方图标与大学资料不因本项目开源而改成 MIT 许可，详见 [第三方声明](THIRD_PARTY_NOTICES.md)。这是独立校园指南，非中大官方服务；车辆位置与到站时间为估算，实际运营以交通处公布为准。
+
+## 本地运行
+
+```sh
+git clone https://github.com/HainaHuang729/cuhk-map.git
+cd cuhk-map
+python3 -m http.server 8765 --bind 127.0.0.1
+```
+
+打开 `http://127.0.0.1:8765/`。网页无需构建或配置云开发，公开资料及前端依赖已包含在仓库中。
+
+使用 Node.js 18 或以上版本检查：
+
+```sh
+node scripts/test_campus_guide.js
+node scripts/test_eta_prediction.mjs
+```
+
 ## 2026-10-26 网页同步
 
 正式入口：https://hainahuang729.github.io/cuhk-map/
@@ -30,7 +55,7 @@
 
 ## Data
 
-数据来自 OpenStreetMap / Overpass，遵循 ODbL；地图瓦片由 OpenStreetMap contributors 提供。
+地图几何与路网来源于 OpenStreetMap / Overpass，数据库遵循 ODbL，底图保留 OpenStreetMap contributors 署名。校巴、餐饮及设施资料保留各自的官方来源与核对日期，完整边界见 [第三方声明](THIRD_PARTY_NOTICES.md)。
 
 ## Transport Data Authority
 
