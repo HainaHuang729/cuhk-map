@@ -1,0 +1,18 @@
+{
+  "schema":"cuhk_public_data_contract_v1",
+  "coordinateSystems":{"web":"WGS84","mini":"GCJ-02","walkingEngine":"GCJ-02; convert only at the web display boundary"},
+  "shared":[
+    {"id":"campus-updates","owner":"mini","web":"data/campus_updates.js","mini":"miniprogram/data/campusUpdates.js"},
+    {"id":"transport-schemes","owner":"web","web":"data/transport_route_schemes.js","mini":"miniprogram/data/transportRouteSchemes.js"},
+    {"id":"eta-engine","owner":"web","web":"data/eta_prediction.js","mini":"miniprogram/data/etaPrediction.js"},
+    {"id":"eta-model","owner":"web","web":"data/eta_model.js","mini":"miniprogram/data/etaModel.js"}
+  ],
+  "webGenerated":["data/campus_guide.js","data/campus_walking.js","assets/campus-light.png","assets/campus-dark.png"],
+  "publicWebFiles":["index.html","assets/campus-light.png","assets/campus-dark.png","assets/campus_coordinates.js","assets/campus_guide.css","assets/campus_guide_core.js","assets/campus_guide_ui.js","data/campus_guide.js","data/campus_walking.js","data/campus_updates.js","data/cuhk_bus_routes.js","data/eta_prediction.js","data/eta_model.js","data/transport_route_schemes.js","data/cuhk_dining_pois.js","demos/ui-modes/assets/leaflet.js","demos/ui-modes/assets/leaflet.css","demos/ui-modes/assets/leaflet-LICENSE.txt","demos/ui-modes/assets/lucide.js","demos/ui-modes/assets/lucide-LICENSE.txt","LICENSE","THIRD_PARTY_NOTICES.md"],
+  "ownershipNotes":[
+    "Transport geometry is maintained in web WGS84; mini geometry must be reviewed against it after GCJ-02 conversion, never silently overwritten.",
+    "Dining and facility facts originate in mini mapData/campusFacilities/campusLifeData and are exported in campus_guide.js. The legacy web dining POI file remains an Overpass replacement compatibility list, not a second independently edited guide directory.",
+    "Sites keeps its own presentation overrides. Data synchronization must not reintroduce the removed bottom route-query button or GPS collection.",
+    "The workflow does not publish, upload a mini-program, change cloud functions, or copy private observation datasets."
+  ]
+}

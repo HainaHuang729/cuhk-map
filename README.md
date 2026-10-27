@@ -4,6 +4,10 @@
 
 [在线使用](https://hainahuang729.github.io/cuhk-map/) · [源码仓库](https://github.com/HainaHuang729/cuhk-map) · [MIT 许可证](LICENSE) · [参与贡献](CONTRIBUTING.md)
 
+## 维护流程
+
+ETA 的历史回看与冻结后验证、官方资料变更检查、三端公开数据同步，见 [维护说明](maintenance/README.md)。工具默认不发布、不上传私人行程，也不新增云端定时调用。
+
 ## 开源范围
 
 本仓库开源网页版及其现有维护脚本，原创代码采用 MIT 许可证。微信小程序、云函数和云端数据库不在本次开源范围；个人课表、原始 GPS、乘客广播及账户资料不公开。

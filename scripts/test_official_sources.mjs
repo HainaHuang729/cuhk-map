@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {officialUrl,validateRegistry,inspectSource,approveFingerprint} from './check_official_sources.mjs';
+const source={id:'transport',url:'https://transport.cuhk.edu.hk/whats-new/',format:'html',reviewEveryDays:1};
+const now=new Date('2026-10-26T00:00:00Z');
+assert(officialUrl(source.url));assert(!officialUrl('https://cuhk.edu.hk.evil.test/'));
+assert(!officialUrl('http://transport.cuhk.edu.hk/'));assert(!officialUrl('https://user:pass@transport.cuhk.edu.hk/'));
+assert.throws(()=>validateRegistry({schema:'cuhk_official_sources_v1',sources:[source,source]}),/duplicate/);
+const response=()=>new Response('<!doctype html><html><body>Official notice</body></html>',{headers:{'content-type':'text/html'}});
+const first=await inspectSource(source,{}, {now,fetch:async()=>response()});assert.equal(first.status,'needs_review');assert.equal(first.factCheckedAt,null);
+const baseline={transport:{sha256:first.sha256,reviewedAt:now.toISOString()}};
+assert.equal((await inspectSource(source,baseline,{now,fetch:async()=>response()})).status,'unchanged');
+assert.equal((await inspectSource(source,baseline,{now,fetch:async()=>new Response('<html>Changed</html>',{headers:{'content-type':'text/html'}})})).status,'needs_review');
+assert.equal((await inspectSource({...source,format:'pdf'},{},{now,fetch:async()=>response()})).reason,'unexpected_document_format');
+assert.equal((await inspectSource(source,baseline,{now,fetch:async()=>{throw new Error('offline');}})).status,'unavailable');
+assert.throws(()=>approveFingerprint({sources:[first]},'transport','wrong',now),/exact/);
+assert.equal(approveFingerprint({sources:[first]},'transport',first.sha256,now).sha256,first.sha256);
+assert.throws(()=>approveFingerprint({sources:[first]},'transport',first.sha256,new Date('2026-10-28T00:00:00Z')),/24 hours/);
+console.log('PASS: official-only registry, bounded retrieval, changed/unchanged/error states, no fabricated fact-check dates and explicit review fingerprints');

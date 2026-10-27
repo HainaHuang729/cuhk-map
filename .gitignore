@@ -19,3 +19,10 @@ ride_gps_sample_chunks.json
 board_broadcasts.json
 snapshot-manifest.json
 cuhk-modeling-data.json
+validation-report.json
+frozen-protocol.json
+training-inputs.json
+station-errors.md
+station-errors.csv
+dwell-analysis.json
+dwell-proposals.md

@@ -60,7 +60,7 @@ for(const vehicle of weekdayVehicles){
  if(!vehicle.nextStop)continue;
  nativeMini.testVehicle=vehicle;
  const eta=vm.runInContext('vehicleNextStopEtaMinutes(testVehicle)',nativeMini);
- const expected=native.CUHK_ETA_PREDICTION.offset(vehicle.route,vehicle.nextStop.stopIndex,new Date('2026-10-05T08:20:00+08:00'))-vehicle.elapsedMinutes;
+ const expected=native.CUHK_ETA_PREDICTION.offset(vehicle.route,vehicle.nextStop.stopIndex,vehicle.predictionAt)-vehicle.elapsedMinutes;
  assert(Math.abs(eta-Math.max(0,expected))<1e-8,'vehicle ETA must use the same time profile as vehicle position');
 }
 console.log(`PASS: ${checked} web/mini stop offsets, finite vehicle progress, stale-route rejection, invalid-cloud fallback`);

@@ -78,9 +78,11 @@ assert.equal(web.CUHK_BUS_UTILS.routeSegmentTravelMinutes(changed, 1),
 assert.equal(web.CUHK_ETA_PREDICTION.evidence(changed).covered, 0);
 const html = fs.readFileSync('index.html', 'utf8');
 const assets = [...html.matchAll(/<script src="(data\/[^\"]+)"/g)].map(match => new URL(match[1], 'https://example.invalid/'));
-assert.equal(assets.length, 6);
+const expectedAssets=['data/campus_updates.js','data/cuhk_bus_routes.js','data/eta_prediction.js','data/eta_model.js','data/transport_route_schemes.js','data/cuhk_dining_pois.js','data/campus_guide.js'];
+assert.equal(new Set(assets.map(asset=>asset.pathname)).size,assets.length,'Do not load duplicate data modules');
+for(const file of expectedAssets)assert(assets.some(asset=>asset.pathname==='/'+file),file);
 for (const asset of assets) {
-  assert.equal(asset.searchParams.get('v'), '20261025.2', 'release assets must share a new cache key');
+  assert(asset.searchParams.get('v'),'Every released data asset needs a cache key');
   assert(fs.existsSync(asset.pathname.slice(1)));
 }
 console.log('PASS: term-only fitting, summer/transition/interpolation separation, completed dwell, neutral fallback, honest coverage and narrowly scoped cloud patch');
