@@ -1,0 +1,17 @@
+{
+  "schema": "cuhk_official_sources_v1",
+  "timezone": "Asia/Hong_Kong",
+  "policy": "Source retrieval and content changes require review. Never infer a route, reopening, exact entrance or a new operating hour from a hash change.",
+  "sources": [
+    {"id":"transport-notices","authority":"CUHK Transport Office","topic":"临时交通通知","url":"https://transport.cuhk.edu.hk/whats-new/","format":"html","reviewEveryDays":1,"targets":["data/campus_updates.js","miniprogram/data/campusUpdates.js"]},
+    {"id":"transport-shuttle","authority":"CUHK Transport Office","topic":"穿梭校巴时刻及站序","url":"https://transport.cuhk.edu.hk/wp-content/uploads/documents/Shuttle.pdf","format":"pdf","reviewEveryDays":7,"targets":["data/transport_route_schemes.js","data/cuhk_bus_routes.js"]},
+    {"id":"transport-meet-class","authority":"CUHK Transport Office","topic":"转堂校巴","url":"https://transport.cuhk.edu.hk/wp-content/uploads/documents/Meet-Class.pdf","format":"pdf","reviewEveryDays":7,"targets":["data/transport_route_schemes.js"]},
+    {"id":"transport-night-holiday","authority":"CUHK Transport Office","topic":"夜间及假日校巴","url":"https://transport.cuhk.edu.hk/wp-content/uploads/documents/NH.pdf","format":"pdf","reviewEveryDays":7,"targets":["data/transport_route_schemes.js"]},
+    {"id":"transport-minibus-up","authority":"CUHK Transport Office","topic":"收费小巴上行","url":"https://transport.cuhk.edu.hk/route/up/","format":"html","reviewEveryDays":7,"targets":["data/transport_route_schemes.js","data/cuhk_bus_routes.js"]},
+    {"id":"transport-minibus-down","authority":"CUHK Transport Office","topic":"收费小巴下行","url":"https://transport.cuhk.edu.hk/route/down/","format":"html","reviewEveryDays":7,"targets":["data/transport_route_schemes.js","data/cuhk_bus_routes.js"]},
+    {"id":"fno-dining","authority":"CUHK Finance Office","topic":"校内餐饮名册及营业安排","url":"https://www.fno.cuhk.edu.hk/staff/on-campus-catering-outlets/","format":"html","reviewEveryDays":7,"targets":["miniprogram/data/mapData.js","data/cuhk_dining_pois.js"]},
+    {"id":"academic-calendar-202627","authority":"CUHK Registration and Examinations Section","topic":"2026-27本科校历","url":"https://www.res.cuhk.edu.hk/wp-content/uploads/general-information/Calendar-View-for-Academic-Year_2026-27_chi_final.pdf","format":"pdf","reviewEveryDays":30,"targets":["miniprogram/pages/index/index.js"]},
+    {"id":"library-study","authority":"CUHK Library","topic":"学习空间及使用资格","url":"https://www.lib.cuhk.edu.hk/en/use/places/24hour/","format":"html","reviewEveryDays":14,"targets":["miniprogram/data/campusFacilities.js"]},
+    {"id":"ws-facilities","authority":"Lee Woo Sing College","topic":"和声书院设施及通行限制","url":"https://www.ws.cuhk.edu.hk/facilities/","format":"html","reviewEveryDays":14,"targets":["miniprogram/data/campusFacilities.js"]}
+  ]
+}

@@ -5719,6 +5719,11 @@ function isAcademicTeachingBusDateString(dateString) {
   return teachingRanges.some(inRange) && !noClassRanges.some(inRange);
 }
 
+function tripPredictionAt(at, departure) {
+  const dayStart = Math.floor((at.getTime() + 8 * 3600000) / 86400000) * 86400000 - 8 * 3600000;
+  return new Date(dayStart + departure * 60000);
+}
+
 function activeVehicles(route, at = new Date()) {
   root.CUHK_CAMPUS_UPDATES?.applyTemporaryStops(root.CUHK_BUS_DATA, at);
   const schedule = route.schedule;
@@ -5726,20 +5731,21 @@ function activeVehicles(route, at = new Date()) {
   if (!schedule || coords.length < 2) return [];
 
   const clock = hongKongClock(at);
-  const tripMinutes = effectiveRouteTripMinutes(route, undefined, at);
   const vehicles = [];
   todayRules(route, clock).forEach((rule) => {
     departuresForRule(rule).forEach((departure) => {
+      const predictionAt = tripPredictionAt(at, departure);
+      const tripMinutes = effectiveRouteTripMinutes(route, undefined, predictionAt);
       const elapsed = clock.minutes - departure;
       if (elapsed < 0 || elapsed > tripMinutes) return;
-      const progress = routeProgressAtElapsed(route, elapsed, tripMinutes, at);
+      const progress = routeProgressAtElapsed(route, elapsed, tripMinutes, predictionAt);
       const point = coordAtProgress(coords, progress);
       vehicles.push({
         id: `${route.id}-${formatTime(departure)}`,
         route,
         departure,
         elapsedMinutes: elapsed,
-        predictionAt: at,
+        predictionAt,
         tripMinutes,
         progress,
         coord: point.coord,
@@ -5781,14 +5787,15 @@ function nextStopArrival(route, stopIndex, at = new Date()) {
     return { route, stopIndex, status: "no_service_today", label: "今日无常规班次", clock };
   }
 
-  const tripMinutes = effectiveRouteTripMinutes(route, undefined, at);
   const stopProgress = routeStopProgress(route, stopIndex);
-  const offsetMinutes = routeStopOffsetMinutes(route, stopIndex, tripMinutes, at);
   let next = null;
 
   rules.forEach((rule) => {
     departuresForRule(rule).forEach((departure) => {
       if (!routeStopServedAtDeparture(route, stopIndex, departure, at)) return;
+      const predictionAt = tripPredictionAt(at, departure);
+      const tripMinutes = effectiveRouteTripMinutes(route, undefined, predictionAt);
+      const offsetMinutes = routeStopOffsetMinutes(route, stopIndex, tripMinutes, predictionAt);
       const arrival = departure + offsetMinutes;
       const graceMinutes = stopIndex === 0 ? 0.75 : 0.25;
       if (arrival + graceMinutes < clock.minutes) return;
@@ -5801,6 +5808,8 @@ function nextStopArrival(route, stopIndex, at = new Date()) {
           arrival,
           etaMinutes: Math.max(0, arrival - clock.minutes),
           offsetMinutes,
+          predictionAt,
+          tripMinutes,
           progress: stopProgress,
           ruleLabel: rule.label,
           clock,

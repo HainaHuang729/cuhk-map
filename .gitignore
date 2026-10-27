@@ -3,3 +3,26 @@ __pycache__/
 .DS_Store
 Thumbs.db
 .playwright-cli/
+
+# Local credentials and private collection exports are not open-source inputs.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+private/
+secrets/
+database_export*.json
+cuhk-gps-*.json
+ride_gps_sessions.json
+ride_gps_sample_chunks.json
+board_broadcasts.json
+snapshot-manifest.json
+cuhk-modeling-data.json
+validation-report.json
+frozen-protocol.json
+training-inputs.json
+station-errors.md
+station-errors.csv
+dwell-analysis.json
+dwell-proposals.md
