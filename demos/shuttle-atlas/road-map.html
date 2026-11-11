@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <title>中大校巴路线图 · 道路骨架版</title>
+  <link rel="stylesheet" href="single-line.css">
+  <link rel="stylesheet" href="road-map.css?v=20261102-all">
+  <script defer src="../ui-modes/assets/lucide.js"></script>
+  <script defer src="../../data/cuhk_bus_routes.js"></script>
+  <script defer src="../../data/transport_route_schemes.js"></script>
+  <script defer src="topology.js?v=20261102-all"></script>
+  <script defer src="designs.js?v=20261102-all"></script>
+  <script defer src="road-map-model.js?v=20261102-all"></script>
+  <script defer src="road-map.js?v=20261102-all"></script>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="identity"><i data-lucide="bus-front" aria-hidden="true"></i><div><h1>中大校巴路线图</h1><p>香港中文大学</p></div></div>
+      <div class="edition"><span></span>穿梭与转堂校巴</div>
+      <a class="icon-button" href="./" aria-label="查看 A1 并线版" data-tooltip="A1 并线版"><i data-lucide="git-compare-arrows"></i></a>
+    </header>
+    <main>
+      <div class="map-status"><span id="caption">全部校巴线路</span><span id="count">12 条线路 · 23 站</span></div>
+      <div id="map" tabindex="0" aria-label="可缩放校巴路线图"><svg id="network" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="校巴道路、方向与站牌"><g id="drawing"></g></svg></div>
+      <aside id="detail" hidden aria-live="polite"></aside>
+      <div class="tools"><button class="icon-button" id="zoom-in" aria-label="放大" data-tooltip="放大"><i data-lucide="plus"></i></button><button class="icon-button" id="zoom-out" aria-label="缩小" data-tooltip="缩小"><i data-lucide="minus"></i></button><button class="icon-button" id="fit" aria-label="查看全图" data-tooltip="查看全图"><i data-lucide="scan"></i></button></div>
+      <div class="map-note"><span class="legend-dot"></span>校巴站<span class="legend-number">1</span>途经线路<span class="conditional-key">*</span>部分班次<span class="note-end">线路示意 · 非地理比例</span></div>
+    </main>
+    <footer><nav class="service-filter" aria-label="服务类别"><button data-group="all" aria-pressed="true">全部</button><button data-group="shuttle" aria-pressed="false">穿梭</button><button data-group="meet" aria-pressed="false">转堂</button></nav><button id="reset" class="icon-button" aria-label="全部线路" data-tooltip="全部线路"><i data-lucide="rotate-ccw"></i></button><nav id="routes" aria-label="选择校巴线路"></nav></footer>
+  </div>
+</body>
+</html>

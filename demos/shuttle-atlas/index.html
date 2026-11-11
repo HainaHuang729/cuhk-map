@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#613982">
+  <title>中大校巴线路图</title>
+  <link rel="stylesheet" href="atlas.css">
+  <link rel="stylesheet" href="variants.css?v=a1-selected-1">
+  <script defer src="../ui-modes/assets/lucide.js"></script>
+  <script defer src="../../data/cuhk_bus_routes.js"></script>
+  <script defer src="../../data/transport_route_schemes.js"></script>
+  <script defer src="topology.js?v=20261102-all"></script>
+  <script defer src="designs.js?v=20261102-all"></script>
+  <script defer src="geographic.js?v=20261102-semi-topology-1"></script>
+  <script defer src="atlas.js?v=20261102-horizontal-1"></script>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="identity"><span class="brand-mark" aria-hidden="true"><i data-lucide="bus-front"></i></span><div><h1>校巴线路图</h1><p>香港中文大学</p></div></div>
+      <nav class="design-tabs" id="design-tabs" aria-label="样式方案"></nav>
+      <div class="header-actions"><a class="icon-button" href="compare.html" aria-label="并排比较四版" data-tooltip="并排比较"><i data-lucide="panels-top-left"></i></a><button class="icon-button" id="export" aria-label="下载线路图" data-tooltip="下载 SVG"><i data-lucide="download"></i></button></div>
+    </header>
+    <main class="main">
+      <section class="map-area" aria-label="校巴总线路图">
+        <div class="map-heading"><span class="map-heading-line"></span><span id="map-caption">全部校巴线路</span></div>
+        <div id="map" tabindex="0" aria-label="可缩放校巴线路图">
+          <svg id="network" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="中大校巴网络"><style id="diagram-style"></style><g id="drawing"></g></svg>
+        </div>
+        <div class="map-tools" aria-label="地图工具">
+          <button class="icon-button" id="zoom-in" aria-label="放大" data-tooltip="放大"><i data-lucide="plus"></i></button>
+          <button class="icon-button" id="zoom-out" aria-label="缩小" data-tooltip="缩小"><i data-lucide="minus"></i></button>
+          <span class="tool-divider"></span>
+          <button class="icon-button" id="fit" aria-label="查看全图" data-tooltip="查看全图"><i data-lucide="scan"></i></button>
+        </div>
+        <div class="map-footer"><span>线路示意 · 非地理比例</span><span id="map-count"></span></div>
+      </section>
+      <aside class="sidebar">
+        <div class="sidebar-head"><h2>校巴线路</h2><button id="reset" class="reset-button" aria-label="显示全部线路"><i data-lucide="rotate-ccw"></i><span>全部</span></button></div>
+        <nav class="service-tabs" aria-label="服务类别"><button data-group="all" aria-pressed="true">全部</button><button data-group="shuttle" aria-pressed="false">穿梭</button><button data-group="meet" aria-pressed="false">转堂</button></nav>
+        <nav class="route-list" id="route-list" aria-label="选择线路"></nav>
+        <section id="detail" class="detail" aria-live="polite" hidden></section>
+        <div class="sidebar-bottom"><div class="key"><span class="key-station"></span><span>停靠站</span><span class="key-conditional"></span><span>部分班次</span></div><p>2026 年 9 月线路方案</p><a href="https://transport.cuhk.edu.hk/" target="_blank" rel="noopener">中大交通处<i data-lucide="arrow-up-right"></i></a></div>
+      </aside>
+    </main>
+  </div>
+</body>
+</html>

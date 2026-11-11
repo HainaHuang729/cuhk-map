@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <title>中大校巴 · 站点索引版</title>
+  <link rel="stylesheet" href="single-line.css">
+  <script defer src="../ui-modes/assets/lucide.js"></script>
+  <script defer src="../../data/cuhk_bus_routes.js"></script>
+  <script defer src="../../data/transport_route_schemes.js"></script>
+  <script defer src="topology.js"></script>
+  <script defer src="single-line-model.js"></script>
+  <script defer src="single-line.js"></script>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="identity"><i data-lucide="bus-front" aria-hidden="true"></i><div><h1>穿梭校巴</h1><p>香港中文大学</p></div></div>
+      <div class="edition"><span></span>站点索引</div>
+      <a class="icon-button" href="./" aria-label="查看 A1 并线版" data-tooltip="A1 并线版"><i data-lucide="git-compare-arrows"></i></a>
+    </header>
+    <main>
+      <div class="map-status"><span id="caption">全部穿梭线路</span><span id="count">8 条线路 · 23 站</span></div>
+      <div id="map" tabindex="0" aria-label="可缩放穿梭校巴拓扑图">
+        <svg id="network" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="站点与途经线路"><g id="drawing"></g></svg>
+      </div>
+      <aside id="detail" hidden aria-live="polite"></aside>
+      <div class="tools">
+        <button class="icon-button" id="zoom-in" aria-label="放大" data-tooltip="放大"><i data-lucide="plus"></i></button>
+        <button class="icon-button" id="zoom-out" aria-label="缩小" data-tooltip="缩小"><i data-lucide="minus"></i></button>
+        <button class="icon-button" id="fit" aria-label="查看全图" data-tooltip="查看全图"><i data-lucide="scan"></i></button>
+      </div>
+      <div class="map-note"><span class="legend-dot"></span>停靠站<span class="legend-number">1</span>途经线路<span class="note-end">线路示意 · 非地理比例</span></div>
+    </main>
+    <footer><button id="reset" class="icon-button" aria-label="全部线路" data-tooltip="全部线路"><i data-lucide="rotate-ccw"></i></button><nav id="routes" aria-label="选择校巴线路"></nav></footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,149 @@
+body { color: var(--ink); background: var(--paper); }
+.header { background: var(--header); color: var(--header-ink); border-bottom: 1px solid var(--line); }
+.header h1 { color: var(--header-ink); }
+.identity p, .sample-label { color: var(--muted); }
+.header .icon-button { color: var(--header-ink); text-decoration: none; }
+.brand-mark { background: none; color: var(--gold); border-color: var(--line); }
+.design-tabs { display: flex; align-items: center; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 7px; }
+.design-tab { display: flex; align-items: center; gap: 8px; padding: 8px 13px; border: 0; border-radius: 4px; background: transparent; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.design-tab b { font-size: 13px; font-family: system-ui, sans-serif; }
+.design-tab[aria-pressed=true] { background: var(--primary-button, var(--purple)); color: var(--primary-button-ink, white); }
+.header-actions { gap: 8px; }
+.sample-label { display: none; }
+.sidebar { background: var(--surface); border-color: var(--line); }
+.sidebar h2, .detail-top h3, .sidebar-bottom a, .reset-button { color: var(--purple); }
+.icon-button { background: var(--surface); color: var(--purple); }
+.map-tools { background: var(--surface); border-color: var(--line); box-shadow: none; }
+.map-heading, .map-footer { color: var(--muted); }
+.service-tabs { background: var(--tint); }
+.service-tabs button { color: var(--muted); }
+.service-tabs button[aria-pressed=true] { background: var(--primary-button, var(--purple)); color: var(--primary-button-ink, white); }
+.route-button { background: var(--surface); color: var(--ink); }
+.route-button > svg { color: var(--muted); }
+.route-button[aria-pressed=true] { background: var(--tint); color: var(--ink); border-color: var(--gold); }
+.route-button[aria-pressed=true] > svg { color: var(--purple); }
+.route-button[aria-pressed=true] .route-badge { box-shadow: none; }
+.route-badge { border-radius: 4px; }
+.key-station { background: var(--surface); border-color: var(--muted); }
+.key-conditional { border-color: var(--muted); }
+.detail { border-color: var(--line); }
+.detail-subtitle, .station-sequence { color: var(--muted); }
+.detail-note { color: var(--gold); border-color: var(--gold); }
+.detail li:after { background: var(--surface); color: var(--ink); }
+.detail li:before { background: var(--line); }
+.stop-row { color: var(--ink); }
+.stop-row small { color: var(--muted); }
+body[data-design=a] .header { border-bottom: 6px solid var(--purple); }
+body[data-design=a] h1 { font-size: 22px; font-weight: 800; }
+body[data-design=a] .brand-mark { background: var(--purple); color: white; border: 0; border-radius: 0; }
+body[data-design=a] .design-tabs { border: 0; border-radius: 0; padding: 0; }
+body[data-design=a] .design-tab { border-radius: 0; border-bottom: 3px solid transparent; padding-block: 14px; }
+body[data-design=a] .design-tab[aria-pressed=true] { background: none; color: var(--purple); border-color: var(--gold); }
+body[data-design=a] .route-badge { border-radius: 0; }
+body[data-design=a] .route-list { gap: 0; }
+body[data-design=a] .route-button { border-radius: 0; border-bottom: 1px solid var(--line); }
+body[data-design=a] .route-button[aria-pressed=true] { border: 1px solid var(--purple); border-left-width: 6px; }
+body[data-design=a] .map-heading { font-weight: 700; color: var(--ink); }
+body[data-design=a] .map-tools { border-radius: 0; border: 2px solid var(--purple); }
+body[data-design=a] .icon-button { border-radius: 0; }
+body[data-variant=a2] .header { border-bottom-width: 1px; }
+body[data-variant=a2] .brand-mark { background: none; color: var(--purple); border: 1.5px solid var(--purple); }
+body[data-variant=a2] .route-badge { background: transparent; color: var(--ink); border-bottom: 4px solid var(--route-color); }
+body[data-variant=a2] .map-tools { border-width: 1px; border-color: var(--line); }
+body[data-variant=a2] .route-name { font-weight: 500; }
+body[data-variant=a3] .header { border-bottom-width: 2px; }
+body[data-variant=a3] .design-tabs { border: 1px solid var(--line); padding: 2px; }
+body[data-variant=a3] .design-tab { padding-block: 8px; border: 1px solid transparent; }
+body[data-variant=a3] .design-tab[aria-pressed=true] { border: 1px solid var(--purple); background: white; }
+body[data-variant=a3] .route-list { gap: 6px; }
+body[data-variant=a3] .route-button { border: 1px solid var(--line); border-radius: 3px; }
+body[data-variant=a3] .route-button[aria-pressed=true] { border: 1px solid var(--purple); }
+body[data-variant=a3] .route-badge { background: white; border: 2px solid var(--route-color); color: var(--ink); border-radius: 3px; }
+body[data-variant=a4] .header { border-bottom: 4px solid var(--purple); }
+body[data-variant=a4] .identity p { color: #76502b; }
+body[data-variant=a4] .design-tab { color: #69402b; }
+body[data-variant=a4] .design-tab[aria-pressed=true] { background: var(--purple); color: white; border-color: var(--purple); }
+body[data-variant=a4] .route-button[aria-pressed=true] { border-color: var(--gold); border-left-width: 6px; }
+body[data-variant=a4] .map-tools { border-color: var(--gold); }
+body[data-variant=a4] .map-heading-line { width: 26px; height: 6px; border-radius: 0; }
+body[data-design=b] h1, body[data-design=b] h2, body[data-design=b] .route-name, body[data-design=b] .map-heading { font-family: "Kaiti SC", STKaiti, KaiTi, serif; font-weight: 600; }
+body[data-design=b] h1 { font-size: 25px; }
+body[data-design=b] .header { border-bottom: 1px dashed var(--purple); }
+body[data-design=b] .brand-mark { border: 2px solid var(--purple); color: var(--purple); border-radius: 50%; transform: rotate(-8deg); }
+body[data-design=b] .design-tabs { border: 1px dashed var(--muted); }
+body[data-design=b] .design-tab[aria-pressed=true] { background: none; color: var(--purple); box-shadow: inset 0 -3px var(--gold); }
+body[data-design=b] .route-badge { border-radius: 50%; min-width: 30px; height: 30px; background: transparent; color: var(--purple); border: 2px solid var(--route-color); }
+body[data-design=b] .route-button { border-radius: 0; border-bottom: 1px dashed var(--line); }
+body[data-design=b] .route-name { font-size: 18px; }
+body[data-design=b] .map-tools { border: 1px solid var(--muted); border-radius: 3px 7px 5px 2px; }
+body[data-design=b] .sidebar { border-left-style: dashed; }
+body[data-design=c] { --primary-button: #f8ce4e; --primary-button-ink: #211929; }
+body[data-design=c] .header { border-bottom: 1px solid var(--gold); }
+body[data-design=c] h1 { font-weight: 800; }
+body[data-design=c] .brand-mark { border: 1px solid var(--gold); border-radius: 0; }
+body[data-design=c] .map-tools { border-color: var(--gold); border-radius: 0; }
+body[data-design=c] .icon-button, body[data-design=c] .design-tabs, body[data-design=c] .design-tab, body[data-design=c] .service-tabs, body[data-design=c] .service-tabs button { border-radius: 0; }
+body[data-design=c] .route-button { border-radius: 0; border: 1px solid var(--line); }
+body[data-design=c] .route-badge { border-radius: 0; background: transparent; border: 1px solid var(--route-color); color: var(--route-color); font-family: "SFMono-Regular", Consolas, monospace; }
+body[data-design=c] .map-heading { color: var(--gold); }
+body[data-design=c] .map-heading-line { width: 6px; height: 6px; border-radius: 0; }
+body[data-design=d] h1, body[data-design=d] h2, body[data-design=d] .route-name { font-family: "Songti SC", "Noto Serif CJK SC", serif; font-weight: 700; }
+body[data-design=d] h1 { font-size: 23px; }
+body[data-design=d] .header { border-bottom: 5px double var(--gold); }
+body[data-design=d] .identity p { color: #dac9e6; }
+body[data-design=d] .brand-mark { border: 1px solid var(--gold); border-radius: 2px; }
+body[data-design=d] .design-tabs { border-color: #9971b5; border-radius: 2px; }
+body[data-design=d] .design-tab { color: #d5bddf; }
+body[data-design=d] .design-tab[aria-pressed=true] { background: var(--gold); color: #392344; border-radius: 1px; }
+body[data-design=d] .route-button { background: var(--purple); color: white; border: 1px solid var(--gold); border-radius: 2px; }
+body[data-design=d] .route-button[aria-pressed=true] { background: var(--gold); color: #392344; }
+body[data-design=d] .route-badge { border: 1px solid #ffffff55; border-radius: 0; }
+body[data-design=d] .route-button > svg { color: var(--gold); }
+body[data-design=d] .route-button[aria-pressed=true] > svg { color: #392344; }
+body[data-design=d] .map-tools { border: 2px solid var(--gold); border-radius: 2px; }
+body[data-design=d] .map-heading { background: var(--purple); color: white; padding: 8px 13px; border-left: 3px solid var(--gold); }
+@media (hover:hover) and (pointer:fine) {
+  .header .icon-button:hover, .icon-button:hover { background: var(--tint); color: var(--purple); }
+  .route-button:not([aria-pressed=true]):hover { border-color: var(--line); background: var(--tint); }
+  .stop-row:hover { color: var(--purple); }
+  body[data-design=d] .header .icon-button:hover { background: #78558e; color: white; }
+}
+@media (max-width:1000px) {
+  .header { height: 112px; padding: 10px 16px 8px; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; }
+  .design-tabs { grid-column: 1 / -1; grid-row: 2; justify-self: center; padding: 2px; }
+  .header-actions { grid-column: 2; grid-row: 1; }
+  .design-tab { padding: 7px 14px; }
+}
+@media (max-width:760px) {
+  .header { height: 106px; }
+  .detail { background: var(--surface); border-color: var(--gold); }
+  .route-button { background: var(--surface); border-color: var(--line); }
+  .sidebar { border-color: var(--line); }
+  .design-tabs { width: 100%; justify-content: space-between; }
+  .design-tab { flex: 1; justify-content: center; gap: 5px; padding: 7px 3px; font-size: 10px; }
+  .design-tab b { font-size: 11px; }
+  .header-actions .icon-button { width: 34px; height: 34px; }
+  .header-actions { gap: 2px; }
+  .identity h1 { font-size: 15px; }
+  body[data-design] .identity h1 { font-size: 16px; }
+  body[data-design=a] .design-tab { padding-block: 7px; }
+  body[data-design=a] .route-list { gap: 5px; }
+  body[data-design=a] .route-button[aria-pressed=true] { border-left-width: 1px; }
+  body[data-design=b] .route-badge { min-width: 27px; height: 25px; border-radius: 12px; }
+  body[data-design=b] .route-name { font-size: 12px; }
+  body[data-design=d] .route-badge { border-width: 1px; }
+  body[data-design=d] .route-button { padding-inline: 3px; }
+}
+@media (max-width:360px) {
+  body[data-design] .route-button { gap: 3px; padding-inline: 2px; }
+  body[data-design] .route-name { font-size: 9px; }
+  body[data-design=b] .route-name { font-size: 10px; }
+}
+body[data-presentation=selected] .design-tabs,
+body[data-presentation=selected] .header-actions > a { display: none; }
+@media (max-width:1000px) {
+  body[data-presentation=selected] .header { display: flex; height: 76px; padding: 0 20px; }
+}
+@media (max-width:760px) {
+  body[data-presentation=selected] .header { height: 65px; padding: 0 16px; }
+}

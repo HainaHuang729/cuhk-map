@@ -35,7 +35,7 @@ try{
   const miniRoot=process.argv[2];
   if(miniRoot){
     const output=path.join(root,'generated');
-    const files=['data/campus_guide.js','data/campus_walking.js','assets/campus-light.png','assets/campus-dark.png'];
+    const files=['data/campus_guide.js','data/campus_walking.js','data/campus_connections.reference.json','data/walking_attributes.reference.geojson','assets/campus-light.png','assets/campus-dark.png','assets/mtr_arrivals.js'];
     for(const file of files){fs.mkdirSync(path.dirname(path.join(output,file)),{recursive:true});fs.copyFileSync(file,path.join(output,file));}
     const generate=()=>execFileSync(process.execPath,['scripts/sync_campus_guide.js',miniRoot,'--out-dir',output],{encoding:'utf8'});
     generate();for(const file of files)assert(fs.readFileSync(file).equals(fs.readFileSync(path.join(output,file))),file+' should not churn');

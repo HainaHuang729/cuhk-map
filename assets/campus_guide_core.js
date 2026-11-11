@@ -6,8 +6,9 @@
   function facility(item, at = new Date()) {
     const category = data.categories[item.category];
     const allowed = item.navigationEnabled !== false && !!item.webCoord;
-    return { ...item, kind: 'facility', name: nameOf(item), hours: data.hoursFor(item, at),
+    return { ...item, kind: 'facility', name: nameOf(item), hours: data.hoursFor(item, at), ...data.scheduleFor(item, at),
       icon: item.icon || category.icon, label: category.label, navigable: allowed,
+      locatable: !!item.webCoord && (allowed || item.mapOnly === true),
       status: item.statusLabel || (!allowed ? item.infoOnlyText || (item.webCoord ? '仅供查阅，暂不提供导航' : '坐标待核实') : '导航至所在建筑') };
   }
   function facilityMatches(query, at) {
@@ -15,6 +16,10 @@
     return data.items.flatMap(raw => {
       const item = facility(raw, at);
       if (!text) return [item];
+      if (item.category === 'public_transit') {
+        const transitText = normalize([item.name, item.english, ...(item.aliases || []), ...(item.routes || []).map(route => route.route)].join(' '));
+        if (text.split(/\s+/).every(word => transitText.includes(word))) return [item];
+      }
       const building = normalize([item.building.name, item.building.english, item.building.code,
         ...(item.buildingAliases || [])].filter(Boolean).join(' '));
       const matchesBuilding = value => value.trim().split(/\s+/).filter(Boolean).every(word => building.includes(word));
@@ -42,7 +47,9 @@
     if (category === 'all' || category === 'stop') stops.forEach(item => {
       if (matches(item.name + ' ' + item.id)) other.push({ ...item, kind: 'stop', label: '校巴站', icon: 'service', navigable: true });
     });
-    const results = (category === 'all' || category === 'facility' ? facilityMatches(query, at) : []).concat(other);
+    const facilities = category === 'all' || category === 'facility' ? facilityMatches(query, at) :
+      category === 'stop' ? facilityMatches(query, at).filter(item => ['public_transit', 'mtr_exit'].includes(item.category)) : [];
+    const results = facilities.concat(other);
     return results.sort((a, b) => (normalize(b.name) === text) - (normalize(a.name) === text));
   }
   function phone(value) {
@@ -52,7 +59,13 @@
   function safeUrl(value) {
     try { const url = new URL(value); return url.protocol === 'https:' ? url.href : ''; } catch { return ''; }
   }
-  const api = { facility, search, phone, safeUrl };
+  function displayNames(item) {
+    const name = String(item.name || ''), english = String(item.english || '');
+    if (english) return { primary: name.endsWith(english) ? name.slice(0, -english.length).trim() : name, secondary: english === name ? '' : english };
+    const bilingual = name.match(/^(.+[\u3400-\u9fff）)])\s+([A-Za-z].*)$/);
+    return { primary: bilingual ? bilingual[1] : name, secondary: bilingual ? bilingual[2] : '' };
+  }
+  const api = { facility, search, phone, safeUrl, displayNames };
   root.CUHK_GUIDE_CORE = api;
   if (typeof module !== 'undefined') module.exports = api;
 })(globalThis);
