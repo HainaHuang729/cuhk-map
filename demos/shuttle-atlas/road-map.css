@@ -1,0 +1,32 @@
+.road-network { pointer-events:none; }
+footer { display:grid; grid-template-columns:40px minmax(0,1fr); gap:10px 16px; }
+.service-filter { grid-column:1/-1; display:flex; justify-self:center; width:240px; height:32px; padding:3px; background:#eee5f3; border-radius:6px; }
+.service-filter button { flex:1; min-width:0; padding:0; border:0; border-radius:4px; background:transparent; font-size:12px; }
+.service-filter button[aria-pressed=true] { background:#633580; color:white; }
+#routes { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:8px; min-width:0; }
+.route-button { justify-content:center; }
+.route-button.dim { opacity:.3; }
+.route-button>span:last-child { display:none; }
+@media(max-width:760px) { footer { grid-template-columns:30px minmax(0,1fr); gap:8px; } #routes { grid-template-columns:repeat(6,minmax(0,1fr)); gap:8px 4px; } .service-filter { height:30px; } }
+.road-station { cursor:pointer; outline:none; }
+.road-station.dim { opacity:.22; }
+.road-leader { fill:none; stroke:#6c5474; stroke-width:1.8; }
+.road-panel { fill:white; stroke:#6c5474; stroke-width:2; }
+.road-panel.selected,.road-station:focus-visible .road-panel { stroke:#d9a619; stroke-width:4; }
+.road-cn { fill:#50385b; font-family:"Songti SC","Noto Serif CJK SC","STSong",serif; font-size:30px; font-weight:650; paint-order:stroke; stroke:white; stroke-width:5; stroke-linejoin:round; }
+.road-en { fill:#79677f; font:17px Arial,sans-serif; paint-order:stroke; stroke:white; stroke-width:4; stroke-linejoin:round; }
+.road-direction { fill:#78637e; font-size:18px; }
+.road-divider { stroke:#d9bc69; stroke-width:1.5; }
+.road-number { text-anchor:middle; dominant-baseline:central; font:750 23px Arial,sans-serif; pointer-events:none; }
+.road-star { fill:#50385b; font:bold 20px Arial,sans-serif; paint-order:stroke; stroke:white; stroke-width:3; pointer-events:none; }
+.road-badge { outline:none; cursor:pointer; }
+.road-badge.dim { opacity:.25; }
+.road-badge:focus-visible circle { stroke:#d9a619; stroke-width:4; }
+.road-stop { fill:white; stroke:#6c5474; stroke-width:2.5; cursor:pointer; }
+.road-stop.selected { fill:#e8be3e; stroke:#633580; stroke-width:3; }
+.road-stop.dim { stroke:#d6cbdc; }
+.route-number { background:var(--badge-color,#602b83); color:var(--badge-ink,white); border:0; }
+.route-button[aria-pressed=true] .route-number { background:var(--badge-color,#602b83); color:var(--badge-ink,white); box-shadow:0 0 0 3px white,0 0 0 5px #d9a619; }
+.conditional-key { color:var(--purple); font-weight:800; font-size:14px; margin-left:10px; }
+@media(hover:hover) { button:not([aria-pressed=true]):hover .route-number { background:var(--badge-color,#602b83); filter:brightness(1.12); } .road-badge:hover circle { stroke:#d9a619; stroke-width:3; } }
+@media(max-width:760px) { .identity h1 { font-size:17px; } .edition { display:none; } header>.icon-button { margin-left:auto; } .map-note { font-size:9px; gap:4px; } .map-note .legend-number { margin-left:5px; } .map-note .conditional-key { margin-left:5px; } .map-note .note-end { font-size:8px; } }

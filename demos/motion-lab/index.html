@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>CUHK 紫金交互样品</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../ui-modes/assets/leaflet.css">
+  <link rel="stylesheet" href="motion.css">
+</head>
+<body>
+  <main id="app">
+    <div id="map" aria-label="香港中文大学校园地图"></div>
+    <header class="topbar">
+      <button id="menu-button" class="icon-button surface" aria-label="打开侧边栏" aria-expanded="false" title="侧边栏"><span class="menu-lines"><b></b><b></b><b></b></span></button>
+      <div class="search-wrap">
+        <div class="search-box surface">
+          <i data-lucide="search" aria-hidden="true"></i>
+          <input id="search" type="search" placeholder="搜索地点、餐厅、站点" aria-label="搜索校园地点" aria-controls="search-panel" aria-expanded="false" autocomplete="off">
+          <button id="search-clear" class="clear-button" aria-label="清空搜索" title="清空搜索" hidden><i data-lucide="x"></i></button>
+        </div>
+        <section id="search-panel" class="search-panel surface" aria-label="搜索结果" hidden>
+          <div class="search-tabs" role="group" aria-label="搜索分类">
+            <button class="active" data-filter="all" aria-pressed="true">全部</button><button data-filter="dining" aria-pressed="false">餐厅</button><button data-filter="stop" aria-pressed="false">站点</button><button data-filter="building" aria-pressed="false">教学楼</button>
+          </div>
+          <div id="search-results" aria-live="polite"></div>
+        </section>
+      </div>
+      <button id="theme-button" class="icon-button surface" aria-label="切换深色" title="切换深色"><i data-lucide="moon"></i></button>
+      <div class="brand"><strong>CUHK</strong><span>校园</span></div>
+    </header>
+    <div class="map-tools surface">
+      <button class="icon-button" id="zoom-in" title="放大" aria-label="放大"><i data-lucide="plus"></i></button>
+      <button class="icon-button" id="zoom-out" title="缩小" aria-label="缩小"><i data-lucide="minus"></i></button>
+      <button class="icon-button" id="recenter" title="回到校园" aria-label="回到校园"><i data-lucide="locate-fixed"></i></button>
+    </div>
+    <div id="dock" class="dock">
+      <div class="nearby surface"><div class="nearby-title"><span>附近校巴</span><span class="subtle">预计到达</span></div><div class="bus-shortcuts" id="bus-shortcuts"></div></div>
+      <button id="board-button" class="primary pressable"><i data-lucide="bus-front"></i><span>上车</span><i class="trailing" data-lucide="arrow-up-right"></i></button>
+    </div>
+    <div class="sample-stamp"><span class="sample-dot"></span>交互样品 · 模拟数据</div>
+    <a class="attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap</a>
+    <div id="menu-scrim" class="scrim" hidden></div>
+    <aside id="sidebar" class="sidebar" aria-label="侧边栏" aria-hidden="true" inert>
+      <div class="side-identity"><strong>CUHK<span>校园</span></strong><button class="icon-button" id="reset" title="重置样品" aria-label="重置样品"><i data-lucide="rotate-ccw"></i></button></div>
+      <div class="side-weather"><i data-lucide="sun"></i><div><strong>晴天 <span>27°C</span></strong><p>湿度 60%</p></div></div>
+      <div class="theme-switch" role="group" aria-label="配色模式"><span class="theme-indicator"></span><button data-theme-choice="light" aria-pressed="true"><i data-lucide="sun"></i>浅色</button><button data-theme-choice="dark" aria-pressed="false"><i data-lucide="moon"></i>深色</button></div>
+      <div class="side-layers" role="group" aria-label="地图图层">
+        <button class="layer-button active" data-layer="bus" aria-pressed="true"><i data-lucide="bus-front"></i><span>校巴</span><i class="layer-check" data-lucide="check"></i></button>
+        <button class="layer-button" data-layer="stop" aria-pressed="false"><i data-lucide="map-pin"></i><span>站点</span><i class="layer-check" data-lucide="check"></i></button>
+        <button class="layer-button" data-layer="dining" aria-pressed="false"><i data-lucide="utensils"></i><span>餐厅</span><i class="layer-check" data-lucide="check"></i></button>
+      </div>
+      <button id="courses-button" class="side-action"><i data-lucide="calendar-days"></i><span>课程</span><i data-lucide="chevron-right"></i></button>
+      <div class="side-bottom"><label class="motion-option"><i data-lucide="sparkles"></i><span>减弱动效</span><input id="reduce-motion" type="checkbox" role="switch"><span class="switch-track"></span></label><div class="side-note">本地演示 · 不采集定位</div></div>
+    </aside>
+    <div id="sheet-scrim" class="sheet-scrim" hidden></div>
+    <section id="sheet" class="sheet surface" role="dialog" aria-modal="true" aria-labelledby="sheet-title" aria-hidden="true" inert>
+      <button class="sheet-handle" id="sheet-handle" aria-label="收起详情" title="收起详情"><span></span></button>
+      <div id="sheet-content" class="sheet-content"></div>
+    </section>
+    <div class="toast" id="toast" role="status"><span class="draw-check"><i data-lucide="check"></i></span><span id="toast-text"></span></div>
+  </main>
+  <script src="../ui-modes/assets/leaflet.js"></script>
+  <script src="../ui-modes/assets/lucide.js"></script>
+  <script src="../ui-modes/assets/campus.js"></script>
+  <script src="route-geometry.js"></script>
+  <script src="motion.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "version": "20261101.4-green-only",
+  "checkedAt": "2026-11-01",
+  "coordinateSystem": "WGS84",
+  "sourceUrl": "https://www.cuhk.edu.hk/chinese/campus/cuhk-campus-map.html",
+  "sourceName": "香港中文大学校园地图",
+  "sourceWarning": "官方地图部分区域不按比例绘制，资料并非即时更新。图示线位不代表已核实的出入口或无障碍通道。",
+  "grid": { "zoom": 17, "x0": 107115, "y0": 57154, "tileSize": 256 },
+  "calibration": { "method": "Official georeferenced TMS tiles; screenshot similarity registration", "matchedFeatures": 1441, "nominalScreenshotMetersPerPixel": 1.2029012861430333 },
+  "stepSectionConvention": "from/to are inclusive vertex indices; step typing is cross-checked against the listed existing OSM highway=steps ways, not field verification. Unmatched sections retain their original type.",
+  "displayReferenceConvention": "Display only the traced green connections from the official map, split by path type. Existing OSM ways provide audit evidence only; do not draw their continuations or the surrounding network.",
+  "connections": [
+    { "id": "postgraduate-path", "name": "研究生宿舍四座附近通道", "kind": "walkway", "stepSections": [{ "from": 0, "to": 13, "sourceWayIds": ["way/230177061", "way/230177062"] }], "pixels": [[455,237],[467,229],[467,222],[476,216],[478,211],[484,218],[490,213],[489,209],[500,212],[505,209],[509,214],[514,211],[519,216],[525,212]] },
+    { "id": "heng-seng-path", "name": "恒生楼旁通道", "kind": "walkway", "stepSections": [{ "from": 0, "to": 8, "sourceWayIds": ["way/523681722", "way/230172579"] }], "pixels": [[463,349],[469,347],[478,359],[474,362],[484,378],[479,381],[489,396],[484,400],[494,414]] },
+    { "id": "lsk-footbridge", "name": "李兆基楼至联合路天桥", "kind": "footbridge", "displayWayIds": ["way/188010214"], "pixels": [[355,648],[355,613]], "note": "官方步行路线 D 提及李兆基楼快线电梯至三楼行人天桥；电梯入口与现场开放情况尚未核实。", "detailSource": "https://www.scu.cuhk.edu.hk/wp-content/uploads/useful-information/CUHK-Campus-Walking-Routes-Security-Office-29-Aug-2025.pdf" },
+    { "id": "library-united-path", "name": "图书馆北侧至联合路通道", "kind": "walkway", "stepSections": [{ "from": 0, "to": 10, "sourceWayIds": ["way/136991777"] }], "pixels": [[366,645],[366,639],[376,639],[376,631],[383,631],[383,629],[411,621],[444,622],[446,614],[453,617],[459,601]] },
+    { "id": "central-student-hostel-path", "name": "中央道至新亚学生宿舍通道", "kind": "walkway", "stepSections": [{ "from": 0, "to": 7, "sourceWayIds": ["way/191766973"] }], "pixels": [[684,642],[684,626],[691,631],[694,623],[696,591],[705,584],[714,594],[741,602]] },
+    { "id": "new-asia-hostel-north-path", "name": "新亚学生宿舍北侧通道", "kind": "walkway", "stepSections": [{ "from": 0, "to": 2, "sourceWayIds": ["way/191766973"] }], "pixels": [[754,599],[754,591],[759,577]] },
+    { "id": "engineering-university-avenue-link", "name": "邵逸夫夫人楼至工程学大楼连廊", "kind": "building-link", "displayWayIds": ["way/136995432", "way/188010215"], "pixels": [[652,766],[664,766],[664,812]], "note": "图示跨越大学道，不在平面交叉处接入道路；连廊楼层与两端入口待核实。" },
+    { "id": "science-courtyard-path", "name": "科学馆南侧通道", "kind": "walkway", "stepSections": [{ "from": 0, "to": 2, "sourceWayIds": ["way/218424332"] }], "pixels": [[677,754],[677,760],[687,769],[687,779],[678,779]] },
+    { "id": "engineering-building-link", "name": "何善衡与蒙民伟工程学大楼之间连廊", "kind": "building-link", "displayWayIds": ["way/136995433"], "pixels": [[680,816],[703,816]] },
+    { "id": "engineering-north-link", "name": "蒙民伟工程学大楼北侧连接", "kind": "building-link", "displayWayIds": ["way/136995431"], "pixels": [[722,805],[722,788]] },
+    { "id": "basic-medical-path", "name": "基本医学大楼东侧通道", "kind": "walkway", "stepSections": [{ "from": 0, "to": 3, "sourceWayIds": ["way/191767357"] }], "pixels": [[853,684],[862,688],[863,693],[873,694],[881,704]] },
+    { "id": "student-centre-path", "name": "龚约翰学生中心附近通道", "kind": "walkway", "stepSections": [{ "from": 0, "to": 3, "sourceWayIds": ["way/1424818904"] }], "pixels": [[755,874],[762,872],[771,884],[778,889]] }
+  ]
+}

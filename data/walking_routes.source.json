@@ -1,0 +1,1080 @@
+{
+  "version": "20261101.8-aligned",
+  "sourceName": "香港中文大学保安处步行路线图",
+  "sourceUrl": "https://www.scu.cuhk.edu.hk/wp-content/uploads/useful-information/CUHK-Campus-Walking-Routes-Security-Office-29-Aug-2025.pdf",
+  "sourceDate": "2025-08-29",
+  "geometryConvention": "The official PDF defines A-E corridors, landmarks and junction topology, not georeferenced line shapes. Display geometry follows explicitly reviewed ways from the same WGS84 OSM dataset as the basemap. Never use unconstrained nearest-road snapping or connect crossing lines on different levels. Original pixel traces remain audit-only. Display geometry does not establish current access or modify the navigation graph.",
+  "routes": [
+    {
+      "id": "A",
+      "name": "大学站至何善衡夫人宿舍",
+      "minutes": 10,
+      "via": [
+        "大学站A出口",
+        "康本国际学术园",
+        "何善衡夫人宿舍"
+      ],
+      "note": "经康本园连续多层扶手电梯、上层天桥和进德路；没有改走西侧出口。楼内出入口及开放情况以现场指示为准。",
+      "color": "#984B2D",
+      "darkColor": "#DBA17F",
+      "labelCoord": [
+        114.21055,
+        22.41515
+      ],
+      "parts": [
+        {
+          "wayId": "way/545777839",
+          "reverse": true
+        },
+        {
+          "wayId": "way/1442185703",
+          "reverse": true
+        },
+        {
+          "wayId": "way/1442185702",
+          "reverse": true
+        },
+        {
+          "wayId": "way/923320387",
+          "reverse": true
+        },
+        {
+          "wayId": "way/923320418",
+          "from": 5,
+          "to": 7
+        },
+        {
+          "wayId": "way/213507293"
+        },
+        {
+          "wayId": "way/1426636966"
+        },
+        {
+          "wayId": "way/1426636971",
+          "from": 1,
+          "to": 2
+        },
+        {
+          "wayId": "way/923320417"
+        },
+        {
+          "wayId": "way/213437744"
+        },
+        {
+          "wayId": "way/1426636973"
+        },
+        {
+          "wayId": "way/1426636974"
+        },
+        {
+          "wayId": "way/1426636975"
+        },
+        {
+          "wayId": "way/1426636976"
+        },
+        {
+          "wayId": "way/1426636977"
+        },
+        {
+          "wayId": "way/1426636978"
+        },
+        {
+          "wayId": "way/1426636979"
+        },
+        {
+          "wayId": "way/1426636972"
+        },
+        {
+          "wayId": "way/1426636980"
+        },
+        {
+          "wayId": "way/1426636982",
+          "from": 0,
+          "to": 2,
+          "reverse": true
+        },
+        {
+          "wayId": "way/201907978",
+          "reverse": true
+        },
+        {
+          "wayId": "way/1426728927",
+          "reverse": true
+        },
+        {
+          "wayId": "way/198293713",
+          "from": 0,
+          "to": 11,
+          "reverse": true
+        },
+        {
+          "wayId": "way/135020312",
+          "from": 1,
+          "to": 2,
+          "reverse": true
+        }
+      ],
+      "referenceTrace": [
+        {
+          "id": "station-a-circle",
+          "kind": "walkway",
+          "pixels": [
+            [
+              865,
+              1140
+            ],
+            [
+              863,
+              1138
+            ],
+            [
+              863,
+              1134
+            ],
+            [
+              867,
+              1126
+            ],
+            [
+              874,
+              1117
+            ],
+            [
+              880,
+              1108
+            ],
+            [
+              879,
+              1102
+            ],
+            [
+              879,
+              1097
+            ],
+            [
+              883,
+              1093
+            ],
+            [
+              888,
+              1090
+            ]
+          ],
+          "anchors": [
+            [
+              114.2098644,
+              22.4137253
+            ],
+            [
+              114.2100842,
+              22.4142981
+            ]
+          ],
+          "anchorEvidence": "Station A approach: way/545777839"
+        },
+        {
+          "id": "station-yia",
+          "kind": "walkway",
+          "pixels": [
+            [
+              888,
+              1090
+            ],
+            [
+              895,
+              1089
+            ],
+            [
+              902,
+              1066
+            ],
+            [
+              918,
+              1037
+            ],
+            [
+              934,
+              1006
+            ],
+            [
+              949,
+              985
+            ],
+            [
+              950,
+              975
+            ]
+          ],
+          "anchors": [
+            [
+              114.2100842,
+              22.4142981
+            ],
+            [
+              114.2110302,
+              22.4159171
+            ]
+          ],
+          "anchorEvidence": "YIA lower approach: way/923320418"
+        },
+        {
+          "id": "yia-escalators",
+          "kind": "escalator",
+          "pixels": [
+            [
+              950,
+              975
+            ],
+            [
+              946,
+              969
+            ],
+            [
+              942,
+              965
+            ],
+            [
+              940,
+              961
+            ],
+            [
+              940,
+              957
+            ],
+            [
+              944,
+              952
+            ],
+            [
+              947,
+              947
+            ],
+            [
+              947,
+              943
+            ],
+            [
+              945,
+              939
+            ],
+            [
+              942,
+              938
+            ]
+          ],
+          "anchors": [
+            [
+              114.2110302,
+              22.4159171
+            ],
+            [
+              114.2111665,
+              22.4163632
+            ]
+          ],
+          "anchorEvidence": "YIA escalator: way/1426636966; internal line remains schematic"
+        },
+        {
+          "id": "yia-upper-link",
+          "kind": "walkway",
+          "pixels": [
+            [
+              942,
+              938
+            ],
+            [
+              952,
+              927
+            ],
+            [
+              970,
+              910
+            ],
+            [
+              990,
+              892
+            ],
+            [
+              1011,
+              876
+            ]
+          ],
+          "anchors": [
+            [
+              114.2111665,
+              22.4163632
+            ],
+            [
+              114.2114506,
+              22.4171092
+            ]
+          ],
+          "anchorEvidence": "Upper campus link: way/1426728928 north end; original diagonal retained"
+        },
+        {
+          "id": "madam-ho-curve",
+          "kind": "walkway",
+          "pixels": [
+            [
+              1011,
+              876
+            ],
+            [
+              1016,
+              869
+            ],
+            [
+              1020,
+              859
+            ],
+            [
+              1021,
+              851
+            ],
+            [
+              1019,
+              847
+            ],
+            [
+              1015,
+              845
+            ],
+            [
+              1004,
+              844
+            ],
+            [
+              982,
+              842
+            ],
+            [
+              964,
+              840
+            ],
+            [
+              958,
+              838
+            ],
+            [
+              955,
+              834
+            ],
+            [
+              954,
+              826
+            ],
+            [
+              953,
+              813
+            ]
+          ],
+          "anchors": [
+            [
+              114.2114506,
+              22.4171092
+            ],
+            [
+              114.2109693,
+              22.4176191
+            ]
+          ],
+          "anchorEvidence": "Madam S.H. Ho Hall road: way/198293713 and way/1442185701"
+        }
+      ]
+    },
+    {
+      "id": "B",
+      "name": "何善衡夫人宿舍至文物馆",
+      "minutes": 15,
+      "via": [
+        "何善衡夫人宿舍",
+        "大学道",
+        "文物馆（罗桂祥阁）"
+      ],
+      "note": "沿大学道至文物馆西侧，在范克廉楼北侧过路处接C线，不另画进馆支线。",
+      "color": "#9952A1",
+      "darkColor": "#DCA4E0",
+      "labelCoord": [
+        114.208461,
+        22.4186158
+      ],
+      "parts": [
+        {
+          "wayId": "way/135020312",
+          "from": 0,
+          "to": 1,
+          "reverse": true
+        },
+        {
+          "wayId": "way/33412273",
+          "from": 6
+        },
+        {
+          "wayId": "way/195863155"
+        },
+        {
+          "wayId": "way/202648856",
+          "from": 6,
+          "to": 10,
+          "reverse": true
+        }
+      ],
+      "referenceTrace": [
+        {
+          "id": "avenue-east",
+          "kind": "walkway",
+          "pixels": [
+            [
+              953,
+              813
+            ],
+            [
+              921,
+              809
+            ],
+            [
+              890,
+              805
+            ],
+            [
+              867,
+              801
+            ],
+            [
+              847,
+              795
+            ],
+            [
+              828,
+              785
+            ],
+            [
+              807,
+              773
+            ],
+            [
+              783,
+              756
+            ],
+            [
+              769,
+              748
+            ],
+            [
+              759,
+              743
+            ]
+          ],
+          "anchors": [
+            [
+              114.2109693,
+              22.4176191
+            ],
+            [
+              114.208461,
+              22.4186158
+            ]
+          ],
+          "anchorEvidence": "University Avenue bend: way/33412273"
+        },
+        {
+          "id": "avenue-museum-west",
+          "kind": "walkway",
+          "pixels": [
+            [
+              759,
+              743
+            ],
+            [
+              751,
+              742
+            ],
+            [
+              740,
+              744
+            ],
+            [
+              726,
+              748
+            ],
+            [
+              710,
+              751
+            ],
+            [
+              695,
+              753
+            ],
+            [
+              678,
+              752
+            ],
+            [
+              648,
+              749
+            ],
+            [
+              612,
+              744
+            ],
+            [
+              579,
+              739
+            ],
+            [
+              548,
+              733
+            ],
+            [
+              518,
+              727
+            ]
+          ],
+          "anchors": [
+            [
+              114.208461,
+              22.4186158
+            ],
+            [
+              114.2055615,
+              22.4186735
+            ]
+          ],
+          "anchorEvidence": "B/C junction at BFC north approach: way/217710677"
+        }
+      ]
+    },
+    {
+      "id": "C",
+      "name": "范克廉楼至大学图书馆",
+      "minutes": 5,
+      "via": [
+        "范克廉楼",
+        "大学行政楼（楼梯）",
+        "大学图书馆／林荫大道"
+      ],
+      "note": "经行政楼旁楼梯、百万大道东侧通道及北端台阶，在中央道接D、E线；不绕到图书馆门口。",
+      "color": "#299F94",
+      "darkColor": "#8BD7C7",
+      "labelCoord": [
+        114.2055719,
+        22.4194
+      ],
+      "parts": [
+        {
+          "wayId": "way/1442185681",
+          "from": 0,
+          "to": 1,
+          "reverse": true
+        },
+        {
+          "wayId": "way/191770421",
+          "reverse": true
+        },
+        {
+          "wayId": "way/191770423",
+          "reverse": true
+        },
+        {
+          "wayId": "way/955764571",
+          "reverse": true
+        },
+        {
+          "wayId": "way/1072300296",
+          "reverse": true
+        },
+        {
+          "wayId": "way/955764573",
+          "from": 7,
+          "to": 10,
+          "reverse": true
+        },
+        {
+          "wayId": "way/230238514",
+          "reverse": true
+        },
+        {
+          "wayId": "way/230238509"
+        }
+      ],
+      "referenceTrace": [
+        {
+          "id": "bfc-stair-approach",
+          "kind": "walkway",
+          "pixels": [
+            [
+              518,
+              727
+            ],
+            [
+              518,
+              713
+            ]
+          ],
+          "anchors": [
+            [
+              114.2055615,
+              22.4186735
+            ],
+            [
+              114.2055719,
+              22.418845
+            ]
+          ],
+          "anchorEvidence": "BFC north approach: way/217710677"
+        },
+        {
+          "id": "admin-stairs",
+          "kind": "steps",
+          "pixels": [
+            [
+              518,
+              713
+            ],
+            [
+              518,
+              690
+            ]
+          ],
+          "anchors": [
+            [
+              114.2055719,
+              22.418845
+            ],
+            [
+              114.2055696,
+              22.4191222
+            ]
+          ],
+          "anchorEvidence": "Confirmed stairs: way/191770423"
+        },
+        {
+          "id": "mall-central-road",
+          "kind": "walkway",
+          "pixels": [
+            [
+              518,
+              690
+            ],
+            [
+              518,
+              625
+            ]
+          ],
+          "anchors": [
+            [
+              114.2055696,
+              22.4191222
+            ],
+            [
+              114.2055719,
+              22.4198793
+            ]
+          ],
+          "anchorEvidence": "Central Road C/D/E junction east of library: way/561427012"
+        }
+      ]
+    },
+    {
+      "id": "D",
+      "name": "大学图书馆至联合书院水塔",
+      "minutes": 5,
+      "via": [
+        "大学图书馆",
+        "李兆基楼（快线电梯至3楼天桥）",
+        "联合书院水塔"
+      ],
+      "note": "经李兆基楼入口、电梯至三楼天桥，再沿联合路前往水塔附近；天桥跨越中央道，不在桥中间接入路面。",
+      "color": "#1474AD",
+      "darkColor": "#8BC5EE",
+      "labelCoord": [
+        114.2042,
+        22.42027
+      ],
+      "parts": [
+        {
+          "wayId": "way/561427012",
+          "from": 2,
+          "to": 5
+        },
+        {
+          "wayId": "way/33412235",
+          "from": 0,
+          "to": 1
+        },
+        {
+          "wayId": "way/218318692",
+          "reverse": true
+        },
+        {
+          "wayId": "way/1492178660",
+          "reverse": true,
+          "kind": "lift-link"
+        },
+        {
+          "wayId": "way/188010214",
+          "reverse": true,
+          "coversConnections": [
+            "lsk-footbridge"
+          ]
+        },
+        {
+          "wayId": "way/33412236",
+          "from": 6,
+          "to": 10
+        },
+        {
+          "wayId": "way/135193911",
+          "from": 0,
+          "to": 2
+        }
+      ],
+      "referenceTrace": [
+        {
+          "id": "library-lsk",
+          "kind": "walkway",
+          "pixels": [
+            [
+              518,
+              625
+            ],
+            [
+              470,
+              625
+            ],
+            [
+              430,
+              625
+            ],
+            [
+              402,
+              625
+            ]
+          ],
+          "anchors": [
+            [
+              114.2055719,
+              22.4198793
+            ],
+            [
+              114.203943,
+              22.4198359
+            ]
+          ],
+          "anchorEvidence": "Central Road to LSK bridge south end"
+        },
+        {
+          "id": "lsk-lift-bridge",
+          "kind": "lift-link",
+          "pixels": [
+            [
+              402,
+              625
+            ],
+            [
+              397,
+              625
+            ],
+            [
+              394,
+              623
+            ],
+            [
+              393,
+              619
+            ],
+            [
+              393,
+              604
+            ],
+            [
+              394,
+              600
+            ],
+            [
+              397,
+              598
+            ],
+            [
+              402,
+              597
+            ]
+          ],
+          "anchors": [
+            [
+              114.203943,
+              22.4198359
+            ],
+            [
+              114.203943,
+              22.420183
+            ]
+          ],
+          "anchorEvidence": "Official green bridge endpoints; PDF line offset beside lift symbol",
+          "coversConnections": [
+            "lsk-footbridge"
+          ]
+        },
+        {
+          "id": "united-road",
+          "kind": "walkway",
+          "pixels": [
+            [
+              402,
+              597
+            ],
+            [
+              437,
+              592
+            ],
+            [
+              474,
+              587
+            ],
+            [
+              490,
+              585
+            ],
+            [
+              494,
+              583
+            ]
+          ],
+          "anchors": [
+            [
+              114.203943,
+              22.420183
+            ],
+            [
+              114.2050514,
+              22.4205463
+            ]
+          ],
+          "anchorEvidence": "United Road: way/135193911"
+        },
+        {
+          "id": "united-water-approach",
+          "kind": "walkway",
+          "pixels": [
+            [
+              494,
+              583
+            ],
+            [
+              495,
+              580
+            ],
+            [
+              495,
+              574
+            ]
+          ],
+          "anchors": [
+            [
+              114.2050514,
+              22.4205463
+            ],
+            [
+              114.2050514,
+              22.4206095
+            ]
+          ],
+          "anchorEvidence": "Original trace ends west of UC water tower, not at its centre"
+        }
+      ]
+    },
+    {
+      "id": "E",
+      "name": "大学图书馆至新亚书院水塔",
+      "minutes": 10,
+      "via": [
+        "大学图书馆",
+        "新亚路",
+        "新亚书院水塔／合一亭方向"
+      ],
+      "note": "沿中央道及新亚路，到原图水塔附近道路的终点；不擅自延伸到水塔或合一亭入口。",
+      "color": "#CF783C",
+      "darkColor": "#EDB275",
+      "labelCoord": [
+        114.2074087,
+        22.4208664
+      ],
+      "parts": [
+        {
+          "wayId": "way/561427012",
+          "from": 0,
+          "to": 2,
+          "reverse": true
+        },
+        {
+          "wayId": "way/43391368",
+          "from": 0,
+          "to": 22
+        }
+      ],
+      "referenceTrace": [
+        {
+          "id": "central-new-asia-junction",
+          "kind": "walkway",
+          "pixels": [
+            [
+              518,
+              625
+            ],
+            [
+              552,
+              625
+            ],
+            [
+              568,
+              624
+            ],
+            [
+              573,
+              623
+            ],
+            [
+              576,
+              622
+            ]
+          ],
+          "anchors": [
+            [
+              114.2055719,
+              22.4198793
+            ],
+            [
+              114.2061697,
+              22.4198824
+            ]
+          ],
+          "anchorEvidence": "Central Road / New Asia Road junction: way/43391368"
+        },
+        {
+          "id": "new-asia-climb",
+          "kind": "walkway",
+          "pixels": [
+            [
+              576,
+              622
+            ],
+            [
+              578,
+              612
+            ],
+            [
+              580,
+              603
+            ],
+            [
+              584,
+              596
+            ],
+            [
+              591,
+              591
+            ],
+            [
+              607,
+              583
+            ],
+            [
+              629,
+              573
+            ],
+            [
+              651,
+              563
+            ],
+            [
+              659,
+              558
+            ],
+            [
+              664,
+              551
+            ],
+            [
+              668,
+              545
+            ],
+            [
+              674,
+              542
+            ],
+            [
+              682,
+              541
+            ]
+          ],
+          "anchors": [
+            [
+              114.2061697,
+              22.4198824
+            ],
+            [
+              114.2074087,
+              22.4208664
+            ]
+          ],
+          "anchorEvidence": "New Asia Road crest: way/43391368"
+        },
+        {
+          "id": "new-asia-water-approach",
+          "kind": "walkway",
+          "pixels": [
+            [
+              682,
+              541
+            ],
+            [
+              691,
+              546
+            ],
+            [
+              697,
+              550
+            ],
+            [
+              706,
+              558
+            ],
+            [
+              718,
+              566
+            ],
+            [
+              727,
+              571
+            ],
+            [
+              731,
+              571
+            ],
+            [
+              735,
+              569
+            ]
+          ],
+          "anchors": [
+            [
+              114.2074087,
+              22.4208664
+            ],
+            [
+              114.2080769,
+              22.4204488
+            ]
+          ],
+          "anchorEvidence": "Original orange line stops before water tower; no extra spur"
+        }
+      ]
+    }
+  ],
+  "traceSpace": {
+    "page": 1,
+    "width": 1888,
+    "height": 1335.17,
+    "units": "normalized PDF page pixels"
+  }
+}
