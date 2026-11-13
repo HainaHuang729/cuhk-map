@@ -195,7 +195,8 @@
         <button data-action="view" data-value="metro">${icon('bus-front')}车辆到站</button>
         <a href="demos/shuttle-atlas/">${icon('route')}线路总览${icon('chevron-right')}</a><hr>
         <button data-action="menu-layers">${icon('map-pin')}地图显示${icon('chevron-right')}</button>
-        <button data-action="facility-search">${icon('building-2')}校园设施${icon('chevron-right')}</button>`;
+        <button data-action="facility-search">${icon('building-2')}校园设施${icon('chevron-right')}</button>
+        <a href="web-gps/">${icon('map-pinned')}贡献轨迹${icon('chevron-right')}</a>`;
       show(`<div class="guide-menu">${heading}${content}</div>`, '校园地图菜单', 'menu');
     }
     function search(openMode = 'place') {
