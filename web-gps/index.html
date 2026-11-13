@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex">
+  <title>贡献轨迹 · 中大校巴</title>
+  <link rel="stylesheet" href="../demos/ui-modes/assets/leaflet.css"><link rel="stylesheet" href="map-style.css">
+</head>
+<body>
+  <main id="map" aria-label="当前采集轨迹地图"></main>
+  <header><button id="menu" class="icon" title="菜单" aria-label="打开菜单"><i data-lucide="menu"></i></button><h1>贡献轨迹</h1></header>
+  <aside id="recording-badge" class="recording-badge" hidden aria-label="采集状态"><span id="state">尚未开始</span><span id="elapsed">00:00</span><span id="accuracy">—</span><span id="points" hidden>0</span></aside>
+  <div class="bottom"><p id="status" role="status" aria-live="polite"></p><button id="action" class="primary"><i data-lucide="bus-front"></i><span>上车</span></button></div>
+  <dialog id="menu-dialog" class="side-menu"><nav aria-label="采集菜单"><h2>贡献轨迹</h2><button id="theme" class="menu-item"><i data-lucide="moon"></i><span>浅深色</span></button><button id="open-queue" class="menu-item"><i data-lucide="cloud-upload"></i><span>待上传记录</span></button><button id="privacy" class="menu-item"><i data-lucide="shield-check"></i><span>采集说明</span></button><a class="menu-item" href="../"><i data-lucide="arrow-left"></i><span>返回校园地图</span></a></nav></dialog>
+  <dialog id="ride-dialog" class="bottom-sheet" aria-label="选择校巴线路"><h2>选择校巴线路</h2><div id="line-grid" class="line-grid" role="group" aria-label="校巴线路"></div><select id="route" hidden aria-label="所选线路"><option value="">选择线路</option></select><details><summary>方向（可选）</summary><select id="direction" aria-label="方向"><option value="unknown">未确认</option><option value="up">上行</option><option value="down">下行</option></select></details><label class="consent"><input id="consent" type="checkbox"><span>同意采集并上传本次乘车位置到项目腾讯云，用于校巴研究。<button id="ride-privacy" class="text-button" type="button">详情</button></span></label><p class="notice">请保持页面在前台；切出时停止并本地保存。</p><p id="picker-status" role="status"></p><button id="start" class="primary">开始采集</button></dialog>
+  <dialog id="queue-dialog" class="bottom-sheet"><h2>待上传记录 <span id="queue-count">0</span></h2><p id="upload-state"></p><div id="queue"></div></dialog>
+  <dialog id="privacy-dialog"><h2>位置数据说明</h2><p>只在你按下开始并允许浏览器定位后采集。记录线路、方向、采样时间、经纬度、定位精度和结束原因，不采集姓名、手机号、照片或通讯录。</p><p>结束后由上传函数写入本项目腾讯云的独立网页轨迹集合。原始轨迹不公开，不直接参与模型训练，也不自动获得小程序积分。</p><p>切出页面会停止定位并保存在本机。关闭或刷新页面后不会自动继续采集。上传失败可重试或导出；只有服务器确认完整保存后，才清理本机该条轨迹。清除浏览器数据可能导致未上传记录丢失。</p><form method="dialog"><button class="primary">知道了</button></form></dialog>
+  <script src="../demos/ui-modes/assets/lucide.js"></script><script src="../demos/ui-modes/assets/leaflet.js"></script>
+  <script src="config.js"></script><script src="core.js"></script><script src="storage.js"></script><script src="transport.js"></script><script src="app.js"></script>
+</body>
+</html>

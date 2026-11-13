@@ -1,0 +1,94 @@
+const assert=require('node:assert/strict'),crypto=require('node:crypto');
+const path=require('node:path'),os=require('node:os');
+const {Collector,upload,manifest}=require('../web-gps/core');
+const functionRoot=path.join(process.env.CUHK_MINIPROGRAM_ROOT||path.join(os.homedir(),'WeChatProjects/miniprogram-1'),'cloudfunctions/uploadWebGps');
+const {makeService,SESSIONS,CHUNKS,sha}=require(path.join(functionRoot,'service'));
+const {makeHttpHandler}=require(path.join(functionRoot,'http'));
+const now=Date.parse('2026-11-13T08:00:00Z'),id='d8c7f6b5-a123-4567-a987-0123456789ab';
+function dbFixture(){
+  let data=new Map(),pending=Promise.resolve();
+  const api=map=>({collection:c=>({doc:id=>({get:async()=>({data:map.has(c+'/'+id)?[{...structuredClone(map.get(c+'/'+id)),_id:id}]:[]}),
+    set:async value=>{assert.equal(value._id,undefined,'CloudBase set must not receive reserved _id');map.set(c+'/'+id,structuredClone(value));}})})});
+  const db={...api(data),runTransaction(fn){const work=pending.then(async()=>{const copy=new Map(data);const result=await fn(api(copy));data.clear();for(const [k,v]of copy)data.set(k,v);return result;});pending=work.catch(()=>{});return work;}};
+  return {db,rows:c=>[...data].filter(([k])=>k.startsWith(c+'/')).map(([,v])=>v)};
+}
+async function main(){
+  const saved=new Map(),timers=new Map();let next=0,callback,error,cleared=0;
+  const geo={watchPosition(ok,fail){callback=ok;error=fail;return 0;},clearWatch(){cleared++;}};
+  const store={put:async r=>saved.set(r.id,structuredClone(r))};
+  const timerAPI={setTimeout(fn){timers.set(++next,fn);return next;},clearTimeout(n){timers.delete(n);}};
+  let clock=now;
+  const c=new Collector({geo,store,now:()=>clock,uuid:()=>id,timers:timerAPI});
+  await assert.rejects(()=>c.start('8','down',false),/同意/);
+  await c.start('8','down',true);
+  await assert.rejects(()=>c.start('8','down',true),/采集/);
+  const fix=(timestamp,lon=114.21)=>({timestamp,coords:{longitude:lon,latitude:22.42,accuracy:10}});
+  callback(fix(clock)); callback(fix(clock));
+  assert.equal(c.current.gpsSamples.length,1,'Duplicate sample times are ignored');
+  clock+=1000;callback(fix(clock));
+  const record=await c.stop('page_hidden');
+  assert.equal(cleared,1);assert.equal(timers.size,0);assert.equal(record.endReason,'page_hidden');
+  callback(fix(clock+1000));assert.equal(record.gpsSamples.length,2,'Late GPS callback cannot resume collection');
+  assert.equal(saved.get(id).gpsSamples.length,2);
+  const f=dbFixture(),service=makeService({db:f.db,secret:'x'.repeat(32),now:()=>now+60000});
+  const call=e=>service.handle('trusted-uid',e),hash=async text=>sha(text);
+  const result=await upload(record,call,hash);
+  assert.equal(result.id,id);
+  assert.equal(f.rows(SESSIONS).filter(r=>r.recordType==='web_gps_session').length,1);
+  assert.equal(f.rows(CHUNKS).length,1);
+  assert.equal(f.rows(SESSIONS).find(r=>r.recordType==='web_gps_session').status,'pending_review');
+  assert.equal(f.rows(SESSIONS).find(r=>r.recordType==='web_gps_session').contributionEligible,false);
+  await upload(record,call,hash);
+  assert.equal(f.rows(CHUNKS).length,1,'Whole-upload retry is idempotent');
+  const ownerCore=f.rows(SESSIONS).find(r=>r.recordType==='web_gps_session');
+  const foreign=await service.handle('another-user',{action:'complete',id,digest:ownerCore.digest});
+  assert.equal(foreign.code,'session_missing','Cannot finalize another browser identity session');
+  assert.equal((await service.handle('',{action:'complete',id,digest:ownerCore.digest})).code,'unauthenticated');
+  const firstManifest=manifest(record,[sha(JSON.stringify(record.gpsSamples))]);
+  const spoof={...firstManifest,coordinateSystem:'GCJ-02'};
+  assert.equal((await call({action:'init',manifest:spoof,digest:sha(JSON.stringify(spoof))})).code,'invalid_manifest');
+  let completionAttempted=false;
+  await assert.rejects(()=>upload(record,async event=>{
+    if(event.action==='chunk')return {ok:false,message:'fixture failure'};
+    if(event.action==='complete')completionAttempted=true;
+    return {ok:true};
+  },hash),/fixture failure/);
+  assert.equal(completionAttempted,false);assert(saved.has(id),'Upload failure retains local data');
+  const noStorage=new Collector({geo,store:{put:async()=>{throw Error('full');}},now:()=>clock,uuid:()=>id,timers:timerAPI});
+  await assert.rejects(()=>noStorage.start('8','down',true),/未开始/);assert.equal(noStorage.current,null);
+  const synchronousDenial=new Collector({geo:{watchPosition(ok,fail){fail({code:1});return 5;},clearWatch(){}},store,now:()=>clock,uuid:()=>id,timers:timerAPI});
+  await synchronousDenial.start('8','down',true);await synchronousDenial.persistChain;
+  assert.equal(synchronousDenial.current,null);assert.equal(timers.size,0,'Synchronous denial must not leave expiry timers');
+  const otherDb=dbFixture(),quotaService=makeService({db:otherDb.db,secret:'x'.repeat(32),now:()=>now+60000});
+  for(let i=0;i<5;i++) {
+    const m={...firstManifest,id:crypto.randomUUID()},digest=sha(JSON.stringify(m));
+    const r=await quotaService.handle('limited-user',{action:'init',manifest:m,digest});
+    assert.equal(r.ok,i<4);
+  }
+  const incomplete=await quotaService.handle('limited-user',{action:'complete',id:otherDb.rows(SESSIONS).find(r=>r.manifest)?.manifest.id,digest:otherDb.rows(SESSIONS).find(r=>r.manifest)?.digest});
+  assert.equal(incomplete.code,'incomplete');
+  const httpDb=dbFixture(),origin='https://hainahuang729.github.io';
+  const http=makeHttpHandler({db:httpDb.db,service:makeService({db:httpDb.db,secret:'z'.repeat(48),now:()=>now+60000}),secret:'z'.repeat(48),origins:[origin],enabled:true,now:()=>now+60000});
+  const request=async(data,token='',extra={})=>http({httpMethod:'POST',headers:{origin,'content-type':'application/json',authorization:'Bearer '+token},body:JSON.stringify(data),...extra});
+  assert.equal((await request({action:'authorize'},'',{headers:{origin:'https://evil.example'}})).statusCode,403);
+  assert.equal((await request({action:'init',uid:'trusted-uid'})).statusCode,401,'Event-supplied identity is not accepted');
+  assert.equal((await request({},'',{httpMethod:'GET'})).statusCode,405);
+  const preflight=await request({},'',{httpMethod:'OPTIONS'});assert.equal(preflight.statusCode,204);assert.equal(preflight.headers['Access-Control-Allow-Origin'],origin);
+  const credential=JSON.parse((await request({action:'authorize'})).body).token;
+  assert(credential);assert.equal((await request({action:'init'},credential+'x')).statusCode,401,'Tampered credential denied');
+  const second=JSON.parse((await request({action:'authorize'})).body).token;
+  const httpRecord={...record,id:crypto.randomUUID(),recordPurpose:'test'};
+  const resultHttp=await upload(httpRecord,async data=>JSON.parse((await request(data,credential)).body),hash);
+  assert.equal(resultHttp.id,httpRecord.id);
+  const httpCore=httpDb.rows(SESSIONS).find(r=>r.recordType==='web_gps_session');
+  assert.equal(httpCore.manifest.recordPurpose,'test');
+  assert.equal(JSON.parse((await request({action:'complete',id:httpRecord.id,digest:httpCore.digest},second)).body).code,'session_missing');
+  assert.equal(JSON.parse((await request({action:'list'},credential)).body).code,'unsupported_action','There is no raw-track read API');
+  for(let i=0;i<98;i++)assert.equal((await request({action:'authorize'})).statusCode,200);
+  assert.equal((await request({action:'authorize'})).statusCode,429,'Public identity issuance has a global daily limit');
+  assert.equal((await request({action:'authorize'},credential)).statusCode,200,'Existing signed identity can be renewed without changing ownership');
+  const disabled=makeHttpHandler({db:httpDb.db,service:null,secret:'z'.repeat(48),origins:[origin],enabled:false});
+  assert.equal((await disabled({httpMethod:'POST',headers:{origin},body:'{}'})).statusCode,503);
+  console.log('PASS consent, GPS dedupe, lifecycle stop, storage failure, late callbacks, protocol roundtrip, ownership, quotas, idempotency, no partial-success deletion, source isolation. Mock GPS/cloud only.');
+}
+main().catch(e=>{console.error(e);process.exitCode=1;});
