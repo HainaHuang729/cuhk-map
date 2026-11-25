@@ -2,7 +2,7 @@
 
 校巴時刻通的香港中文大學校園地圖，可查校巴班次、路線、車站、餐飲和校園設施。
 
-[校園地圖](https://hainahuang729.github.io/cuhk-map/) · [中大校巴時間表](https://hainahuang729.github.io/cuhk-map/shuttle-bus/) · [源码仓库](https://github.com/HainaHuang729/cuhk-map) · [MIT 许可证](LICENSE) · [参与贡献](CONTRIBUTING.md)
+[校園地圖](https://digital-cuhk.github.io/) · [中大校巴時間表](https://digital-cuhk.github.io/shuttle-bus/) · [源码仓库](https://github.com/HainaHuang729/cuhk-map) · [MIT 许可证](LICENSE) · [参与贡献](CONTRIBUTING.md)
 
 ## 维护流程
 
@@ -33,7 +33,7 @@ node scripts/test_eta_prediction.mjs
 
 ## 2026-10-26 网页同步
 
-正式入口：https://hainahuang729.github.io/cuhk-map/
+正式入口：https://digital-cuhk.github.io/
 
 - 同步小程序的 132 条已核对设施/服务、66 个建筑条目和餐饮资料，支持中英及繁简搜索。
 - 地图选中设施使用同款紫金标志。详情保留楼层、开放时段、使用资格、电话和官方链接。
@@ -46,7 +46,7 @@ node scripts/test_eta_prediction.mjs
 
 ## UI Prototype
 
-[A/F 浅色与深色双模式演示](https://hainahuang729.github.io/cuhk-map/demos/ui-modes/)位于 `demos/ui-modes/`，独立于正式地图首页。可在样品顶部或侧边栏切换模式，切换时共享地图和日程状态。到站时间、天气、课程和餐厅时间均为演示内容，不连接云端、不读取定位、不发送上车广播。其他设计方案保留供对比参考。
+[A/F 浅色与深色双模式演示](https://digital-cuhk.github.io/demos/ui-modes/)位于 `demos/ui-modes/`，独立于正式地图首页。可在样品顶部或侧边栏切换模式，切换时共享地图和日程状态。到站时间、天气、课程和餐厅时间均为演示内容，不连接云端、不读取定位、不发送上车广播。其他设计方案保留供对比参考。
 
 ## Files
 
