@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>香港中文大学校园地图</title>
-  <meta name="description" content="中大校巴、餐厅与校园设施查询。">
+  <title>香港中文大學校巴及校園地圖｜校巴時刻通</title>
+  <meta name="description" content="香港中文大學校園地圖，查中大校巴路線、站點、時間表、估計到站時間、餐飲及校園設施。">
+  <link rel="canonical" href="https://hainahuang729.github.io/cuhk-map/">
   <link rel="stylesheet" href="demos/ui-modes/assets/leaflet.css">
   <link rel="stylesheet" href="assets/campus_guide.css?v=ca13f6bfe8afc798">
   <style>
@@ -145,7 +146,7 @@
       left: 50%;
       display: flex;
       gap: 4px;
-      width: 126px;
+      width: 188px;
       height: 34px;
       padding: 3px;
       border: 1px solid var(--line);
@@ -156,7 +157,8 @@
       transform: translateX(-50%);
     }
 
-    .view-mode-button {
+    .view-mode-button,
+    .view-mode-link {
       flex: 1;
       min-width: 0;
       border: 0;
@@ -167,6 +169,16 @@
       font-size: 12px;
       font-weight: 850;
       cursor: pointer;
+    }
+
+    .view-mode-link {
+      display: grid;
+      place-items: center;
+      text-decoration: none;
+    }
+
+    .view-mode-link:hover {
+      text-decoration: underline;
     }
 
     .view-mode-button.is-active {
@@ -1128,11 +1140,12 @@
     @media (max-width: 720px) {
       .view-mode-dock {
         top: calc(8px + env(safe-area-inset-top));
-        width: 116px;
+        width: 170px;
         height: 32px;
       }
 
-      .view-mode-button {
+      .view-mode-button,
+      .view-mode-link {
         font-size: 11px;
       }
 
@@ -1323,6 +1336,7 @@
   <nav id="viewModeDock" class="view-mode-dock" aria-label="视图切换">
     <button class="view-mode-button is-active" type="button" data-mode="map">地图</button>
     <button class="view-mode-button" type="button" data-mode="metro">线路图</button>
+    <a class="view-mode-link" href="shuttle-bus/">校巴时间表</a>
   </nav>
   <nav id="busRouteDock" class="bus-route-dock" hidden aria-label="预计到下一站"></nav>
   <section id="routeMessagePanel" class="route-message-panel" aria-label="线路消息" hidden>

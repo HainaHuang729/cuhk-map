@@ -1,8 +1,8 @@
-# CUHK Dining and Bus Map
+# CUHK Shuttle Bus Timetable & Campus Map｜中大校巴時間表及校園地圖
 
-香港中文大学校园餐饮和校巴地图。
+校巴時刻通的香港中文大學校園地圖，可查校巴班次、路線、車站、餐飲和校園設施。
 
-[在线使用](https://hainahuang729.github.io/cuhk-map/) · [源码仓库](https://github.com/HainaHuang729/cuhk-map) · [MIT 许可证](LICENSE) · [参与贡献](CONTRIBUTING.md)
+[校園地圖](https://hainahuang729.github.io/cuhk-map/) · [中大校巴時間表](https://hainahuang729.github.io/cuhk-map/shuttle-bus/) · [源码仓库](https://github.com/HainaHuang729/cuhk-map) · [MIT 许可证](LICENSE) · [参与贡献](CONTRIBUTING.md)
 
 ## 维护流程
 

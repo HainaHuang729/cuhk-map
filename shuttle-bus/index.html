@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-Hant-HK">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>中大校巴時間表及路線｜校巴時刻通 · CUHK Shuttle Bus</title>
+  <meta name="description" content="查香港中文大學校巴時間表、發車分鐘和主要車站。涵蓋 2／2S 新聯線、N 綫尾班車、H 假日線、轉堂校巴及收費小巴。">
+  <link rel="canonical" href="https://hainahuang729.github.io/cuhk-map/shuttle-bus/">
+  <link rel="icon" href="data:,">
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f8f4fa;
+      --surface: #fff;
+      --ink: #281b30;
+      --muted: #5b4d62;
+      --purple: #532879;
+      --line: #ddd0e4;
+      --gold: #f1cf6b;
+      font-family: "PingFang HK", "Noto Sans HK", "Microsoft JhengHei", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); line-height: 1.65; }
+    a { color: var(--purple); text-underline-offset: .22em; }
+    a:focus-visible { outline: 2px solid #935c11; outline-offset: 4px; }
+    h1, h2, h3 { line-height: 1.25; margin: 0; }
+    p { margin: .7rem 0 0; }
+    .wrap { width: min(100% - 2rem, 60rem); margin-inline: auto; }
+    .masthead { background: var(--purple); color: #fff; border-bottom: .3rem solid var(--gold); }
+    .masthead .wrap { padding-block: 1rem 2rem; }
+    .masthead a { color: var(--gold); }
+    .brand { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin-bottom: 1.65rem; font-size: .92rem; }
+    .brand strong { font-size: 1rem; letter-spacing: .06em; }
+    h1 { font-size: clamp(1.65rem, 5.2vw, 3.15rem); font-weight: 800; }
+    .intro { max-width: 40rem; color: #f2e8f9; }
+    .jump { display: flex; flex-wrap: wrap; gap: .4rem 1.25rem; padding: .8rem 0; border-bottom: 1px solid var(--line); }
+    .jump a { min-height: 2.25rem; display: inline-flex; align-items: center; font-weight: 650; }
+    main { padding-bottom: 2.5rem; }
+    section { padding-block: 1.4rem 0; scroll-margin: 1rem; }
+    h2 { font-size: 1.4rem; }
+    .note { color: var(--muted); font-size: .94rem; }
+    .questions { display: grid; gap: .75rem; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 1rem; }
+    .questions article { border-inline-start: .22rem solid var(--gold); background: var(--surface); padding: .85rem 1rem; }
+    .questions h3 { font-size: 1.05rem; }
+    .table-wrap { border: 1px solid var(--line); border-radius: .55rem; margin-top: .85rem; overflow: hidden; }
+    table { border-collapse: collapse; width: 100%; background: var(--surface); font-size: .95rem; }
+    th, td { text-align: left; vertical-align: top; padding: .6rem .8rem; }
+    thead th { background: #eee3f3; color: #45255f; font-weight: 700; }
+    tbody tr + tr { border-top: 1px solid var(--line); }
+    tbody th { min-width: 6.1rem; }
+    .line { display: inline-grid; min-width: 2.05rem; border-radius: .23rem; place-items: center; padding: 0 .25rem; color: #fff; background: var(--purple); font-variant-numeric: tabular-nums; text-decoration: none; }
+    .line:hover { text-decoration: underline; }
+    .label { display: block; margin-top: .22rem; line-height: 1.4; }
+    .times { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .route-notes { padding-left: 1.25rem; }
+    footer { border-top: 1px solid var(--line); padding: 0 0 1.5rem; }
+    @media (max-width: 43rem) {
+      .questions { grid-template-columns: 1fr; }
+      thead th, tbody th, td { padding: .5rem .4rem; }
+      tbody th { min-width: 0; }
+      table { font-size: .85rem; }
+    }
+  </style>
+</head>
+<body>
+  <header class="masthead">
+    <div class="wrap">
+      <div class="brand"><strong>校巴時刻通</strong><a href="../">開啟校園地圖</a></div>
+      <h1>中大校巴時間表及路線</h1>
+      <p class="intro">香港中文大學（沙田）穿梭校巴、轉堂校巴及收費小巴。下表為路線起點的開車時間，時間均為香港時間。</p>
+    </div>
+  </header>
+  <main class="wrap">
+    <nav class="jump" aria-label="本頁章節">
+      <a href="#questions">常見乘車問題</a>
+      <a href="#campus-shuttle">穿梭校巴</a>
+      <a href="#meet-class">轉堂校巴</a>
+      <a href="#paid-minibus">收費小巴</a>
+      <a href="#sources">資料來源</a>
+    </nav>
+
+    <section id="questions">
+      <h2>常見乘車問題</h2>
+      <div class="questions">
+        <article>
+          <h3>大學站去新亞搭哪班校巴？</h3>
+          <p>日間可查 <a href="#route-2">2</a> 和 <a href="#route-2s">2S</a> 新聯線。兩線均停新亞書院。上車前請在<a href="../">校園地圖</a>或官方路線圖核對大學站一帶的乘車站和行車方向。</p>
+        </article>
+        <article>
+          <h3>中大 N 線尾班車幾點？</h3>
+          <p>星期一至六（公眾假期除外），<a href="#route-n">N 晚間線</a>由起點開出的尾班車是 <strong class="times">23:30</strong>。</p>
+        </article>
+        <article>
+          <h3>星期日有哪班中大校巴？</h3>
+          <p><a href="#route-h">H 假日線</a>逢星期日及公眾假期行走，起點首班 <strong class="times">08:20</strong>，尾班 <strong class="times">23:20</strong>。</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="campus-shuttle">
+      <h2>穿梭校巴</h2>
+      <p class="note">1、2、2S、3、4、8 和 N 線逢星期一至六服務，公眾假期停駛。H 線逢星期日及公眾假期服務。按路線號碼可查交通處的站序及特別安排。</p>
+      <div class="table-wrap">
+        <table aria-label="穿梭校巴起點發車時間及主要車站">
+          <thead><tr><th scope="col">路線</th><th scope="col">起點首班至尾班</th><th scope="col">每小時開出（分）</th><th scope="col">主要車站</th></tr></thead>
+          <tbody>
+            <tr id="route-1"><th scope="row"><a class="line" href="https://transport.cuhk.edu.hk/route/1/">1</a><span class="label">本部線</span></th><td class="times">07:40–18:55</td><td>10、25、40、55</td><td>大學站、大學體育中心、邵逸夫堂</td></tr>
+            <tr id="route-2"><th scope="row"><a class="line" href="https://transport.cuhk.edu.hk/route/2/">2</a><span class="label">新聯線</span></th><td class="times">07:45–18:45</td><td>15、45</td><td>大學站一帶、新亞書院、聯合書院</td></tr>
+            <tr id="route-2s"><th scope="row"><a class="line" href="https://transport.cuhk.edu.hk/route/2s/">2S</a><span class="label">新聯線（S）</span></th><td class="times">08:00–18:30</td><td>00、30</td><td>大學站一帶、新亞書院、聯合書院、研究生宿舍一座</td></tr>
+            <tr id="route-3"><th scope="row"><a class="line" href="https://transport.cuhk.edu.hk/route/3/">3</a><span class="label">逸夫線</span></th><td class="times">09:00–18:40</td><td>00、20、40</td><td>敬文書院、逸夫書院、科學館、大學站廣場</td></tr>
+            <tr id="route-4"><th scope="row"><a class="line" href="https://transport.cuhk.edu.hk/route/4/">4</a><span class="label">環迴線</span></th><td class="times">07:30–18:50</td><td>10、30、50</td><td>大學站、康本園、環迴東站（上行）</td></tr>
+            <tr id="route-8"><th scope="row"><a class="line" href="https://transport.cuhk.edu.hk/route/8/">8</a><span class="label">西部線</span></th><td class="times">07:35–18:35</td><td>15、35、55</td><td>新亞坊、逸夫書院、伍宜孫書院</td></tr>
+            <tr id="route-n"><th scope="row"><a class="line" href="https://transport.cuhk.edu.hk/route/n/">N</a><span class="label">晚間線</span></th><td class="times">19:00–23:30</td><td>00、15、30、45</td><td>大學站、本部、逸夫及新亞一帶</td></tr>
+            <tr id="route-h"><th scope="row"><a class="line" href="https://transport.cuhk.edu.hk/route/h/">H</a><span class="label">假日線</span></th><td class="times">08:20–23:20</td><td>00、20、40</td><td>大學站、本部、逸夫及新亞一帶</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul class="route-notes note">
+        <li>8 線在非教學日停大學站廣場和崇基教學樓，飛站大學站。</li>
+        <li>N、H 線逢整點班次停研究生宿舍一座。H 線整點班次亦停 39 區上行站。</li>
+      </ul>
+    </section>
+
+    <section id="meet-class">
+      <h2>轉堂校巴</h2>
+      <p class="note">只限教學日。非教學日、閱讀週及大學假期停駛。</p>
+      <div class="table-wrap">
+        <table aria-label="轉堂校巴起點發車時間">
+          <thead><tr><th scope="col">路線</th><th scope="col">星期一至五</th><th scope="col">星期六</th><th scope="col">每小時開出（分）</th></tr></thead>
+          <tbody>
+            <tr><th scope="row"><a class="line" href="https://transport.cuhk.edu.hk/route/5/">5</a><span class="label">上行</span></th><td class="times">09:18–17:26</td><td class="times">09:18–13:26</td><td>18、22、26</td></tr>
+            <tr><th scope="row"><a class="line" href="https://transport.cuhk.edu.hk/route/6a/">6A</a><span class="label">敬文下行</span></th><td class="times">09:10–17:10</td><td class="times">09:10–13:10</td><td>10</td></tr>
+            <tr><th scope="row"><a class="line" href="https://transport.cuhk.edu.hk/route/6b/">6B</a><span class="label">新聯下行</span></th><td class="times">12:20–17:20</td><td>停駛</td><td>20</td></tr>
+            <tr><th scope="row"><a class="line" href="https://transport.cuhk.edu.hk/route/7/">7</a><span class="label">逸夫下行</span></th><td class="times">08:18–17:18</td><td class="times">08:18–13:18</td><td>00、18</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="paid-minibus">
+      <h2>收費穿梭小巴</h2>
+      <p class="note">每程 HK$5.50。到站、改站及其他時段請查看交通處的路線頁。</p>
+      <ul class="route-notes">
+        <li><a href="https://transport.cuhk.edu.hk/route/up/">上行線</a>每日 <span class="times">08:30–23:00</span>，每小時 00、30 分開出。</li>
+        <li><a href="https://transport.cuhk.edu.hk/route/down/">下行線</a>官方路線頁列出星期一至六早段 <span class="times">07:00–08:15</span>（公眾假期除外），星期日及公眾假期 <span class="times">08:45–21:15</span>。</li>
+      </ul>
+    </section>
+
+    <section id="sources">
+      <h2>資料來源</h2>
+      <p>班次以香港中文大學交通處公布為準。這裡整理常規時間表，出發前可查<a href="https://transport.cuhk.edu.hk/whats-new/">交通處最新通告</a>。穿梭及轉堂校巴供中大學生和教職員使用。</p>
+      <p class="note">資料核對日期 <time datetime="2026-11-25">2026 年 11 月 25 日</time>。<a href="https://transport.cuhk.edu.hk/wp-content/uploads/documents/Shuttle.pdf">日間穿梭校巴</a>、<a href="https://transport.cuhk.edu.hk/wp-content/uploads/documents/NH.pdf">晚間及假日</a>、<a href="https://transport.cuhk.edu.hk/wp-content/uploads/documents/Meet-class.pdf">轉堂校巴</a>。</p>
+    </section>
+  </main>
+  <footer class="wrap">
+    <p class="note">校巴時刻通是獨立校園出行項目。<a href="../">開啟校園地圖</a> · <a href="https://github.com/HainaHuang729/cuhk-map">查看 GitHub 原始碼</a></p>
+  </footer>
+</body>
+</html>
